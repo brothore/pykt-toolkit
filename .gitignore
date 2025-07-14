@@ -7,6 +7,7 @@ examples/saved_model/
 examples/start_predict.sh
 examples/wandb/
 dist/
+data/
 *.egg-info/
 *.pyc
 *.pkl
