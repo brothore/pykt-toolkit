@@ -3,6 +3,8 @@ import numpy as np
 import os
 
 from .dkt import DKT
+from .mambakt import MAMBAKT
+from .lstm_template import LSTM_TEMPLATE
 from .dkt_plus import DKTPlus
 from .dkvmn import DKVMN
 from .deep_irt import DeepIRT
@@ -10,8 +12,11 @@ from .sakt import SAKT
 from .saint import SAINT
 from .kqn import KQN
 from .atkt import ATKT
+from .mamba_atakt import MAMBA_ATAKT
 from .dkt_forget import DKTForget
 from .akt import AKT
+from .mamba_akt import MAMBA_AKT
+from .Transformer_template import TRANSFORMER_TEMPLATE
 from .gkt import GKT
 from .gkt_utils import get_gkt_graph
 from .lpkt import LPKT
@@ -22,6 +27,7 @@ from .iekt import IEKT
 from .atdkt import ATDKT
 from .simplekt import simpleKT
 from .bakt_time import BAKTTime
+from .dbakt import DBAKT
 from .qdkt import QDKT
 from .qikt import QIKT
 from .dimkt import DIMKT
@@ -44,6 +50,10 @@ device = "cpu" if not torch.cuda.is_available() else "cuda"
 def init_model(model_name, model_config, data_config, emb_type):
     if model_name == "dkt":
         model = DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "mambakt":
+        model = MAMBAKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "lstm_template":
+        model = LSTM_TEMPLATE(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "dkt+":
         model = DKTPlus(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "dkvmn":
@@ -58,6 +68,10 @@ def init_model(model_name, model_config, data_config, emb_type):
         model = DKTForget(data_config["num_c"], data_config["num_rgap"], data_config["num_sgap"], data_config["num_pcount"], **model_config).to(device)
     elif model_name == "akt":
         model = AKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "mamba_akt":
+        model = MAMBA_AKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "Transformer_template":
+        model = TRANSFORMER_TEMPLATE(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "lefokt_akt":
         model = LEFOKT_AKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "extrakt":
@@ -68,6 +82,8 @@ def init_model(model_name, model_config, data_config, emb_type):
         model = KQN(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "atkt":
         model = ATKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], fix=False).to(device)
+    elif model_name == "mamba_atakt":
+        model = MAMBA_ATAKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], fix=False).to(device)
     elif model_name == "atktfix":
         model = ATKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], fix=True).to(device)
     elif model_name == "gkt":
@@ -116,6 +132,8 @@ def init_model(model_name, model_config, data_config, emb_type):
         model = ATDKT(data_config["num_q"], data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "bakt_time":
         model = BAKTTime(data_config["num_c"], data_config["num_q"], data_config["num_rgap"], data_config["num_sgap"], data_config["num_pcount"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "dbakt":
+        model = DBAKT(data_config["num_c"], data_config["num_q"], data_config["num_rgap"], data_config["num_sgap"], data_config["num_pcount"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "simplekt":
         model = simpleKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "rekt":

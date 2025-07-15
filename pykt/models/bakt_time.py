@@ -22,12 +22,14 @@ class timeGap2(nn.Module):
     def __init__(self, num_rgap, num_sgap, num_pcount, emb_size) -> None:
         super().__init__()
         self.num_rgap, self.num_sgap, self.num_pcount = num_rgap, num_sgap, num_pcount
+        
+        # Register eye matrices as buffers so they automatically move with the model
         if num_rgap != 0:
-            self.rgap_eye = torch.eye(num_rgap)
+            self.register_buffer('rgap_eye', torch.eye(num_rgap))
         if num_sgap != 0:
-            self.sgap_eye = torch.eye(num_sgap)
+            self.register_buffer('sgap_eye', torch.eye(num_sgap))
         if num_pcount != 0:
-            self.pcount_eye = torch.eye(num_pcount)
+            self.register_buffer('pcount_eye', torch.eye(num_pcount))
 
         input_size = num_rgap + num_sgap + num_pcount
         
@@ -38,13 +40,13 @@ class timeGap2(nn.Module):
     def forward(self, rgap, sgap, pcount):
         infs = []
         if self.num_rgap != 0:
-            rgap = self.rgap_eye[rgap].to(device)
+            rgap = self.rgap_eye[rgap]  # No need for .to(device) since it's a buffer
             infs.append(rgap)
         if self.num_sgap != 0:
-            sgap = self.sgap_eye[sgap].to(device)
+            sgap = self.sgap_eye[sgap]  # No need for .to(device) since it's a buffer
             infs.append(sgap)
         if self.num_pcount != 0:
-            pcount = self.pcount_eye[pcount].to(device)
+            pcount = self.pcount_eye[pcount]  # No need for .to(device) since it's a buffer
             infs.append(pcount)
 
         tg = torch.cat(infs, -1)
@@ -158,6 +160,15 @@ class BAKTTime(nn.Module):
         return pad_attn_mask.repeat(self.nhead, 1, 1)
 
     def forward(self, dcur, dgaps, qtest=False, train=False):
+        # 获取模型所在的设备
+        device = next(self.parameters()).device
+        # 将输入数据移动到模型所在的设备
+        for key in dcur:
+            if torch.is_tensor(dcur[key]):
+                dcur[key] = dcur[key].to(device)
+        for key in dgaps:
+            if torch.is_tensor(dgaps[key]):
+                dgaps[key] = dgaps[key].to(device)
         q, c, r = dcur["qseqs"].long(), dcur["cseqs"].long(), dcur["rseqs"].long()
         qshft, cshft, rshft = dcur["shft_qseqs"].long(), dcur["shft_cseqs"].long(), dcur["shft_rseqs"].long()
         pid_data = torch.cat((q[:,0:1], qshft), dim=1)
@@ -310,7 +321,8 @@ class TransformerLayer(nn.Module):
         seqlen, batch_size = query.size(1), query.size(0)
         nopeek_mask = np.triu(
             np.ones((1, 1, seqlen, seqlen)), k=mask).astype('uint8')
-        src_mask = (torch.from_numpy(nopeek_mask) == 0).to(device)
+        # 修改这里：直接创建在query的设备上
+        src_mask = (torch.from_numpy(nopeek_mask) == 0).to(query.device)
         if mask == 0:  # If 0, zero-padding is needed.
             # Calls block.masked_attn_head.forward() method
             query2 = self.masked_attn_head(
@@ -409,7 +421,7 @@ def attention(q, k, v, d_k, mask, dropout, zero_pad):
     # print(f"before zero pad scores: {scores.shape}")
     # print(zero_pad)
     if zero_pad:
-        pad_zero = torch.zeros(bs, head, 1, seqlen).to(device)
+        pad_zero = torch.zeros(bs, head, 1, seqlen).to(scores.device)
         scores = torch.cat([pad_zero, scores[:, :, 1:, :]], dim=2) # 第一行score置0
     # print(f"after zero pad scores: {scores}")
     scores = dropout(scores)
@@ -450,21 +462,21 @@ class CosinePositionalEmbedding(nn.Module):
 class timeGap(nn.Module):
     def __init__(self, num_rgap, num_sgap, num_pcount, emb_size) -> None:
         super().__init__()
-        self.rgap_eye = torch.eye(num_rgap)
-        self.sgap_eye = torch.eye(num_sgap)
-        self.pcount_eye = torch.eye(num_pcount)
+        # Register eye matrices as buffers so they automatically move with the model
+        self.register_buffer('rgap_eye', torch.eye(num_rgap))
+        self.register_buffer('sgap_eye', torch.eye(num_sgap))
+        self.register_buffer('pcount_eye', torch.eye(num_pcount))
 
         input_size = num_rgap + num_sgap + num_pcount
 
         self.time_emb = nn.Linear(input_size, emb_size, bias=False)
 
     def forward(self, rgap, sgap, pcount):
-        rgap = self.rgap_eye[rgap].to(device)
-        sgap = self.sgap_eye[sgap].to(device)
-        pcount = self.pcount_eye[pcount].to(device)
+        rgap = self.rgap_eye[rgap]  # No need for .to(device) since it's a buffer
+        sgap = self.sgap_eye[sgap]  # No need for .to(device) since it's a buffer
+        pcount = self.pcount_eye[pcount]  # No need for .to(device) since it's a buffer
 
         tg = torch.cat((rgap, sgap, pcount), -1)
         tg_emb = self.time_emb(tg)
 
         return tg_emb
-
