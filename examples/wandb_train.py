@@ -1,6 +1,8 @@
 import os
 import argparse
 import json
+import subprocess
+import sys
 
 import torch
 torch.set_num_threads(4) 
@@ -10,6 +12,7 @@ import copy
 from pykt.models import train_model,evaluate,init_model
 from pykt.utils import debug_print,set_seed
 from pykt.datasets import init_dataset4train
+from pykt.config import predict_after_train
 import datetime
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
@@ -21,6 +24,56 @@ def save_config(train_config, model_config, data_config, params, save_dir):
     save_path = os.path.join(save_dir, "config.json")
     with open(save_path, "w") as fout:
         json.dump(d, fout)
+
+def run_prediction(predict_mode, save_dir):
+    """
+    运行预测脚本
+    Args:
+        predict_mode: 1 for wandb_multi_predict.py, 2 for wandb_predict.py
+        save_dir: 模型保存目录
+    """
+    try:
+        if predict_mode == 1:
+            # 调用 wandb_multi_predict.py
+            script_path = "/root/autodl-tmp/pykt-toolkit/examples/wandb_multi_predict.py"
+            if not os.path.exists(script_path):
+                print(f"Warning: {script_path} not found in current directory")
+                return False
+            
+            cmd = [sys.executable, script_path, "--save_dir", save_dir]
+            print(f"Running prediction script: {' '.join(cmd)}")
+            
+        elif predict_mode == 2:
+            # 调用 /root/autodl-tmp/pykt-toolkit/examples/wandb_predict.py
+            script_path = "/root/autodl-tmp/pykt-toolkit/examples/wandb_predict.py"
+            if not os.path.exists(script_path):
+                print(f"Warning: {script_path} not found")
+                return False
+            
+            cmd = [sys.executable, script_path, "--save_dir", save_dir]
+            print(f"Running prediction script: {' '.join(cmd)}")
+            
+        else:
+            print(f"Invalid predict_after_train value: {predict_mode}")
+            return False
+        
+        # 执行预测脚本
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            print("Prediction completed successfully!")
+            print("Prediction output:")
+            print(result.stdout)
+            return True
+        else:
+            print(f"Prediction failed with return code: {result.returncode}")
+            print("Error output:")
+            print(result.stderr)
+            return False
+            
+    except Exception as e:
+        print(f"Error running prediction: {str(e)}")
+        return False
 
 def main(params):
     if "use_wandb" not in params:
@@ -154,3 +207,27 @@ def main(params):
     if params['use_wandb']==1:
         wandb.log({ 
                     "validauc": validauc, "validacc": validacc, "best_epoch": best_epoch,"model_save_path":model_save_path})
+    
+    # 训练完成后进行预测
+    if predict_after_train in [1, 2]:
+        print(f"\n{'='*50}")
+        print(f"Training completed. Starting prediction with predict_after_train={predict_after_train}")
+        print(f"{'='*50}")
+        
+        # 运行预测脚本
+        prediction_success = run_prediction(predict_after_train, ckpt_path)
+        
+        if prediction_success:
+            print("Prediction completed successfully!")
+            if params['use_wandb']==1:
+                wandb.log({"prediction_status": "success"})
+        else:
+            print("Prediction failed!")
+            if params['use_wandb']==1:
+                wandb.log({"prediction_status": "failed"})
+    elif predict_after_train == 0:
+        print("predict_after_train is set to 0, skipping prediction.")
+    else:
+        print(f"Invalid predict_after_train value: {predict_after_train}. Valid values are 0, 1, or 2.")
+        
+    print(f"Training and prediction process completed at: {datetime.datetime.now()}")

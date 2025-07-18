@@ -22,18 +22,42 @@ class MAMBA_ATAKT(nn.Module):
         self.num_c = num_c
         self.epsilon = epsilon
         self.beta = beta
-        self.rnn = Mamba(
-            d_model=self.skill_dim + self.answer_dim,  # 输入维度
-            d_state=16,  
-            d_conv=4,    
-            expand=2,    
-        )
         
-        # 添加线性层将Mamba输出映射到hidden_dim
-        self.mamba_proj = nn.Linear(self.skill_dim + self.answer_dim, self.hidden_dim)
-        
-        
-        
+        # 根据emb_type选择不同的Mamba配置方案
+        if self.emb_type == "qid_after":
+            # 方案1: Mamba输出需要投影到hidden_dim
+            self.rnn = Mamba(
+                d_model=self.skill_dim + self.answer_dim,  # 输入维度
+                d_state=16,  
+                d_conv=4,    
+                expand=2,    
+            )
+            # 添加线性层将Mamba输出映射到hidden_dim
+            self.mamba_proj = nn.Linear(self.skill_dim + self.answer_dim, self.hidden_dim)
+            self.input_proj = None
+            
+        elif self.emb_type == "qid_before":
+            # 方案2: 直接使用hidden_dim作为d_model
+            self.rnn = Mamba(
+                d_model=self.hidden_dim,  # 直接使用hidden_dim
+                d_state=16,  
+                d_conv=4,    
+                expand=2,    
+            )
+            # 添加输入投影层
+            self.input_proj = nn.Linear(self.skill_dim + self.answer_dim, self.hidden_dim)
+            self.mamba_proj = None
+            
+        else:
+            # 默认使用方案1
+            self.rnn = Mamba(
+                d_model=self.skill_dim + self.answer_dim,
+                d_state=16,  
+                d_conv=4,    
+                expand=2,    
+            )
+            self.mamba_proj = nn.Linear(self.skill_dim + self.answer_dim, self.hidden_dim)
+            self.input_proj = None
         
         self.dropout_layer = nn.Dropout(dropout)
         self.fc = nn.Linear(self.hidden_dim*2, self.num_c)
@@ -101,13 +125,24 @@ class MAMBA_ATAKT(nn.Module):
         # print(skill_answer_embedding)
         
         skill_answer_embedding1=skill_answer_embedding
-        if  perturbation is not None:
+        if perturbation is not None:
             skill_answer_embedding += perturbation
-            
-        out = self.rnn(skill_answer_embedding)
         
-        # 将Mamba输出投影到hidden_dim
-        out = self.mamba_proj(out)
+        # 根据emb_type选择不同的处理方式
+        if self.emb_type == "qid_after":
+            # 方案1: 先通过Mamba，再投影到hidden_dim
+            out = self.rnn(skill_answer_embedding)
+            out = self.mamba_proj(out)
+            
+        elif self.emb_type == "qid_before":
+            # 方案2: 先投影到hidden_dim，再通过Mamba
+            out = self.input_proj(skill_answer_embedding)
+            out = self.rnn(out)
+            
+        else:
+            # 默认使用方案1
+            out = self.rnn(skill_answer_embedding)
+            out = self.mamba_proj(out)
         
         # print(f"out: {out.shape}")
         out=self.attention_module(out)
