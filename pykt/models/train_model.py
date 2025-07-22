@@ -12,6 +12,90 @@ from pykt.config import que_type_models
 import pandas as pd
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#成对排序损失函数（近似AUC计算）
+def pairwise_ranking_loss(predictions, targets):
+    """
+    计算近似AUC的成对排序损失
+    
+    参数:
+        predictions: 模型预测值 (形状: [N])
+        targets: 真实标签 (形状: [N])
+        
+    返回:
+        成对排序损失值
+    """
+    # 获取正负样本索引
+    pos_indices = torch.where(targets == 1)[0]
+    neg_indices = torch.where(targets == 0)[0]
+    
+    # 如果没有正样本或负样本，返回0损失
+    if len(pos_indices) == 0 or len(neg_indices) == 0:
+        return torch.tensor(0.0, device=predictions.device)
+    
+    # 创建所有正负样本对
+    pos_preds = predictions[pos_indices]
+    neg_preds = predictions[neg_indices]
+    
+    # 计算所有正负样本对之间的差异
+    diff = neg_preds.view(-1, 1) - pos_preds.view(1, -1)  # shape: (num_neg, num_pos)
+    
+    # 计算损失
+    loss = F.softplus(diff).mean()
+    return loss
+
+# 学生AUC差异计算函数
+def student_auc_discrepancy(predictions, targets, uids, weights=None):
+    """
+    计算学生间的AUC差异
+    
+    参数:
+        predictions: 模型预测值 (形状: [B, L])
+        targets: 真实标签 (形状: [B, L])
+        uids: 学生ID (形状: [B])
+        weights: 不同学生对的权重 (可选)
+        
+    返回:
+        学生AUC差异的加权平均值
+    """
+    # 获取唯一的学生ID
+    unique_uids = torch.unique(uids)
+    student_aucs = []
+    
+    # 如果批次中只有一个学生，直接返回0
+    if len(unique_uids) <= 1:
+        return torch.tensor(0.0, device=predictions.device)
+    
+    # 为每个学生计算近似AUC（成对排序损失）
+    for uid in unique_uids:
+        # 获取当前学生的预测和标签
+        mask = (uids == uid)
+        stud_preds = predictions[mask].view(-1)
+        stud_targets = targets[mask].view(-1)
+        
+        # 计算该学生的成对排序损失（近似负AUC）
+        auc_loss = pairwise_ranking_loss(stud_preds, stud_targets)
+        student_aucs.append(auc_loss)
+    
+    student_aucs = torch.stack(student_aucs)
+    
+    # 计算两两学生之间的AUC差异
+    diff_tensor = torch.abs(student_aucs.view(-1, 1) - student_aucs.view(1, -1))
+    
+    # 提取上三角矩阵（不包括对角线）
+    triu_mask = torch.triu(torch.ones_like(diff_tensor), diagonal=1).bool()
+    pair_diffs = diff_tensor[triu_mask]
+    
+    # 如果没有有效的差异对，返回0
+    if len(pair_diffs) == 0:
+        return torch.tensor(0.0, device=predictions.device)
+    
+    # 使用权重（如果提供）
+    if weights is not None and weights.shape == diff_tensor.shape:
+        pair_weights = weights[triu_mask]
+        return (pair_diffs * pair_weights).sum() / pair_weights.sum()
+    
+    # 计算平均差异
+    return pair_diffs.mean()
 
 def cal_loss(model, ys, r, rshft, sm, preloss=[]):
     model_name = model.model_name
@@ -52,6 +136,11 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[]):
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
         loss = binary_cross_entropy(y.double(), t.double())
+    elif model_name in ["balance_dkt"]:
+
+        y = torch.masked_select(ys[0], sm)
+        t = torch.masked_select(rshft, sm)
+        loss = binary_cross_entropy(y.double(), t.double())+ preloss[0]
     elif model_name == "dkt+":
         y_curr = torch.masked_select(ys[1], sm)
         y_next = torch.masked_select(ys[0], sm)
@@ -94,8 +183,10 @@ def model_forward(model, data, rel=None):
     else:
         q, c, r, t = dcur["qseqs"].to(device), dcur["cseqs"].to(device), dcur["rseqs"].to(device), dcur["tseqs"].to(device)
         qshft, cshft, rshft, tshft = dcur["shft_qseqs"].to(device), dcur["shft_cseqs"].to(device), dcur["shft_rseqs"].to(device), dcur["shft_tseqs"].to(device)
+        
     m, sm = dcur["masks"].to(device), dcur["smasks"].to(device)
-
+    if model_name in needs_uid_models:
+        uid = dcur["uids"].to(device)  # 提取 uid 并送到设备
     ys, preloss = [], []
     cq = torch.cat((q[:,0:1], qshft), dim=1)
     cc = torch.cat((c[:,0:1], cshft), dim=1)
@@ -200,6 +291,58 @@ def model_forward(model, data, rel=None):
         y = model(c.long(), r.long())
         y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
         ys.append(y) # first: yshft
+        
+    elif model_name in ["balance_dkt"]:
+        y = model(c.long(), r.long())
+        y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+        ys.append(y)  # yshft存储模型预测结果
+        
+        # 应用sigmoid获取概率值
+        probas = torch.sigmoid(y)
+        
+        # 提取真实标签和学生ID
+        targets = rshft
+        uids = dcur["uids"].to(device)
+        masks = sm
+        
+        # 计算原始损失
+        
+        
+        # 获取当前批次的学生权重（假设权重存储在dcur中）
+        weights = None
+        # if "student_weights" in dcur:
+        #     weights = dcur["student_weights"].to(device)
+        
+        # 计算学生间AUC差异
+        auc_discrepancy = student_auc_discrepancy(
+            probas, 
+            targets, 
+            uids.unsqueeze(-1).expand(-1, probas.size(1)).contiguous(),
+            weights
+        )
+        
+        # 计算整体批次AUC（使用成对排序损失作为负AUC的近似）
+        batch_preds = torch.masked_select(probas, masks)
+        batch_targets = torch.masked_select(targets, masks)
+        batch_auc_neg = pairwise_ranking_loss(batch_preds, batch_targets)
+        
+        # 综合差异和整体AUC
+        # 公式: λ * |差异 - (整体AUC + ε)|
+        # 鼓励学生间的AUC差异接近整体批次AUC
+        regularization = model.reg_lambda * torch.abs(
+            auc_discrepancy - (batch_auc_neg + model.reg_epsilon)
+        )
+        
+        # 打印调试信息（可选）
+        if model.training:
+            print(
+                  f"AUC discrepancy: {auc_discrepancy.item():.4f}, "
+                  f"Batch AUC neg: {batch_auc_neg.item():.4f}, "
+                  f"Regularization: {regularization.item():.4f}")
+        
+        # 总损失 = 原始损失 + 正则化项
+        preloss.append(regularization)
+        return loss
     elif model_name == "dkt+":
         y = model(c.long(), r.long())
         y_next = (y * one_hot(cshft.long(), model.num_c)).sum(-1)

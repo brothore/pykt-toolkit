@@ -35,60 +35,42 @@ def replace_model_name_in_file(file_path, base_model, new_model):
         f.write(content)
 
 def add_model_to_lists(file_path, base_model, new_model):
-    """在包含基底模型的列表中添加新模型"""
+    """在包含基底模型的列表中添加新模型（修复重复添加问题）"""
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
-    # 检查新模型是否已经存在于文件中
-    if f'"{new_model}"' in content or f"'{new_model}'" in content:
-        print(f"⚠️  {new_model} 已存在于 {file_path} 中，跳过添加")
+    # 增强存在性检查（使用单词边界\b避免误判）
+    if re.search(rf'\b{new_model}\b', content):
+        print(f"⚠️  {new_model} 已存在于 {file_path}，跳过添加")
         return False
-    
-    # 处理 if model_name in [...] 或 elif model_name in [...] 的情况
-    pattern = r'((?:if|elif)\s+\w+\s+in\s*\[)([^\]]+)(\])'
+
+    # 合并处理列表修改逻辑
+    changed = False
     
     def replacer(match):
-        prefix = match.group(1)
-        items = match.group(2)
-        suffix = match.group(3)
+        nonlocal changed
+        prefix, items, suffix = match.group(1), match.group(2), match.group(3)
         
         # 检查是否包含基底模型
-        if f'"{base_model}"' in items or f"'{base_model}'" in items:
-            # 在末尾添加新模型 - 保持原有大小写
-            items = items.rstrip()
-            if items.endswith(','):
-                new_items = f'{items} "{new_model}"'
-            else:
-                new_items = f'{items}, "{new_model}"'
-            return prefix + new_items + suffix
+        if re.search(rf'[\'"]{base_model}[\'"]', items):
+            # 避免重复添加
+            if not re.search(rf'[\'"]{new_model}[\'"]', items):
+                items = items.rstrip()
+                if items.endswith(','):
+                    new_items = f'{items} "{new_model}"'
+                else:
+                    new_items = f'{items}, "{new_model}"'
+                changed = True
+                return prefix + new_items + suffix
         return match.group(0)
     
-    content = re.sub(pattern, replacer, content)
+    # 单次匹配处理所有列表类型
+    combined_pattern = r'((?:if|elif|\w+)\s+(?:\w+\s+)?in\s*=\s*)?(\[)([^\]]*?)(\])(?=[^\]\n]*(?:\)|:|,|}|;|\n))'
+    content = re.sub(combined_pattern, lambda m: m.group(1) + replacer(m) + m.group(4) if m.group(1) else m.group(0), content, flags=re.DOTALL)
     
-    # 处理多行列表的情况
-    pattern_multiline = r'((?:if|elif)\s+\w+\s+in\s*\[)([^\]]+?)(\])'
-    content = re.sub(pattern_multiline, replacer, content, flags=re.DOTALL)
-    
-    # 处理变量赋值形式的列表
-    pattern_var = r'(\w+\s*=\s*\[)([^\]]+)(\])'
-    
-    def var_replacer(match):
-        prefix = match.group(1)
-        items = match.group(2)
-        suffix = match.group(3)
-        
-        # 检查是否包含基底模型
-        if f'"{base_model}"' in items or f"'{base_model}'" in items:
-            # 在末尾添加新模型 - 保持原有大小写
-            items = items.rstrip()
-            if items.endswith(','):
-                new_items = f'{items} "{new_model}"'
-            else:
-                new_items = f'{items}, "{new_model}"'
-            return prefix + new_items + suffix
-        return match.group(0)
-    
-    content = re.sub(pattern_var, var_replacer, content)
+    if not changed:
+        print(f"ℹ️ 未在 {file_path} 中找到基底模型 {base_model} 的列表")
+        return False
     
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(content)

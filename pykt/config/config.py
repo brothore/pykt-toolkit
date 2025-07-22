@@ -4,4 +4,6 @@ qikt_ab_models = ["qikt_ab_a+b+c","qikt_ab_a+b+c+irt","qikt_ab_a+b+irt","qikt_ab
 
 que_type_models += qikt_ab_models
 
+needs_uid_models = ["balance_dkt"]
+
 predict_after_train = 1

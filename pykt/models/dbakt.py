@@ -9,6 +9,9 @@ import numpy as np
 from torch.nn import LayerNorm
 from torch.nn.parameter import Parameter
 
+# 添加Mamba相关导入
+from mamba_ssm import Mamba
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class LayerNorm(nn.Module):
@@ -32,7 +35,6 @@ class CausalConv1d(nn.Module):
     def forward(self, x):
         return self.conv(x)[:, :, :-(self.conv.padding[0])]  # 因果卷积，切掉右侧填充部分
 
-
 class FrequencyLayer(nn.Module):
     def __init__(self, dropout, hidden_size, kernel_sizes):
         super(FrequencyLayer, self).__init__()
@@ -44,11 +46,11 @@ class FrequencyLayer(nn.Module):
             CausalConv1d(hidden_size, hidden_size, ks) for ks in kernel_sizess
         ])
         
-        
         # 可学习的权重参数用于合并
         self.combine_weights = nn.Parameter(torch.randn(len(kernel_sizess)))
         self.sigmoid_input=nn.Linear(hidden_size+hidden_size,hidden_size)
         self.tanh_iuput=nn.Linear(hidden_size,hidden_size)
+        
     def forward(self, input_tensor):
         # [batch, seq_len, hidden]
         batch, seq_len, hidden = input_tensor.shape
@@ -64,7 +66,7 @@ class FrequencyLayer(nn.Module):
             low_pass = causal_conv(input_tensor_conv)  # [batch, hidden, seq_len]
             low_pass = low_pass.permute(0, 2, 1)  # [batch, seq_len, hidden]
             
-            # # 高通滤波
+            # 高通滤波
             high_pass = input_tensor - low_pass  # [batch, seq_len, hidden]
             
             #########
@@ -133,11 +135,104 @@ class timeGap2(nn.Module):
 
         return tg_emb
 
+# 新增：Mamba时间模块
+class MambaTimeModule(nn.Module):
+    def __init__(self, d_model, d_state=16, d_conv=4, expand=2, 
+                 num_layers=2, dropout=0.1, emb_type=""):
+        super().__init__()
+        self.d_model = d_model
+        self.num_layers = num_layers
+        self.emb_type = emb_type.lower()  # 确保小写方便检查
+        self.use_cat = "cat" in self.emb_type  # 检查emb_type是否包含"cat"关键词
+        
+        # 融合时间嵌入和答题嵌入的投影层
+        self.time_fusion = nn.Linear(d_model, d_model)
+        self.qa_fusion = nn.Linear(d_model, d_model)
+        
+        # 根据融合方式选择不同的门控层输入维度
+        if "cat" in self.emb_type:
+            # concat方式：输入维度加倍
+            print(f"使用concat融合方式 (emb_type: {emb_type})")
+            self.fusion_gate = nn.Linear(d_model * 2, d_model)
+        elif "plus" in self.emb_type:
+            # add方式：输入维度不变
+            print(f"使用add融合方式 (emb_type: {emb_type})")
+            self.fusion_gate = nn.Linear(d_model, d_model)
+        
+        # 多层Mamba模块
+        self.mamba_layers = nn.ModuleList([
+            Mamba(
+                d_model=d_model,
+                d_state=d_state,
+                d_conv=d_conv,
+                expand=expand,
+            ) for _ in range(num_layers)
+        ])
+        
+        # 层归一化和dropout
+        self.layer_norms = nn.ModuleList([
+            nn.LayerNorm(d_model) for _ in range(num_layers)
+        ])
+        self.dropout = nn.Dropout(dropout)
+        
+        # 输出投影层
+        self.output_proj = nn.Linear(d_model, d_model)
+        
+    def forward(self, time_emb, qa_emb):
+        """
+        Args:
+            time_emb: [batch_size, seq_len, d_model] 时间嵌入
+            qa_emb: [batch_size, seq_len, d_model] 答题嵌入
+        Returns:
+            output: [batch_size, seq_len, d_model] 时间分支输出
+        """
+        # 融合时间嵌入和答题嵌入
+        time_proj = self.time_fusion(time_emb[:, :-1, :])
+        qa_proj = self.qa_fusion(qa_emb[:, :-1, :])
+        
+        # 根据emb_type中的关键词选择融合方式
+        if "cat" in self.emb_type:
+            # 使用concat方式融合
+            concat_features = torch.cat([time_proj, qa_proj], dim=-1)
+        elif "plus" in self.emb_type:
+            # 使用add方式融合
+            concat_features = time_proj + qa_proj
+        
+        # 门控机制融合
+        gate = torch.sigmoid(self.fusion_gate(concat_features))
+        
+        # 加权融合
+        fused_input = gate * time_proj + (1 - gate) * qa_proj
+        
+        # 经过多层Mamba
+        hidden_states = fused_input
+        for i, (mamba_layer, layer_norm) in enumerate(zip(self.mamba_layers, self.layer_norms)):
+            # 残差连接
+            residual = hidden_states
+            
+            # Mamba层处理
+            hidden_states = mamba_layer(hidden_states)
+            
+            # 残差连接、层归一化和dropout
+            hidden_states = layer_norm(hidden_states + residual)
+            hidden_states = self.dropout(hidden_states)
+        
+        # 输出投影
+        output = self.output_proj(hidden_states)
+        # 填充序列开头以适应原始序列长度
+        output = torch.cat([
+            torch.zeros_like(output[:, :1, :]),  # 第一个时间步补零
+            output
+        ], dim=1)
+        return output
+    
 class DBAKT(nn.Module):
     def __init__(self, n_question, n_pid, num_rgap, num_sgap, num_pcount, 
             d_model, n_blocks, dropout, d_ff=256, 
             loss1=0.5, loss2=0.5, loss3=0.5, start=50, num_layers=2, nheads=4, seq_len=200, kernel_size=3, freq=True,
-            kq_same=1, final_fc_dim=512, final_fc_dim2=256, num_attn_heads=8, separate_qa=False, l2=1e-5, emb_type="qid", emb_path="", pretrain_dim=768):
+            kq_same=1, final_fc_dim=512, final_fc_dim2=256, num_attn_heads=8, separate_qa=False, l2=1e-5, emb_type="qid", emb_path="", pretrain_dim=768,
+            # 新增Mamba相关参数
+            mamba_d_state=16, mamba_d_conv=4, mamba_expand=2, mamba_num_layers=2):
         super().__init__()
         """
         Input:
@@ -146,6 +241,10 @@ class DBAKT(nn.Module):
             num_attn_heads: number of heads in multi-headed attention
             d_ff : dimension for fully conntected net inside the basic block
             kq_same: if key query same, kq_same=1, else = 0
+            mamba_d_state: Mamba state dimension
+            mamba_d_conv: Mamba convolution dimension
+            mamba_expand: Mamba expansion factor
+            mamba_num_layers: Number of Mamba layers
         """
         self.model_name = "dbakt"
         print(f"model_name: {self.model_name}, emb_type: {emb_type}")
@@ -159,6 +258,7 @@ class DBAKT(nn.Module):
         self.emb_type = emb_type
         embed_l = d_model
         self.n_blocks=n_blocks
+        
         if self.n_pid > 0:
             self.difficult_param = nn.Embedding(self.n_pid+1, embed_l) # 题目难度
             self.q_embed_diff = nn.Embedding(self.n_question+1, embed_l) # question emb, 总结了包含当前question（concept）的problems（questions）的变化
@@ -171,6 +271,7 @@ class DBAKT(nn.Module):
                     self.qa_embed = nn.Embedding(2*self.n_question+1, embed_l)
             else: # false default
                 self.qa_embed = nn.Embedding(2, embed_l)
+                
         # Architecture Object. It contains stack of attention block
         self.model = Architecture(n_question=n_question, n_blocks=n_blocks, n_heads=num_attn_heads, dropout=dropout,
                                     d_model=d_model, d_feature=d_model / num_attn_heads, d_ff=d_ff,  kq_same=self.kq_same, model_type=self.model_type, seq_len=seq_len, emb_type=self.emb_type, kernel_size=kernel_size, freq=freq,time=False).to(device)
@@ -187,9 +288,17 @@ class DBAKT(nn.Module):
             self.c_weight = nn.Linear(d_model, d_model)
             self.t_weight = nn.Linear(d_model, d_model)
             self.time_emb = timeGap(num_rgap, num_sgap, num_pcount, d_model)
-            self.model2 = Architecture(n_question=n_question, n_blocks=n_blocks, n_heads=num_attn_heads,
-                                    dropout=dropout, d_model=d_model, d_feature=d_model / num_attn_heads, d_ff=d_ff,
-                                    kq_same=self.kq_same, model_type=self.model_type, seq_len=seq_len,emb_type=emb_type, kernel_size=kernel_size, freq=freq,time=True)
+            
+            # 替换原来的model2为MambaTimeModule
+            self.model2 = MambaTimeModule(
+                d_model=d_model,
+                d_state=mamba_d_state,
+                d_conv=mamba_d_conv,
+                expand=mamba_expand,
+                num_layers=mamba_num_layers,
+                dropout=dropout,
+                emb_type=self.emb_type
+            )
         
         #如果是单分支且不使用时间信息，则不需要添加时间序列的信息
         elif "single"  in emb_type:
@@ -232,9 +341,11 @@ class DBAKT(nn.Module):
         r_gaps = torch.cat((rg[:, 0:1], rgshft), dim=1)
         s_gaps = torch.cat((sg[:, 0:1], sgshft), dim=1)
         pcounts = torch.cat((p[:, 0:1], pshft), dim=1)
-        # Batch Firs
+        
+        # Batch First
         if emb_type.startswith("qid"):
             q_embed_data, qa_embed_data = self.base_emb(q_data, target)#KC层面的嵌入
+            
         if self.n_pid > 0: # have problem id
             q_embed_diff_data = self.q_embed_diff(q_data)  # KC的难度
             pid_embed_data = self.difficult_param(pid_data.to(device))  # uq 当前question的难度
@@ -242,16 +353,12 @@ class DBAKT(nn.Module):
                 q_embed_diff_data  # uq *d_ct + c_ct # question encoder
 
         if "single" not in emb_type:
-            #时间信息分支的注意力网络
+            # 时间信息分支的Mamba网络
             temb = self.time_emb(r_gaps, s_gaps, pcounts)#输出三个时间特征的混合表示
-            #是否选择将时间信息代替kernel_bias的相对位置信息
-            if "time" in self.emb_type:
-                timestamps = torch.cumsum(s_gaps, dim=1).long().to(device)
-                time_diff = torch.abs(timestamps[:, :, None] - timestamps[:, None, :])  # 
-            else:
-                time_diff = None
-                
-            t_out = self.model2(temb, qa_embed_data,time_diff=time_diff)
+            
+            # 使用Mamba处理时间分支 - 关键修改点
+            t_out = self.model2(temb, qa_embed_data)  # 融合时间嵌入和答题嵌入后通过Mamba
+            
         #如果是单分支，则直接将混合时间表示加到答题信息表示上
         elif "single" in emb_type :
             #是否选择将时间信息代替kernel_bias的相对位置信息
@@ -261,10 +368,18 @@ class DBAKT(nn.Module):
             else:
                 time_diff = None
             temb = self.time_emb(r_gaps, s_gaps, pcounts)#输出三个时间特征的混合表示
+            
         y2, y3 = 0, 0
         
         if "single" not in emb_type:
-            d_output = self.model(q_embed_data, qa_embed_data,time_diff=time_diff)
+            # 基本信息分支处理
+            if "time" in self.emb_type:
+                timestamps = torch.cumsum(s_gaps, dim=1).long().to(device)
+                time_diff = torch.abs(timestamps[:, :, None] - timestamps[:, None, :])  # 
+            else:
+                time_diff = None
+                
+            d_output = self.model(q_embed_data, qa_embed_data, time_diff=time_diff)
 
             w = torch.sigmoid(self.c_weight(d_output) + self.t_weight(t_out)) # w = sigmoid(基本信息编码 + 时间信息编码)，每一维设置为0-1之间的数值
             d_output = w * d_output + (1 - w) * t_out # 每一维加权平均后的综合信息
@@ -291,6 +406,7 @@ class DBAKT(nn.Module):
             else:
                 return preds
 
+# 原有的其他类保持不变
 class Architecture(nn.Module):
     def __init__(self, n_question,  n_blocks, d_model, d_feature,
                 d_ff, n_heads, dropout, kq_same, model_type, seq_len, emb_type, kernel_size, freq,time):
@@ -352,6 +468,7 @@ class TransformerLayer(nn.Module):
 
         self.layer_norm2 = nn.LayerNorm(d_model)
         self.dropout2 = nn.Dropout(dropout)
+        
     def forward(self, mask, query, key, values, apply_pos=True,time_diff=None):
         """
         Input:
@@ -386,7 +503,6 @@ class TransformerLayer(nn.Module):
             query = query + self.dropout2((query2)) # 残差
             query = self.layer_norm2(query) # lay norm
         return query 
-
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, d_model, d_feature, n_heads, dropout, kq_same, emb_type="qidtrue",bias=True,time=True):
@@ -453,8 +569,6 @@ class MultiHeadAttention(nn.Module):
         output = self.out_proj(concat)
 
         return output
-        
-
 
 def attention(q, k, v, d_k, mask, dropout, zero_pad,kernel_bias_timediff=None
             ,time_diff=None):
@@ -477,8 +591,6 @@ def attention(q, k, v, d_k, mask, dropout, zero_pad,kernel_bias_timediff=None
     scores = dropout(scores)
     output = torch.matmul(scores, v)
     return output
-    
-
 
 class LearnablePositionalEmbedding(nn.Module):
     def __init__(self, d_model, max_len=512):
@@ -490,7 +602,6 @@ class LearnablePositionalEmbedding(nn.Module):
 
     def forward(self, x):
         return self.weight[:, :x.size(Dim.seq), :]  # ( 1,seq,  Feature)
-
 
 class CosinePositionalEmbedding(nn.Module):
     def __init__(self, d_model, max_len=512):
@@ -530,7 +641,6 @@ class timeGap(nn.Module):
 
         return tg_emb
 
-  
 class ParallelKerpleLogTimediff(nn.Module):
     """Kernel Bias"""
     def __init__(self, num_attention_heads):
@@ -592,4 +702,3 @@ class ParallelKerpleLogTimediff(nn.Module):
             if not isinstance(bias, float):
                 bias = bias[:, seq_len_k - 1, :].view(bias.shape[0], 1, bias.shape[2])
         return x + bias
-

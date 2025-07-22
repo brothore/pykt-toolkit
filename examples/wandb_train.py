@@ -27,48 +27,69 @@ def save_config(train_config, model_config, data_config, params, save_dir):
 
 def run_prediction(predict_mode, save_dir):
     """
-    运行预测脚本
+    运行预测脚本并实时显示输出
     Args:
         predict_mode: 1 for wandb_multi_predict.py, 2 for wandb_predict.py
         save_dir: 模型保存目录
     """
     try:
         if predict_mode == 1:
-            # 调用 wandb_multi_predict.py
             script_path = "/root/autodl-tmp/pykt-toolkit/examples/wandb_multi_predict.py"
             if not os.path.exists(script_path):
-                print(f"Warning: {script_path} not found in current directory")
+                print(f"Warning: {script_path} not found")
                 return False
-            
             cmd = [sys.executable, script_path, "--save_dir", save_dir]
-            print(f"Running prediction script: {' '.join(cmd)}")
             
         elif predict_mode == 2:
-            # 调用 /root/autodl-tmp/pykt-toolkit/examples/wandb_predict.py
             script_path = "/root/autodl-tmp/pykt-toolkit/examples/wandb_predict.py"
             if not os.path.exists(script_path):
                 print(f"Warning: {script_path} not found")
                 return False
-            
             cmd = [sys.executable, script_path, "--save_dir", save_dir]
-            print(f"Running prediction script: {' '.join(cmd)}")
             
         else:
             print(f"Invalid predict_after_train value: {predict_mode}")
             return False
         
-        # 执行预测脚本
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        print(f"Starting prediction (mode {predict_mode}) at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"Command: {' '.join(cmd)}")
+        print(f"{'='*50} PREDICTION OUTPUT {'='*50}")
+
+        # 创建子进程并实时捕获输出
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,  # 合并标准输出和错误输出
+            text=True,
+            bufsize=1,  # 行缓冲模式
+            universal_newlines=True
+        )
         
-        if result.returncode == 0:
+        # 实时输出处理
+        try:
+            # 逐行读取输出并打印
+            for line in iter(process.stdout.readline, ''):
+                # 添加前缀便于识别预测输出
+                print(f"[Prediction] {line}", end='') 
+                sys.stdout.flush()  # 确保立即输出
+            
+            # 等待进程完成
+            process.wait()
+            
+        except KeyboardInterrupt:
+            print("\nCtrl-C detected! Terminating prediction process...")
+            process.terminate()
+            return False
+        
+        # 检查返回码
+        returncode = process.returncode
+        print(f"\n{'='*50} PREDICTION FINISHED ({returncode}) {'='*50}")
+        
+        if returncode == 0:
             print("Prediction completed successfully!")
-            print("Prediction output:")
-            print(result.stdout)
             return True
         else:
-            print(f"Prediction failed with return code: {result.returncode}")
-            print("Error output:")
-            print(result.stderr)
+            print(f"Prediction failed with return code: {returncode}")
             return False
             
     except Exception as e:
@@ -100,8 +121,8 @@ def main(params):
             train_config["batch_size"] = 16 
         if model_name in ["qdkt","qikt"] and dataset_name in ['algebra2005','bridge2algebra2006']:
             train_config["batch_size"] = 32 
-        if model_name in ["dtransformer"]:
-            train_config["batch_size"] = 32 ## because of OOM
+        if model_name in ["dtransformer","mamba_akt"]:
+            train_config["batch_size"] = 16 ## because of OOM
         model_config = copy.deepcopy(params)
         for key in ["model_name", "dataset_name", "emb_type", "save_dir", "fold", "seed"]:
             del model_config[key]

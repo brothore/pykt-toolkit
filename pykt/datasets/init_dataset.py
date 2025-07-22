@@ -3,13 +3,13 @@ import json
 
 from torch.utils.data import DataLoader
 import numpy as np
-from .data_loader import KTDataset
+from .data_loader import KTDataset,KTDataset_uid
 from .dkt_forget_dataloader import DktForgetDataset
 from .atdkt_dataloader import ATDKTDataset
 from .lpkt_dataloader import LPKTDataset
 from .lpkt_utils import generate_time2idx
 from .que_data_loader import KTQueDataset
-from pykt.config import que_type_models
+from pykt.config import que_type_models,needs_uid_models
 from .dimkt_dataloader import DIMKTDataset
 from .que_data_loader_promptkt import KTQueDataset_promptKT
 from .pretrain_utils import get_pretrain_data
@@ -90,6 +90,15 @@ def init_test_datasets_multi_stu(data_config, model_name, batch_size, diff_level
                 )        
         test_question_dataset = None
         test_question_window_dataset= None
+    elif model_name in needs_uid_models:
+        test_dataset = KTDataset_uid(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
+        test_window_dataset = KTDataset_uid(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
+        if "test_question_file" in data_config:
+            test_question_dataset = KTDataset_uid(os.path.join(data_config["dpath"], data_config["test_question_file"]), data_config["input_type"], {-1}, True)
+            if stu_id == 0:
+                test_question_window_dataset = KTDataset_uid(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
+            else:
+                test_question_window_dataset = KTDataset_uid(os.path.join(data_config["dpath"], f"top_{stu_id}_student.csv"), data_config["input_type"], {-1}, True)
     elif model_name in ["atdkt"]:
         test_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
         test_window_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})

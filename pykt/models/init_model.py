@@ -3,6 +3,7 @@ import numpy as np
 import os
 
 from .dkt import DKT
+from .balance_dkt import BALANCE_DKT
 from .mambakt import MAMBAKT
 from .lstm_template import LSTM_TEMPLATE
 from .dkt_plus import DKTPlus
@@ -50,6 +51,8 @@ device = "cpu" if not torch.cuda.is_available() else "cuda"
 def init_model(model_name, model_config, data_config, emb_type):
     if model_name == "dkt":
         model = DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "balance_dkt":
+        model = BALANCE_DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "mambakt":
         model = MAMBAKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "lstm_template":

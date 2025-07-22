@@ -3,7 +3,7 @@ import torch
 from torch import nn
 from torch.nn.functional import one_hot
 from sklearn import metrics
-from pykt.config import que_type_models
+from pykt.config import que_type_models,needs_uid_models
 from ..datasets.lpkt_utils import generate_time2idx
 import pandas as pd
 import csv
@@ -101,6 +101,11 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             elif model_name in ["rekt"]:
                 y = model(dcur)
             elif model_name in ["dkt", "dkt+", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "mambakt", "mambakt"]:
+                
+                y = model(c.long(), r.long())
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+            elif model_name in needs_uid_models:
+        
                 y = model(c.long(), r.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name in ["dkt_forget"]:
@@ -459,6 +464,9 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
                 y = model(dcurori)#c.long(), r.long(), q.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name in ["dkt", "dkt+", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "mambakt", "mambakt"]:
+                y = model(c.long(), r.long())
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+            elif model_name in needs_uid_models:
                 y = model(c.long(), r.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name in ["dkt_forget"]:
@@ -869,6 +877,10 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             y = model(cin.long(), rin.long())
             # print(y)
             pred = y[0][-1][cout.item()]
+        if model_name in needs_uid_models:
+            y = model(cin.long(), rin.long())
+            # print(y)
+            pred = y[0][-1][cout.item()]    
         if model_name in ["dkt_forget", "bakt_time", "dbakt"]:
             din = dict()
             for key in curdforget:
@@ -888,6 +900,10 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             y = model(dcurinfos)
             pred = y[0][-1][cout.item()]
         elif model_name in ["dkt", "dkt+", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "mambakt", "mambakt"]:
+            y = model(cin.long(), rin.long())
+            # print(y)
+            pred = y[0][-1][cout.item()]
+        elif model_name in needs_uid_models:
             y = model(cin.long(), rin.long())
             # print(y)
             pred = y[0][-1][cout.item()]
@@ -1304,6 +1320,9 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
             y = model(dcurinfos)
             y = (y * one_hot(curcshft.long(), model.num_c)).sum(-1)
         elif model_name in ["dkt", "dkt+", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "mambakt", "mambakt"]:
+            y = model(curc.long(), curr.long())
+            y = (y * one_hot(curcshft.long(), model.num_c)).sum(-1)
+        elif model_name in needs_uid_models:
             y = model(curc.long(), curr.long())
             y = (y * one_hot(curcshft.long(), model.num_c)).sum(-1)
         elif model_name in ["dkt_forget"]:
