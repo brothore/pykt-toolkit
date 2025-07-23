@@ -1,18 +1,20 @@
 安装和美化 Zsh 的完整指南
 1. 安装 Zsh
-Linux (Ubuntu/Debian)
-sudo apt update
+
 sudo apt install zsh
-macOS
-brew install zsh
+
 设置 Zsh 为默认 shell
 chsh -s $(which zsh)
+
 2. 安装 Oh My Zsh (Zsh 配置框架)
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 3. 安装常用插件
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+
 git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
+
 git clone https://github.com/agkozak/zsh-z ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-z
 
 
