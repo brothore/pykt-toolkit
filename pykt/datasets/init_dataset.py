@@ -15,6 +15,7 @@ from .que_data_loader_promptkt import KTQueDataset_promptKT
 from .pretrain_utils import get_pretrain_data
 def init_test_datasets_multi_stu(data_config, model_name, batch_size, diff_level=None, args=None, re_mapping=False,predict_file_type=""):
     # predict_file_type为0设置为默认的文件，其他的根据字符串设置
+    # print(f"data_config{data_config}")
     dataset_name = data_config["dataset_name"]
     print(f"model_name is {model_name}, dataset_name is {dataset_name}")
     test_question_loader, test_question_window_loader = None, None

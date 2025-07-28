@@ -341,6 +341,10 @@ def update_data_config(dataset_name: str, num_students: int, generated_files: Li
                     # 例如：total_questions_low_interval.csv -> total_questions_low_interval_file
                     key_name = filename.replace('.csv', '_file')
                     config[dataset_name][key_name] = filename
+                elif 'top_' in filename and '_student.csv' in filename:
+                    # 处理学生文件，例如：top_1_student.csv -> top_1_student_file
+                    key_name = filename.replace('.csv', '_file')
+                    config[dataset_name][key_name] = filename
             
             print(f"已更新数据集 {dataset_name} 的学生个数为: {num_students}")
             print(f"已添加 {len(generated_files)} 个生成的文件到配置中")
