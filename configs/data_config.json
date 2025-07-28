@@ -290,7 +290,7 @@
         "dpath": "../data/nips_task34",
         "num_q": 948,
         "num_c": 57,
-        "students_num":893,
+        "students_num": 983,
         "input_type": [
             "questions",
             "concepts"
@@ -317,7 +317,25 @@
         "train_valid_file_quelevel": "train_valid_sequences_quelevel.csv",
         "test_file_quelevel": "test_sequences_quelevel.csv",
         "test_window_file_quelevel": "test_window_sequences_quelevel.csv",
-        "test_original_file_quelevel": "test_quelevel.csv"
+        "test_original_file_quelevel": "test_quelevel.csv",
+        "global_question_stats_file": "global_question_stats.csv",
+        "global_concept_stats_file": "global_concept_stats.csv",
+        "student_summary_file": "student_summary.csv",
+        "total_questions_low_interval_file": "total_questions_low_interval.csv",
+        "total_questions_medium_interval_file": "total_questions_medium_interval.csv",
+        "total_questions_high_interval_file": "total_questions_high_interval.csv",
+        "overall_accuracy_low_interval_file": "overall_accuracy_low_interval.csv",
+        "overall_accuracy_medium_interval_file": "overall_accuracy_medium_interval.csv",
+        "overall_accuracy_high_interval_file": "overall_accuracy_high_interval.csv",
+        "accuracy_range_low_interval_file": "accuracy_range_low_interval.csv",
+        "accuracy_range_medium_interval_file": "accuracy_range_medium_interval.csv",
+        "accuracy_range_high_interval_file": "accuracy_range_high_interval.csv",
+        "accuracy_variance_low_interval_file": "accuracy_variance_low_interval.csv",
+        "accuracy_variance_medium_interval_file": "accuracy_variance_medium_interval.csv",
+        "accuracy_variance_high_interval_file": "accuracy_variance_high_interval.csv",
+        "questions_range_low_interval_file": "questions_range_low_interval.csv",
+        "questions_range_medium_interval_file": "questions_range_medium_interval.csv",
+        "questions_range_high_interval_file": "questions_range_high_interval.csv"
     },
     "poj": {
         "dpath": "../data/poj",

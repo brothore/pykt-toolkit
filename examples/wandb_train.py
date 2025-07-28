@@ -14,7 +14,7 @@ from pykt.utils import debug_print,set_seed
 from pykt.datasets import init_dataset4train
 from pykt.config import predict_after_train
 import datetime
-
+from pykt.models.cuda_retry import safe_cuda_execution
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 os.environ['CUBLAS_WORKSPACE_CONFIG']=':4096:2'
@@ -34,7 +34,7 @@ def run_prediction(predict_mode, save_dir):
     """
     try:
         if predict_mode == 1:
-            script_path = "/root/autodl-tmp/pykt-toolkit/examples/wandb_multi_predict.py"
+            script_path = "./wandb_multi_predict.py"
             if not os.path.exists(script_path):
                 print(f"Warning: {script_path} not found")
                 return False
@@ -113,7 +113,7 @@ def main(params):
     with open("../configs/kt_config.json") as f:
         config = json.load(f)
         train_config = config["train_config"]
-        if model_name in ["dkvmn","deep_irt", "sakt", "saint","saint++", "akt", "robustkt", "folibikt", "atkt", "lpkt", "skvmn", "dimkt",  "Transformer_template", "mamba_akt", "mamba_akt", "mamba_atakt", "mamba_atakt"]:
+        if model_name in ["dkvmn","deep_irt", "sakt", "saint","saint++", "akt", "robustkt", "folibikt", "atkt", "lpkt", "skvmn", "dimkt",  "Transformer_template", "mamba_atakt", "mamba_atakt", "balance_akt"]:
             train_config["batch_size"] = 64 ## because of OOM
         if model_name in ["simplekt","stablekt", "bakt_time", "sparsekt", "dbakt"]:
             train_config["batch_size"] = 64 ## because of OOM
@@ -121,7 +121,7 @@ def main(params):
             train_config["batch_size"] = 16 
         if model_name in ["qdkt","qikt"] and dataset_name in ['algebra2005','bridge2algebra2006']:
             train_config["batch_size"] = 32 
-        if model_name in ["dtransformer","mamba_akt"]:
+        if model_name in ["dtransformer"]:
             train_config["batch_size"] = 16 ## because of OOM
         model_config = copy.deepcopy(params)
         for key in ["model_name", "dataset_name", "emb_type", "save_dir", "fold", "seed"]:
@@ -208,13 +208,15 @@ def main(params):
     save_model = True
     
     debug_print(text = "train model",fuc_name="main")
-    
-    if model_name == "rkt":
-        testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = \
-            train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model, data_config[dataset_name], fold)
-    else:
-        testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model)
-    
+    def _safe_train():
+        nonlocal testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch
+        model.cuda()  # 确保模型在GPU上
+        if model_name == "rkt":
+            return train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model, data_config[dataset_name], fold)
+        else:
+            return train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model)
+    testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = \
+        safe_cuda_execution(_safe_train)
     if save_model:
         best_model = init_model(model_name, model_config, data_config[dataset_name], emb_type)
         net = torch.load(os.path.join(ckpt_path, emb_type+"_model.ckpt"))
@@ -234,10 +236,10 @@ def main(params):
         print(f"\n{'='*50}")
         print(f"Training completed. Starting prediction with predict_after_train={predict_after_train}")
         print(f"{'='*50}")
-        
+        def _safe_predict():
+            return run_prediction(predict_after_train, ckpt_path)
         # 运行预测脚本
-        prediction_success = run_prediction(predict_after_train, ckpt_path)
-        
+        prediction_success = safe_cuda_execution(_safe_predict)
         if prediction_success:
             print("Prediction completed successfully!")
             if params['use_wandb']==1:

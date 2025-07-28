@@ -8,9 +8,9 @@ from .evaluate_model import evaluate
 from torch.autograd import Variable, grad
 from .atkt import _l2_normalize_adv
 from ..utils.utils import debug_print
-from pykt.config import que_type_models
+from pykt.config import que_type_models,needs_uid_models
 import pandas as pd
-
+import torch.nn.functional as F
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #成对排序损失函数（近似AUC计算）
 def pairwise_ranking_loss(predictions, targets):
@@ -131,7 +131,7 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[]):
             loss1 = loss1 + model.cl_weight * loss2
         loss =loss1
 
-    elif model_name in ["rkt","dimkt","dkt", "dkt_forget", "dkvmn","deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "mambakt", "mambakt", "mamba_atakt", "mamba_atakt"]:
+    elif model_name in ["rkt","dimkt","dkt", "dkt_forget", "dkvmn","deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "mamba_atakt", "mamba_atakt"]:
 
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
@@ -140,7 +140,9 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[]):
 
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
-        loss = binary_cross_entropy(y.double(), t.double())+ preloss[0]
+        c_loss = binary_cross_entropy(y.double(), t.double())
+        print(f"c_loss{c_loss}+preloss{preloss[0]}")
+        loss = c_loss+ preloss[0]
     elif model_name == "dkt+":
         y_curr = torch.masked_select(ys[1], sm)
         y_next = torch.masked_select(ys[0], sm)
@@ -155,7 +157,7 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[]):
         loss_w2 = loss_w2.mean() / model.num_c
 
         loss = loss + model.lambda_r * loss_r + model.lambda_w1 * loss_w1 + model.lambda_w2 * loss_w2
-    elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx","lefokt_akt", "dtransformer", "fluckt",  "Transformer_template", "mamba_akt", "mamba_akt"]:
+    elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx","lefokt_akt", "dtransformer", "fluckt",  "Transformer_template", "balance_akt"]:
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
         loss = binary_cross_entropy(y.double(), t.double()) + preloss[0]
@@ -185,8 +187,8 @@ def model_forward(model, data, rel=None):
         qshft, cshft, rshft, tshft = dcur["shft_qseqs"].to(device), dcur["shft_cseqs"].to(device), dcur["shft_rseqs"].to(device), dcur["shft_tseqs"].to(device)
         
     m, sm = dcur["masks"].to(device), dcur["smasks"].to(device)
-    if model_name in needs_uid_models:
-        uid = dcur["uids"].to(device)  # 提取 uid 并送到设备
+    # if model_name in needs_uid_models:
+    #     uid = dcur["uid"].to(device)  # 提取 uid 并送到设备
     ys, preloss = [], []
     cq = torch.cat((q[:,0:1], qshft), dim=1)
     cc = torch.cat((c[:,0:1], cshft), dim=1)
@@ -287,11 +289,57 @@ def model_forward(model, data, rel=None):
     elif model_name in ["lpkt"]:
         # cat = torch.cat((d["at_seqs"][:,0:1], dshft["at_seqs"]), dim=1)
         cit = torch.cat((dcur["itseqs"][:,0:1], dcur["shft_itseqs"]), dim=1)
-    if model_name in ["dkt", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "lstm_template", "mambakt", "mambakt"]:
+    if model_name in ["dkt"]:
         y = model(c.long(), r.long())
         y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
         ys.append(y) # first: yshft
         
+    elif model_name in ["balance_akt"]:
+        y, reg_loss = model(cc.long(), cr.long(), cq.long())
+        ys.append(y[:,1:])
+        # 提取真实标签和学生ID
+        targets = rshft
+        # 应用sigmoid获取概率值
+        probas = y[:,1:]  # 已经通过Sigmoid
+        
+        # print(dcur.keys()) 
+        uids = dcur["uid"].to(device)
+        masks = sm
+        # 获取当前批次的学生权重（假设权重存储在dcur中）
+        weights = None
+        # if "student_weights" in dcur:
+        #     weights = dcur["student_weights"].to(device)
+        
+        # 计算学生间AUC差异
+        auc_discrepancy = student_auc_discrepancy(
+            probas, 
+            targets, 
+            uids.unsqueeze(-1).expand(-1, probas.size(1)).contiguous(),
+            weights
+        )
+        
+        # 计算整体批次AUC（使用成对排序损失作为负AUC的近似）
+        batch_preds = torch.masked_select(probas, masks)
+        batch_targets = torch.masked_select(targets, masks)
+        batch_auc_neg = pairwise_ranking_loss(batch_preds, batch_targets)
+        
+        # 综合差异和整体AUC
+        # 公式: λ * |差异 - (整体AUC + ε)|
+        # 鼓励学生间的AUC差异接近整体批次AUC
+        regularization = model.reg_lambda * torch.abs(
+            auc_discrepancy - (batch_auc_neg + model.reg_epsilon)
+        )
+        
+        # 打印调试信息（可选）
+        if model.training:
+            print(
+                  f"AUC discrepancy: {auc_discrepancy.item():.4f}, "
+                  f"Batch AUC neg: {batch_auc_neg.item():.4f}, "
+                  f"Regularization: {regularization.item():.4f}")
+        
+        # 总损失 = 原始损失 + 正则化项
+        preloss.append(reg_loss+regularization)
+
     elif model_name in ["balance_dkt"]:
         y = model(c.long(), r.long())
         y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
@@ -302,7 +350,8 @@ def model_forward(model, data, rel=None):
         
         # 提取真实标签和学生ID
         targets = rshft
-        uids = dcur["uids"].to(device)
+        # print(dcur.keys()) 
+        uids = dcur["uid"].to(device)
         masks = sm
         
         # 计算原始损失
@@ -338,11 +387,12 @@ def model_forward(model, data, rel=None):
             print(
                   f"AUC discrepancy: {auc_discrepancy.item():.4f}, "
                   f"Batch AUC neg: {batch_auc_neg.item():.4f}, "
+                  f"reg_lamda: {model.reg_lambda},"
                   f"Regularization: {regularization.item():.4f}")
         
         # 总损失 = 原始损失 + 正则化项
         preloss.append(regularization)
-        return loss
+        # return loss
     elif model_name == "dkt+":
         y = model(c.long(), r.long())
         y_next = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
@@ -361,7 +411,7 @@ def model_forward(model, data, rel=None):
     elif model_name in ["saint"]:
         y = model(cq.long(), cc.long(), r.long())
         ys.append(y[:, 1:])
-    elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt",  "Transformer_template", "mamba_akt", "mamba_akt"]:               
+    elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt",  "Transformer_template"]:               
         y, reg_loss = model(cc.long(), cr.long(), cq.long())
         ys.append(y[:,1:])
         preloss.append(reg_loss)

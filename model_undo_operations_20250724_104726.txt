@@ -1,0 +1,12 @@
+模型撤销操作记录
+时间: 2025-07-24 10:47:26
+基底模型: dkt
+撤销模型: mambakt
+操作类型: 撤销模型添加
+
+执行的撤销操作:
+1. 删除文件: examples/wandb_mambakt_train.py
+2. 删除文件: pykt/models/mambakt.py
+3. 从 pykt/models/evaluate_model.py 中删除模型引用
+4. 从 pykt/models/train_model.py 中删除模型引用
+5. 从 pykt/models/init_model.py 中删除模型引用

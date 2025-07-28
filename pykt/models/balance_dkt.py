@@ -6,15 +6,15 @@ import torch
 from torch.nn import Module, Embedding, LSTM, Linear, Dropout
 
 class BALANCE_DKT(Module):
-    def __init__(self, num_c, emb_size, dropout=0.1, emb_type='qid', emb_path="", pretrain_dim=768):
+    def __init__(self, num_c, emb_size, dropout=0.1, emb_type='qid', emb_path="", pretrain_dim=768, reg_lambda=0.1, reg_epsilon=0.05):
         super().__init__()
         self.model_name = "balance_dkt"
         self.num_c = num_c
         self.emb_size = emb_size
         self.hidden_size = emb_size
         self.emb_type = emb_type
-        self.reg_epsilon = 0.05
-        self.reg_lambda = 0.1
+        self.reg_epsilon = reg_epsilon
+        self.reg_lambda = reg_lambda
         if emb_type.startswith("qid"):
             self.interaction_emb = Embedding(self.num_c * 2, self.emb_size)
 

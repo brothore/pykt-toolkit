@@ -4,8 +4,6 @@ import os
 
 from .dkt import DKT
 from .balance_dkt import BALANCE_DKT
-from .mambakt import MAMBAKT
-from .lstm_template import LSTM_TEMPLATE
 from .dkt_plus import DKTPlus
 from .dkvmn import DKVMN
 from .deep_irt import DeepIRT
@@ -16,7 +14,7 @@ from .atkt import ATKT
 from .mamba_atakt import MAMBA_ATAKT
 from .dkt_forget import DKTForget
 from .akt import AKT
-from .mamba_akt import MAMBA_AKT
+from .balance_akt import BALANCE_AKT
 from .Transformer_template import TRANSFORMER_TEMPLATE
 from .gkt import GKT
 from .gkt_utils import get_gkt_graph
@@ -53,10 +51,6 @@ def init_model(model_name, model_config, data_config, emb_type):
         model = DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "balance_dkt":
         model = BALANCE_DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
-    elif model_name == "mambakt":
-        model = MAMBAKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
-    elif model_name == "lstm_template":
-        model = LSTM_TEMPLATE(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "dkt+":
         model = DKTPlus(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "dkvmn":
@@ -71,8 +65,8 @@ def init_model(model_name, model_config, data_config, emb_type):
         model = DKTForget(data_config["num_c"], data_config["num_rgap"], data_config["num_sgap"], data_config["num_pcount"], **model_config).to(device)
     elif model_name == "akt":
         model = AKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
-    elif model_name == "mamba_akt":
-        model = MAMBA_AKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "balance_akt":
+        model = BALANCE_AKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "Transformer_template":
         model = TRANSFORMER_TEMPLATE(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "lefokt_akt":

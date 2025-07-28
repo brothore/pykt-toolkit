@@ -6,7 +6,29 @@ import numpy as np
 from .utils import ut_mask
 from mamba_ssm import Mamba
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+from mamba_ssm.modules.mamba_simple import Mamba as OriginalMamba
 
+class CustomMamba(nn.Module):
+    def __init__(self, d_model, d_state=16, d_conv=4, expand=2):
+        super().__init__()
+        self.mamba = OriginalMamba(
+            d_model=d_model,
+            d_state=d_state,
+            d_conv=d_conv,
+            expand=expand
+        )
+        self.activation = TeLU()
+    
+    def forward(self, x):
+        x = self.mamba(x)
+        return self.activation(x)
+
+class TeLU(nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, x):
+        return x * torch.tanh(torch.exp(x))        
 class MAMBA_ATAKT(nn.Module):
     def __init__(self, num_c, skill_dim, answer_dim, hidden_dim, attention_dim=80, epsilon=10, beta=0.2, dropout=0.2, emb_type="qid", emb_path="", fix=True):
         super(MAMBA_ATAKT, self).__init__()
@@ -163,3 +185,5 @@ def _l2_normalize_adv(d):
         d = d.cpu().numpy()
     d /= (np.sqrt(np.sum(d ** 2, axis=(1, 2))).reshape((-1, 1, 1)) + 1e-16)
     return torch.from_numpy(d)
+
+
