@@ -131,7 +131,7 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[]):
             loss1 = loss1 + model.cl_weight * loss2
         loss =loss1
 
-    elif model_name in ["rkt","dimkt","dkt", "dkt_forget", "dkvmn","deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "mamba_atakt", "mamba_atakt"]:
+    elif model_name in ["rkt","dimkt","dkt", "dkt_forget", "dkvmn","deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "mamba_atakt", "mamba_atakt", "long_dkt"]:
 
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
@@ -293,7 +293,16 @@ def model_forward(model, data, rel=None):
         y = model(c.long(), r.long())
         y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
         ys.append(y) # first: yshft
+    elif model_name in ["long_dkt"]:
+        # 提取学生ID
+        uids = dcur["uid"].to(device)  # [batch_size]
         
+        # 调用模型，传入学生ID以使用学生记忆
+        y = model(c.long(), r.long(), uids)
+        
+        # 应用one-hot和求和操作
+        y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+        ys.append(y) # first: yshft
     elif model_name in ["balance_akt"]:
         y, reg_loss = model(cc.long(), cr.long(), cq.long())
         ys.append(y[:,1:])
