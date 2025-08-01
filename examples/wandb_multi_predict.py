@@ -310,135 +310,143 @@ def main(params):
     dataset_name = parse_dataset_name(params["save_dir"])
     print(f"解析出的数据集名称: {dataset_name}")
     
-    # """主函数，循环评估所有学生"""
-    # config_path = os.path.join(os.path.dirname(__file__), '../configs/data_config.json')
-    # try:
-    #     with open(config_path) as fin:
-    #         data_configs = json.load(fin)
-    #         dataset_config = data_configs.get(dataset_name)
+    """主函数，循环评估所有学生"""
+    config_path = os.path.join(os.path.dirname(__file__), '../configs/data_config.json')
+    try:
+        with open(config_path) as fin:
+            data_configs = json.load(fin)
+            dataset_config = data_configs.get(dataset_name)
             
-    #         if dataset_config:
-    #             # 获取学生总数
-    #             total_students = dataset_config["students_num"]
-    #             print(f"从配置加载总学生数: {total_students}")
-    #             params['total_students'] = total_students
-    #             # 数据集配置存入params
-    #             params['full_data_config'] = dataset_config  
-    #         else:
-    #             print(f"警告: 配置中未找到数据集 '{dataset_name}'，使用默认学生数")
-    # except Exception as e:
-    #     print(f"加载数据配置时出错: {e}")
+            if dataset_config:
+                # 获取学生总数
+                total_students = dataset_config["students_num_eval"]
+                print(f"从配置加载总学生数: {total_students}")
+                params['total_students'] = total_students
+                # 数据集配置存入params
+                params['full_data_config'] = dataset_config  
+            else:
+                print(f"警告: 配置中未找到数据集 '{dataset_name}'，使用默认学生数")
+    except Exception as e:
+        print(f"加载数据配置时出错: {e}")
 
-    # start_student = params.get('start_student', 1)
+    start_student = params.get('start_student', 1)
     save_dir = params["save_dir"]
     
-    # # 创建统计文件路径
-    # stat_file_path = os.path.join(save_dir, "evaluation_statistics.txt")
+    # 创建统计文件路径
+    stat_file_path = os.path.join(save_dir, "evaluation_statistics.txt")
     
-    # # 存储所有学生的评估结果
-    # all_results = []
+    # 存储所有学生的评估结果
+    all_results = []
     
-    # print(f"开始批量评估，共 {total_students} 个学生，从学生 {start_student} 开始")
+    print(f"开始批量评估，共 {total_students} 个学生，从学生 {start_student} 开始")
     
-    # for student_id in range(start_student, total_students + 1):
-    #     # 评估单个学生
-    #     result = evaluate_single_student(params, student_id)
-    #     all_results.append(result)
-    #     print(f"完成学生 {student_id} 的评估 ({student_id - start_student + 1}/{total_students - start_student + 1})")
+    for student_id in range(start_student, total_students + 1):
+        # 评估单个学生
+        result = evaluate_single_student(params, student_id)
+        all_results.append(result)
+        print(f"完成学生 {student_id} 的评估 ({student_id - start_student + 1}/{total_students - start_student + 1})")
     
-    # # 将所有结果转换为DataFrame并保存为CSV
-    # if all_results:
-    #     df = pd.DataFrame(all_results)
+    # 将所有结果转换为DataFrame并保存为CSV
+    if all_results:
+        df = pd.DataFrame(all_results)
         
-    #     # 生成CSV文件路径
-    #     csv_path = os.path.join(save_dir, "batch_evaluation_results.csv")
+        # 生成CSV文件路径
+        csv_path = os.path.join(save_dir, "batch_evaluation_results.csv")
         
-    #     try:
-    #         df.to_csv(csv_path, index=False, encoding='utf-8-sig')
-    #         print(f"\n所有评估结果已保存到 CSV 文件: {csv_path}")
+        try:
+            df.to_csv(csv_path, index=False, encoding='utf-8-sig')
+            print(f"\n所有评估结果已保存到 CSV 文件: {csv_path}")
             
-    #         # 打开统计文件进行写入
-    #         with open(stat_file_path, 'w', encoding='utf-8') as stat_file:
-    #             # 写入CSV文件信息
-    #             stat_file.write(f"所有评估结果已保存到 CSV 文件: {csv_path}\n")
+            # 打开统计文件进行写入
+            with open(stat_file_path, 'w', encoding='utf-8') as stat_file:
+                # 写入CSV文件信息
+                stat_file.write(f"所有评估结果已保存到 CSV 文件: {csv_path}\n")
                 
-    #             # 写入评估统计摘要
-    #             stat_file.write("\n评估完成统计:\n")
-    #             stat_file.write(f"总计评估学生数: {len(all_results)}\n")
+                # 写入评估统计摘要
+                stat_file.write("\n评估完成统计:\n")
+                stat_file.write(f"总计评估学生数: {len(all_results)}\n")
                 
-    #             # 计算并写入各统计列的基本统计信息
-    #             stat_columns = [
-    #                 'total_questions', 'avg_questions_per_concept', 'max_questions_per_concept',
-    #                 'min_questions_per_concept', 'questions_range', 'overall_accuracy',
-    #                 'accuracy_range', 'accuracy_variance', 'max_accuracy', 'min_accuracy'
-    #             ]
+                # 计算并写入各统计列的基本统计信息
+                stat_columns = [
+                    'total_questions', 'avg_questions_per_concept', 'max_questions_per_concept',
+                    'min_questions_per_concept', 'questions_range', 'overall_accuracy',
+                    'accuracy_range', 'accuracy_variance', 'max_accuracy', 'min_accuracy'
+                ]
                 
-    #             for col in stat_columns:
-    #                 if col in df.columns:
-    #                     valid_data = df[col][df[col] >= 0]  # 只取有效值
-    #                     if not valid_data.empty:
-    #                         # 控制台输出
-    #                         print(f"\n{col}统计:")
-    #                         print(f"  最小值: {valid_data.min():.2f}")
-    #                         print(f"  最大值: {valid_data.max():.2f}")
-    #                         print(f"  平均值: {valid_data.mean():.2f}")
-    #                         print(f"  标准差: {valid_data.std():.2f}")
+                for col in stat_columns:
+                    if col in df.columns:
+                        valid_data = df[col][df[col] >= 0]  # 只取有效值
+                        if not valid_data.empty:
+                            # 控制台输出
+                            print(f"\n{col}统计:")
+                            print(f"  最小值: {valid_data.min():.2f}")
+                            print(f"  最大值: {valid_data.max():.2f}")
+                            print(f"  平均值: {valid_data.mean():.2f}")
+                            print(f"  标准差: {valid_data.std():.2f}")
                             
-    #                         # 文件输出
-    #                         stat_file.write(f"\n{col}统计:\n")
-    #                         stat_file.write(f"  最小值: {valid_data.min():.2f}\n")
-    #                         stat_file.write(f"  最大值: {valid_data.max():.2f}\n")
-    #                         stat_file.write(f"  平均值: {valid_data.mean():.2f}\n")
-    #                         stat_file.write(f"  标准差: {valid_data.std():.2f}\n")
+                            # 文件输出
+                            stat_file.write(f"\n{col}统计:\n")
+                            stat_file.write(f"  最小值: {valid_data.min():.2f}\n")
+                            stat_file.write(f"  最大值: {valid_data.max():.2f}\n")
+                            stat_file.write(f"  平均值: {valid_data.mean():.2f}\n")
+                            stat_file.write(f"  标准差: {valid_data.std():.2f}\n")
                 
-    #             # 处理windowauclate_mean统计
-    #             if 'windowauclate_mean' in df.columns:
-    #                 valid_windowauc = df['windowauclate_mean'][df['windowauclate_mean'] != -1]
-    #                 if len(valid_windowauc) > 0:
-    #                     # 控制台输出
-    #                     print(f"\nwindowauclate_mean统计:")
-    #                     print(f"  最小值: {valid_windowauc.min():.6f}")
-    #                     print(f"  最大值: {valid_windowauc.max():.6f}")
-    #                     print(f"  平均值: {valid_windowauc.mean():.6f}")
-    #                     print(f"  标准差: {valid_windowauc.std():.6f}")
+                # 处理windowauclate_mean统计
+                if 'windowauclate_mean' in df.columns:
+                    valid_windowauc = df['windowauclate_mean'][df['windowauclate_mean'] != -1]
+                    if len(valid_windowauc) > 0:
+                        # 控制台输出
+                        print(f"\nwindowauclate_mean统计:")
+                        print(f"  最小值: {valid_windowauc.min():.6f}")
+                        print(f"  最大值: {valid_windowauc.max():.6f}")
+                        print(f"  平均值: {valid_windowauc.mean():.6f}")
+                        print(f"  标准差: {valid_windowauc.std():.6f}")
                         
-    #                     # 文件输出
-    #                     stat_file.write(f"\nwindowauclate_mean统计:\n")
-    #                     stat_file.write(f"  最小值: {valid_windowauc.min():.6f}\n")
-    #                     stat_file.write(f"  最大值: {valid_windowauc.max():.6f}\n")
-    #                     stat_file.write(f"  平均值: {valid_windowauc.mean():.6f}\n")
-    #                     stat_file.write(f"  标准差: {valid_windowauc.std():.6f}\n")
+                        # 文件输出
+                        stat_file.write(f"\nwindowauclate_mean统计:\n")
+                        stat_file.write(f"  最小值: {valid_windowauc.min():.6f}\n")
+                        stat_file.write(f"  最大值: {valid_windowauc.max():.6f}\n")
+                        stat_file.write(f"  平均值: {valid_windowauc.mean():.6f}\n")
+                        stat_file.write(f"  标准差: {valid_windowauc.std():.6f}\n")
                 
-    #             # 处理windowacclate_mean统计
-    #             if 'windowacclate_mean' in df.columns:
-    #                 valid_windowacc = df['windowacclate_mean'][df['windowacclate_mean'] != -1]
-    #                 if len(valid_windowacc) > 0:
-    #                     # 控制台输出
-    #                     print(f"\nwindowacclate_mean统计:")
-    #                     print(f"  最小值: {valid_windowacc.min():.6f}")
-    #                     print(f"  最大值: {valid_windowacc.max():.6f}")
-    #                     print(f"  平均值: {valid_windowacc.mean():.6f}")
-    #                     print(f"  标准差: {valid_windowacc.std():.6f}")
+                # 处理windowacclate_mean统计
+                if 'windowacclate_mean' in df.columns:
+                    valid_windowacc = df['windowacclate_mean'][df['windowacclate_mean'] != -1]
+                    if len(valid_windowacc) > 0:
+                        # 控制台输出
+                        print(f"\nwindowacclate_mean统计:")
+                        print(f"  最小值: {valid_windowacc.min():.6f}")
+                        print(f"  最大值: {valid_windowacc.max():.6f}")
+                        print(f"  平均值: {valid_windowacc.mean():.6f}")
+                        print(f"  标准差: {valid_windowacc.std():.6f}")
                         
-    #                     # 文件输出
-    #                     stat_file.write(f"\nwindowacclate_mean统计:\n")
-    #                     stat_file.write(f"  最小值: {valid_windowacc.min():.6f}\n")
-    #                     stat_file.write(f"  最大值: {valid_windowacc.max():.6f}\n")
-    #                     stat_file.write(f"  平均值: {valid_windowacc.mean():.6f}\n")
-    #                     stat_file.write(f"  标准差: {valid_windowacc.std():.6f}\n")
+                        # 文件输出
+                        stat_file.write(f"\nwindowacclate_mean统计:\n")
+                        stat_file.write(f"  最小值: {valid_windowacc.min():.6f}\n")
+                        stat_file.write(f"  最大值: {valid_windowacc.max():.6f}\n")
+                        stat_file.write(f"  平均值: {valid_windowacc.mean():.6f}\n")
+                        stat_file.write(f"  标准差: {valid_windowacc.std():.6f}\n")
             
-    #         print(f"\n评估统计信息已保存到文件: {stat_file_path}")
+            print(f"\n评估统计信息已保存到文件: {stat_file_path}")
                     
-    #     except Exception as e:
-    #         print(f"保存结果时出错: {e}")
-    #         import traceback
-    #         traceback.print_exc()
-    # else:
-    #     print("警告：没有收集到任何评估结果")
-    # === 新增代码：在所有学生评估前预测区间数据 ===
-    print("\n=== 开始预测区间数据文件 ===")
-    
-    # 加载模型配置（与evaluate_single_student中相同）
+        except Exception as e:
+            print(f"保存结果时出错: {e}")
+            import traceback
+            traceback.print_exc()
+    else:
+        print("警告：没有收集到任何评估结果")
+    if params['use_wandb'] == 1:
+        import wandb
+        with open("../configs/wandb.json") as fin:
+            wandb_config = json.load(fin)
+        os.environ['WANDB_API_KEY'] = wandb_config["api_key"]
+        wandb.init(project="wandb_predict")
+
+    save_dir, batch_size, fusion_type = params["save_dir"], params["bz"], params["fusion_type"].split(",")
+
+    # 确保保存目录存在
+    os.makedirs(save_dir, exist_ok=True)
+
     with open(os.path.join(save_dir, "config.json")) as fin:
         config = json.load(fin)
         model_config = copy.deepcopy(config["model_config"])
@@ -457,31 +465,146 @@ def main(params):
         curconfig = copy.deepcopy(json.load(fin))
         data_config = curconfig[dataset_name]
         data_config["dataset_name"] = dataset_name
-        if model_name in ["dkt_forget", "bakt_time","dbakt"]:
+        if model_name in ["dkt_forget", "bakt_time"]:
             data_config["num_rgap"] = config["data_config"]["num_rgap"]
             data_config["num_sgap"] = config["data_config"]["num_sgap"]
             data_config["num_pcount"] = config["data_config"]["num_pcount"]
         elif model_name == "lpkt":
             data_config["num_at"] = config["data_config"]["num_at"]
             data_config["num_it"] = config["data_config"]["num_it"]
-    
-    
-    # # 加载数据配置
-    # with open("../configs/data_config.json") as fin:
-    #     data_config = json.load(fin)[dataset_name]
-    
-    # 加载模型
+    if model_name not in ["dimkt"]:
+        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
+    else:
+        diff_level = trained_params["difficult_levels"]
+        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
+
+    print(f"Start predicting model: {model_name}, embtype: {emb_type}, save_dir: {save_dir}, dataset_name: {dataset_name}")
+    print(f"model_config: {model_config}")
+    print(f"data_config: {data_config}")
+
     model = load_model(model_name, model_config, data_config, emb_type, save_dir)
+
+    save_test_path = os.path.join(save_dir, f"{model.emb_type}_test_predictions.txt")
+
+    if model.model_name == "rkt":
+        dpath = data_config["dpath"]
+        dataset_name = dpath.split("/")[-1]
+        tmp_folds = set(data_config["folds"]) - {fold}
+        folds_str = "_" + "_".join([str(_) for _ in tmp_folds])
+        rel = None
+        if dataset_name in ["algebra2005", "bridge2algebra2006"]:
+            fname = "phi_dict" + folds_str + ".pkl"
+            rel = pd.read_pickle(os.path.join(dpath, fname))
+        else:
+            fname = "phi_array" + folds_str + ".pkl"
+            rel = pd.read_pickle(os.path.join(dpath, fname))
+
+    save_result_path = ""
+    # if model.model_name == "rkt":
+    #     testauc, testacc = evaluate(model, test_loader, model_name, rel, save_test_path,save_result_path)
+    # else:
+    #     testauc, testacc = evaluate(model, test_loader, model_name, save_test_path,save_result_path)
+    # print(f"testauc: {testauc}, testacc: {testacc}")
+
+    testauc,testacc,window_testauc, window_testacc = -1, -1,-1,-1
+    save_test_window_path = os.path.join(save_dir, f"{model.emb_type}_test_window_predictions.txt")
+    # if model.model_name == "rkt":
+    #     window_testauc, window_testacc = evaluate(model, test_window_loader, model_name, rel)
+    # else:
+    #     window_testauc, window_testacc = evaluate(model, test_window_loader, model_name)
+    # print(f"testauc: {testauc}, testacc: {testacc}, window_testauc: {window_testauc}, window_testacc: {window_testacc}")
+
+    dres = {}
+
+    q_testaucs, q_testaccs = -1, -1
+    qw_testaucs, qw_testaccs = -1, -1
+    # if "test_question_file" in data_config and not test_question_loader is None:
+    #     save_test_question_path = os.path.join(save_dir, f"{model.emb_type}_test_question_predictions.txt")
+    #     q_testaucs, q_testaccs = evaluate_question(model, test_question_loader, model_name, fusion_type, save_test_question_path)
+    #     for key in q_testaucs:
+    #         dres["oriauc" + key] = q_testaucs[key]
+    #     for key in q_testaccs:
+    #         dres["oriacc" + key] = q_testaccs[key]
+
+    if "test_question_window_file" in data_config and not test_question_window_loader is None:
+        save_test_question_window_path = os.path.join(save_dir, f"{model.emb_type}_test_question_window_predictions.txt")
+
+        qw_testaucs, qw_testaccs = evaluate_question(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
+        for key in qw_testaucs:
+            dres["windowauc" + key] = qw_testaucs[key]
+        for key in qw_testaccs:
+            dres["windowacc" + key] = qw_testaccs[key]
+
+    print(dres)
+    raw_config = json.load(open(os.path.join(save_dir, "config.json")))
+    dres.update(raw_config['params'])
+
+    if params['use_wandb'] == 1:
+        wandb.log(dres)
+    print(f"windowauclate_mean: {dres['windowauclate_mean']}")
+    print(f"windowacclate_mean: {dres['windowacclate_mean']}")
     
-    # 预测区间数据
-    interval_results = predict_interval_data(model, data_config, model_name, params["fusion_type"], save_dir)
+    # 将评估结果保存到 save_dir 目录下的 evaluation_results.json 文件
+    if SET_TARGET_STU != 0:
+        results_path = os.path.join(save_dir, f"evaluation_results_{SET_TARGET_STU}.json")
+    else:    
+        results_path = os.path.join(save_dir, "evaluation_results.json")
+    try:
+        with open(results_path, "w") as fout:
+            json.dump(dres, fout, indent=4, ensure_ascii=False)
+        print(f"评估结果已保存到 {results_path}")
+    except Exception as e:
+        print(f"保存评估结果时出错: {e}")
     
-    # 保存区间预测结果到单独文件
-    interval_results_path = os.path.join(save_dir, "interval_data_predictions.json")
-    with open(interval_results_path, "w") as f:
-        json.dump(interval_results, f, indent=4)
-    print(f"\n区间数据预测结果已保存到: {interval_results_path}")
-    print("=== 区间数据文件预测完成 ===\n")
+    
+    
+    # === 新增代码：在所有学生评估前预测区间数据 ===
+    # print("\n=== 开始预测区间数据文件 ===")
+    
+    # # 加载模型配置（与evaluate_single_student中相同）
+    # with open(os.path.join(save_dir, "config.json")) as fin:
+    #     config = json.load(fin)
+    #     model_config = copy.deepcopy(config["model_config"])
+    #     for remove_item in ['use_wandb', 'learning_rate', 'add_uuid', 'l2']:
+    #         if remove_item in model_config:
+    #             del model_config[remove_item]
+    #     trained_params = config["params"]
+    #     fold = trained_params["fold"]
+    #     model_name, dataset_name, emb_type = trained_params["model_name"], trained_params["dataset_name"], trained_params["emb_type"]
+    #     if model_name in ["saint", "sakt", "atdkt"]:
+    #         train_config = config["train_config"]
+    #         seq_len = train_config["seq_len"]
+    #         model_config["seq_len"] = seq_len
+
+    # with open("../configs/data_config.json") as fin:
+    #     curconfig = copy.deepcopy(json.load(fin))
+    #     data_config = curconfig[dataset_name]
+    #     data_config["dataset_name"] = dataset_name
+    #     if model_name in ["dkt_forget", "bakt_time","dbakt"]:
+    #         data_config["num_rgap"] = config["data_config"]["num_rgap"]
+    #         data_config["num_sgap"] = config["data_config"]["num_sgap"]
+    #         data_config["num_pcount"] = config["data_config"]["num_pcount"]
+    #     elif model_name == "lpkt":
+    #         data_config["num_at"] = config["data_config"]["num_at"]
+    #         data_config["num_it"] = config["data_config"]["num_it"]
+    
+    
+    # # # 加载数据配置
+    # # with open("../configs/data_config.json") as fin:
+    # #     data_config = json.load(fin)[dataset_name]
+    
+    # # 加载模型
+    # model = load_model(model_name, model_config, data_config, emb_type, save_dir)
+    
+    # # 预测区间数据
+    # interval_results = predict_interval_data(model, data_config, model_name, params["fusion_type"], save_dir)
+    
+    # # 保存区间预测结果到单独文件
+    # interval_results_path = os.path.join(save_dir, "interval_data_predictions.json")
+    # with open(interval_results_path, "w") as f:
+    #     json.dump(interval_results, f, indent=4)
+    # print(f"\n区间数据预测结果已保存到: {interval_results_path}")
+    # print("=== 区间数据文件预测完成 ===\n")
 
 if __name__ == "__main__":
     

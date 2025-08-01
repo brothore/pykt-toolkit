@@ -113,7 +113,7 @@ def main(params):
     with open("../configs/kt_config.json") as f:
         config = json.load(f)
         train_config = config["train_config"]
-        if model_name in ["dkvmn","deep_irt", "sakt", "saint","saint++", "akt", "robustkt", "folibikt", "atkt", "lpkt", "skvmn", "dimkt",  "Transformer_template", "mamba_atakt", "mamba_atakt", "balance_akt"]:
+        if model_name in ["dkvmn","deep_irt", "sakt", "saint","saint++", "akt", "robustkt", "folibikt", "atkt", "lpkt", "skvmn", "dimkt",  "Transformer_template", "mamba_atakt", "mamba_atakt", "balance_akt", "deepseekv3"]:
             train_config["batch_size"] = 64 ## because of OOM
         if model_name in ["simplekt","stablekt", "bakt_time", "sparsekt", "dbakt"]:
             train_config["batch_size"] = 64 ## because of OOM
@@ -123,6 +123,8 @@ def main(params):
             train_config["batch_size"] = 32 
         if model_name in ["dtransformer"]:
             train_config["batch_size"] = 16 ## because of OOM
+        if model_name in ["long_dkt"]:
+            train_config["batch_size"] = 1 ## because of OOM
         model_config = copy.deepcopy(params)
         for key in ["model_name", "dataset_name", "emb_type", "save_dir", "fold", "seed"]:
             del model_config[key]
@@ -213,6 +215,8 @@ def main(params):
         model.cuda()  # 确保模型在GPU上
         if model_name == "rkt":
             return train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model, data_config[dataset_name], fold)
+        elif model_name == "long_dkt":
+            return train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model,data_config[dataset_name])
         else:
             return train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model)
     testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = \

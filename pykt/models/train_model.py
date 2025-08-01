@@ -12,6 +12,7 @@ from pykt.config import que_type_models,needs_uid_models
 import pandas as pd
 import torch.nn.functional as F
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+from pykt.models.long_dkt import StudentHiddenStateManager
 #成对排序损失函数（近似AUC计算）
 def pairwise_ranking_loss(predictions, targets):
     """
@@ -157,7 +158,7 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[]):
         loss_w2 = loss_w2.mean() / model.num_c
 
         loss = loss + model.lambda_r * loss_r + model.lambda_w1 * loss_w1 + model.lambda_w2 * loss_w2
-    elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx","lefokt_akt", "dtransformer", "fluckt",  "Transformer_template", "balance_akt"]:
+    elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx","lefokt_akt", "dtransformer", "fluckt",  "Transformer_template", "balance_akt", "deepseekv3"]:
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
         loss = binary_cross_entropy(y.double(), t.double()) + preloss[0]
@@ -294,13 +295,24 @@ def model_forward(model, data, rel=None):
         y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
         ys.append(y) # first: yshft
     elif model_name in ["long_dkt"]:
-        # 提取学生ID
-        uids = dcur["uid"].to(device)  # [batch_size]
+        uids = dcur["uid"].to(device)
+        # print(f"uids：{uids}")
         
-        # 调用模型，传入学生ID以使用学生记忆
-        y = model(c.long(), r.long(), uids)
+        # 如果提供了学生状态管理器，则使用持久化的隐藏状态
+        student_state_manager = rel
+        if student_state_manager is not None:
+            # 获取当前批次学生的隐藏状态
+            initial_states = student_state_manager.get_student_states(uids)
+            
+            # 调用模型时传入初始隐藏状态
+            y, final_states = model(c.long(), r.long(), initial_states)
+            
+            # 更新学生的隐藏状态
+            student_state_manager.update_student_states(uids, final_states[0], final_states[1])
+        else:
+            # 如果没有状态管理器，使用原来的方式
+            y = model(c.long(), r.long())
         
-        # 应用one-hot和求和操作
         y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
         ys.append(y) # first: yshft
     elif model_name in ["balance_akt"]:
@@ -420,7 +432,7 @@ def model_forward(model, data, rel=None):
     elif model_name in ["saint"]:
         y = model(cq.long(), cc.long(), r.long())
         ys.append(y[:, 1:])
-    elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt",  "Transformer_template"]:               
+    elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt",  "Transformer_template", "deepseekv3"]:               
         y, reg_loss = model(cc.long(), cr.long(), cq.long())
         ys.append(y[:,1:])
         preloss.append(reg_loss)
@@ -467,7 +479,22 @@ def model_forward(model, data, rel=None):
 def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, test_loader=None, test_window_loader=None, save_model=False, data_config=None, fold=None):
     max_auc, best_epoch = 0, -1
     train_step = 0
+    # 为long_dkt创建学生隐藏状态管理器
+    student_state_manager = None
+    if model.model_name == "long_dkt":
+        # 假设模型有hidden_size属性，如果没有需要从模型配置中获取
+        hidden_size = getattr(model, 'emb_size')  # 默认256
+        num_layers = getattr(model, 'num_layers',1)      # 默认1层
+        dpath = data_config["dpath"]
+        dataset_name = dpath.split("/")[-1]  # 需要在data_config中添加dataset_name
+        
+        student_state_manager = StudentHiddenStateManager(
+            data_config_path="../configs/data_config.json",
 
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            mode = "train"
+        )
     rel = None
     if model.model_name == "rkt":
         dpath = data_config["dpath"]
@@ -495,6 +522,8 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
                 loss = model_forward(model, data, rel)
             elif model.model_name in ["ukt"] and model.use_CL != 0:
                 loss,temp = model_forward(model, data)
+            elif model.model_name == "long_dkt":
+                loss = model_forward(model, data,student_state_manager)
             else:
                 loss = model_forward(model, data)
             opt.zero_grad()

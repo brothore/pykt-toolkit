@@ -7,9 +7,12 @@ from pykt.config import que_type_models,needs_uid_models
 from ..datasets.lpkt_utils import generate_time2idx
 import pandas as pd
 import csv
-
+from pykt.models.long_dkt import StudentHiddenStateManager
+import asyncio
 device = "cpu" if not torch.cuda.is_available() else "cuda"
-
+import os
+from datetime import datetime
+current_time = datetime.now().strftime('%m_%d')
 def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
     # dres, q, r, qshft, rshft, m, sm, y
     results = []
@@ -45,6 +48,19 @@ def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
     return "\n".join(results)
 
 def evaluate(model, test_loader, model_name, rel=None, save_path=""):
+    eval_student_state_manager = None
+    if model_name == "long_dkt":
+        from pykt.models.long_dkt import StudentHiddenStateManager
+        hidden_size = getattr(model, 'emb_size', 256)
+        num_layers = getattr(model, 'num_layers', 1)
+        
+        
+        eval_student_state_manager = StudentHiddenStateManager(
+            data_config_path="../configs/data_config.json",
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            mode="eval"  # 标记为评估模式，确保与训练模式分离
+        )
     if save_path != "":
         fout = open(save_path, "w", encoding="utf8")
     with torch.no_grad():
@@ -70,7 +86,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             q, c, r, qshft, cshft, rshft, m, sm = q.to(device), c.to(device), r.to(device), qshft.to(device), cshft.to(device), rshft.to(device), m.to(device), sm.to(device)
             if model.model_name in que_type_models and model_name not in ["lpkt", "rkt", "promptkt", "unikt"]:
                 model.model.eval()
-            else:
+            elif model_name not in ["deepseekv3"]:
                 model.eval()
 
             # print(f"before y: {y.shape}")
@@ -100,9 +116,25 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 y = y[:,1:]
             elif model_name in ["rekt"]:
                 y = model(dcur)
-            elif model_name in ["dkt", "dkt+", "long_dkt"]:
+            elif model_name in ["dkt", "dkt+"]:
                 
                 y = model(c.long(), r.long())
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+            elif model_name == "long_dkt":
+                uids = dcur["uid"].to(device)
+                if eval_student_state_manager is not None:
+                    # 获取当前批次学生的隐藏状态
+                    initial_states = eval_student_state_manager.get_student_states(uids)
+                    
+                    # 调用模型时传入初始隐藏状态
+                    y, final_states = model(c.long(), r.long(), initial_states)
+                    
+                    # 更新学生的隐藏状态
+                    eval_student_state_manager.update_student_states(uids, final_states[0], final_states[1])
+                else:
+                    # 如果没有状态管理器，使用原来的方式
+                    y = model(c.long(), r.long())
+                
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name in ["balance_dkt"]:
         
@@ -122,6 +154,14 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt",   "Transformer_template", "balance_akt"]:                                
                 y, reg_loss = model(cc.long(), cr.long(), cq.long())
                 y = y[:,1:]
+            elif model_name == "deepseekv3":
+                batch_q_data = cc.long()
+                batch_pid_data = cq.long()
+                batch_target_data = cr.long()
+                predictions = asyncio.run(model.forward(batch_q_data, batch_pid_data, batch_target_data))
+                y = torch.from_numpy(predictions).float().to(device)
+                y = y  
+                print(f"[DEBUG] 正在进行前向传播")
             elif model_name in ["dtransformer"]:
                 output, *_ = model.predict(cc.long(), cr.long(), cq.long())
                 sg = nn.Sigmoid()
@@ -158,8 +198,8 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             if save_path != "":
                 result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y)
                 fout.write(result+"\n")
-
-            y = torch.masked_select(y, sm).detach().cpu()
+            if model_name not in ["deepseekv3"]:
+                y = torch.masked_select(y, sm).detach().cpu()
             # print(f"pred_results:{y}")  
             t = torch.masked_select(rshft, sm).detach().cpu()
 
@@ -188,7 +228,7 @@ def early_fusion(curhs, model, model_name):
         que_diff = model.diff_layer(curhs[1])#equ 13
         p = torch.sigmoid(3.0*stu_ability-que_diff)#equ 14
         p = p.squeeze(-1)
-    elif model_name in ["akt","extrakt", "folibikt","robustkt", "dtransformer","simplekt","stablekt","cskt", "fluckt", "bakt_time", "sparsekt", "lefokt_akt", "ukt", "hcgkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "dbakt", "balance_akt"]:
+    elif model_name in ["akt","extrakt", "folibikt","robustkt", "dtransformer","simplekt","stablekt","cskt", "fluckt", "bakt_time", "sparsekt", "lefokt_akt", "ukt", "hcgkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "dbakt", "balance_akt", "deepseekv3"]:
         output = model.out(curhs[0]).squeeze(-1)
         m = nn.Sigmoid()
         p = m(output)
@@ -291,11 +331,19 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
         cursm = ([0] + sms[bz].cpu().tolist())
         curqidxs = ([-1] + qidxs[bz].cpu().tolist())
         currests = ([-1] + rests[bz].cpu().tolist())
+        # print(f"[DEBUG] orirows[bz].shape: {orirows[bz].shape} (type: {type(orirows[bz].shape)})")
         currows = ([-1] + orirows[bz].cpu().tolist())
-        curps = ([-1] + ps[bz].cpu().tolist())
+
+        if model_name not in ["deepseekv3"]:    
+            curps = ([-1] + ps[bz].cpu().tolist())
         # print(f"qid: {len(curqidxs)}, select: {len(cursm)}, response: {len(rs[bz].cpu().tolist())}, preds: {len(curps)}")
-        df = pd.DataFrame({"qidx": curqidxs, "rest": currests, "row": currows, "select": cursm, 
-                "questions": cq[bz].cpu().tolist(), "concepts": cc[bz].cpu().tolist(), "response": rs[bz].cpu().tolist(), "preds": curps})
+            df = pd.DataFrame({"qidx": curqidxs, "rest": currests, "row": currows, "select": cursm, 
+                    "questions": cq[bz].cpu().tolist(), "concepts": cc[bz].cpu().tolist(), "response": rs[bz].cpu().tolist(), "preds": curps})
+        else:
+            curps = (ps[bz].cpu().tolist())
+            df = pd.DataFrame({"qidx": curqidxs, "rest": currests, "row": currows, "select": cursm, 
+                    "questions": cq[bz].cpu().tolist(), "concepts": cc[bz].cpu().tolist(), "response": rs[bz].cpu().tolist(), "preds": curps})
+
         if model_name in hasearly and model_name not in ["kqn","lpkt","deep_irt"]:
             df["hidden"] = [np.array(a) for a in hs[0][bz].cpu().tolist()]
         elif model_name == "kqn":
@@ -309,7 +357,11 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
         elif model_name == "deep_irt":
             df["h"] = [np.array(a) for a in hs[0][bz].cpu().tolist()]
             df["k"] = [np.array(a) for a in hs[1][bz].cpu().tolist()]
-        df = df[df["select"] != 0]
+        if model_name not in ["deepseekv3"]: 
+            df = df[df["select"] != 0]
+        else:
+            df = df[df["select"] != 0].copy()
+            df["preds"] = curps  # 保持preds字段不变
         alldfs.append(df)
     
     effective_dfs, rest_start = [], -1
@@ -379,6 +431,18 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
     # dkvmn / akt / saint: give cur -> predict cur
     # sakt: give past+cur -> predict cur
     # kqn: give past+cur -> predict cur
+    eval_student_state_manager = None
+    if model_name == "long_dkt":
+        from pykt.models.long_dkt import StudentHiddenStateManager
+        hidden_size = getattr(model, 'emb_size', 256)
+        num_layers = getattr(model, 'num_layers', 1)
+        
+        eval_student_state_manager = StudentHiddenStateManager(
+            data_config_path="../configs/data_config.json",
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            mode="eval"  # 标记为评估模式，确保与训练模式分离
+        )
     hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","extrakt","folibikt", "robustkt", "simplekt","cskt","fluckt", "stablekt", "ukt", "hcgkt", "bakt_time", "sparsekt", "lefokt_akt", "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt"]
     if save_path != "":
         fout = open(save_path, "w", encoding="utf8")
@@ -395,6 +459,8 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         y_trues, y_scores = [], []
         lenc = 0
         for data in test_loader:
+            total_batches = len(test_loader)
+            print(f"测试集将被迭代 {total_batches} 次")
             if model_name in ["dkt_forget", "bakt_time", "dbakt"]:
                 dcurori, dgaps, dqtest = data
             else:
@@ -413,7 +479,8 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             lenc += q.shape[0]
             # print("="*20)
             # print(f"start predict seqlen: {lenc}")
-            model.eval()
+            if model_name not in ["deepseekv3"]:
+                model.eval()
 
             # print(f"before y: {y.shape}")
             cq = torch.cat((q[:,0:1], qshft), dim=1)
@@ -441,6 +508,37 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             elif model_name in ["akt","extrakt", "folibikt","fluckt","robustkt", "lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt"]:
                 y, reg_loss, h = model(cc.long(), cr.long(), cq.long(), True)
                 y = y[:,1:]
+            elif model_name == "deepseekv3":
+                batch_q_data = cc.long()
+                batch_pid_data = cq.long()
+                batch_target_data = cr.long()
+                # 生成缓存文件名
+                
+                cache_dir = f"deepseekv3_cache_{current_time}"
+                os.makedirs(cache_dir, exist_ok=True)
+                cache_file = os.path.join(cache_dir, f"pred_{hash(tuple(batch_q_data.cpu().numpy().tobytes()))}.npy")
+                
+                # 检查是否有缓存
+                if os.path.exists(cache_file):
+                    print(f"[DEBUG] 从缓存加载预测结果: {cache_file}")
+                    predictions = np.load(cache_file)
+                else:
+                    # 没有缓存则进行预测
+                    print(f"[DEBUG] 正在进行前向传播")
+                    # 直接同步调用forward方法，不再需要asyncio.run
+                    predictions = model.forward(
+                        batch_q_data.cpu().numpy().tolist(),  # 转换为Python列表
+                        batch_pid_data.cpu().numpy().tolist(),
+                        batch_target_data.cpu().numpy().tolist()
+                    )
+                    # 保存预测结果到缓存
+                    np.save(cache_file, predictions)
+                    print(f"[DEBUG] 预测结果已保存到: {cache_file}")
+                
+                y = torch.from_numpy(predictions).float().to(device)
+                # 不需要[:,1:]，因为已经是最终预测
+                y = y
+                print(f"[DEBUG] y: {y} (type: {type(y)})")
             elif model_name in ["dtransformer"]:
                 output, h, *_ = model.predict(cc.long(), cr.long(), cq.long())
                 sg = nn.Sigmoid()
@@ -463,8 +561,24 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             elif model_name in ["atdkt"]:
                 y = model(dcurori)#c.long(), r.long(), q.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
-            elif model_name in ["dkt", "dkt+", "long_dkt"]:
+            elif model_name in ["dkt", "dkt+"]:
                 y = model(c.long(), r.long())
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+            elif model_name == "long_dkt":
+                uids = dcurori["uid"].to(device)
+                if eval_student_state_manager is not None:
+                    # 获取当前批次学生的隐藏状态
+                    initial_states = eval_student_state_manager.get_student_states(uids)
+                    
+                    # 调用模型时传入初始隐藏状态
+                    y, final_states = model(c.long(), r.long(), initial_states)
+                    
+                    # 更新学生的隐藏状态
+                    eval_student_state_manager.update_student_states(uids, final_states[0], final_states[1])
+                else:
+                    # 如果没有状态管理器，使用原来的方式
+                    y = model(c.long(), r.long())
+                
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name in ["balance_dkt"]:
                 y = model(c.long(), r.long())
@@ -490,8 +604,10 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
                 y = y[:, 1:]
             elif model_name == "dimkt":
                 y = model(q.long(),c.long(),sd.long(),qd.long(),r.long(),qshft.long(),cshft.long(),sdshft.long(),qdshft.long())
-
-            concepty = torch.masked_select(y, sm).detach().cpu()
+            if model_name not in ["deepseekv3"]:
+                concepty = torch.masked_select(y, sm).detach().cpu()
+            else:
+                concepty = y.cpu()
             conceptt = torch.masked_select(rshft, sm).detach().cpu()
 
             y_trues.append(conceptt.numpy())
@@ -552,6 +668,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         acc = metrics.accuracy_score(ts, prelabels)
         aucs["concepts"] = auc
         accs["concepts"] = acc
+        print(f"[DEBUG] auc: {auc} (type: {type(auc)})")
 
         # print(f"dinfos: {dinfos.keys()}")
         for key in dinfos:
@@ -950,7 +1067,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             # 应该用预测的r更新memory value，但是这里一个知识点一个知识点预测，所以curr不起作用！
             y = model(cin.long(), rin.long())
             pred = y[0][-1]
-        elif model_name in ["akt","extrakt","folibikt","fluckt", "robustkt","lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt"]:  
+        elif model_name in ["akt","extrakt","folibikt","fluckt", "robustkt","lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "deepseekv3"]:  
             #### 输入有question！     
             if qout != None:
                 curq = torch.tensor([[qout.item()]]).to(device)
@@ -1337,7 +1454,7 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
         elif model_name == "saint":
             y = model(ccq.long(), ccc.long(), curr.long())
             y = y[:, 1:]
-        elif model_name in ["akt","extrakt","folibikt", "robustkt", "cakt","fluckt","lefokt_akt",  "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt"]:                                
+        elif model_name in ["akt","extrakt","folibikt", "robustkt", "cakt","fluckt","lefokt_akt",  "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "deepseekv3"]:                                
             y, reg_loss = model(ccc.long(), ccr.long(), ccq.long())
             y = y[:,1:]
         elif model_name in ["dtransformer"]:

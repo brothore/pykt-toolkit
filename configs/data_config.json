@@ -290,7 +290,8 @@
         "dpath": "../data/nips_task34",
         "num_q": 948,
         "num_c": 57,
-        "students_num": 983,
+        "students_num_eval": 983,
+        "students_num_train": 3935,
         "input_type": [
             "questions",
             "concepts"

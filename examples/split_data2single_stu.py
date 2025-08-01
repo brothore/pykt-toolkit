@@ -290,7 +290,7 @@ def load_data_config(config_path: str = "../configs/data_config.json") -> dict:
         print(f"读取配置文件时出错: {e}")
         return {}
 
-def get_students_num(dataset_name: str, config_path: str = "../configs/data_config.json") -> int:
+def get_students_num_train(dataset_name: str, config_path: str = "../configs/data_config.json") -> int:
     """
     获取指定数据集的学生数量
     
@@ -305,15 +305,37 @@ def get_students_num(dataset_name: str, config_path: str = "../configs/data_conf
     
     if dataset_name in config:
         dataset_config = config[dataset_name]
-        if 'students_num' in dataset_config:
-            return dataset_config['students_num']
+        if 'students_num_train' in dataset_config:
+            return dataset_config['students_num_train']
         else:
-            print(f"数据集 {dataset_name} 配置中未找到 students_num 字段")
+            print(f"数据集 {dataset_name} 配置中未找到 students_num_train 字段")
             return None
     else:
         print(f"配置文件中未找到数据集: {dataset_name}")
         return None
-
+def get_students_num_eval(dataset_name: str, config_path: str = "../configs/data_config.json") -> int:
+    """
+    获取指定数据集的学生数量
+    
+    Args:
+        dataset_name: 数据集名称，如 "assist2015"
+        config_path: 配置文件路径
+        
+    Returns:
+        学生数量，如果未找到则返回None
+    """
+    config = load_data_config(config_path)
+    
+    if dataset_name in config:
+        dataset_config = config[dataset_name]
+        if 'students_num_eval' in dataset_config:
+            return dataset_config['students_num_eval']
+        else:
+            print(f"数据集 {dataset_name} 配置中未找到 students_num_eval 字段")
+            return None
+    else:
+        print(f"配置文件中未找到数据集: {dataset_name}")
+        return None
 def update_data_config(dataset_name: str, num_students: int, generated_files: List[str], config_path: str = "../configs/data_config.json"):
     """更新data_config.json文件中的学生个数和生成的文件列表"""
     try:
@@ -326,7 +348,7 @@ def update_data_config(dataset_name: str, num_students: int, generated_files: Li
         
         # 更新对应数据集的学生个数
         if dataset_name in config:
-            config[dataset_name]['students_num'] = num_students
+            config[dataset_name]['students_num_eval'] = num_students
             
             # 为每个生成的文件创建单独的键值对
             for filename in generated_files:

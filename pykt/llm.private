@@ -1,0 +1,35 @@
+class Config():
+    def __init__(self):
+        #  调用服务信息
+        self.qwen_2_5_vl_7_token = r'gpustack_c1f273333d9a7cdb_2abcf57d3827de0c74e17e49c323901a'
+        self.qwen_2_5_vl_7_model = r'qwen2.5-vl-7b-instruct'
+
+        self.gpu_stack_chat_url = r'http://8.141.20.189:8002/v1/chat/completions'
+
+        self.default_max_tokens = 1024 * 10
+        self.default_temperature = 0.7
+        self.default_top_p = 0.8
+        self.default_frequency_penalty = 0.0
+        self.default_presence_penalty = 0.0
+
+        # pdf解析相关
+        self.default_dpi = 150
+
+        # LLM配置，上述VL模型理论上应该纳入
+        self.llms_config = {
+
+            'DeepSeek-V3': {
+                'model_id': 'DeepSeek-V3',
+                'url': r'http://1.95.57.200/v1/chat/completions',
+                'token': r'=====',
+                'auth_key': 'Authorization',
+                'auth_func': lambda it: f'{it}',
+                'max_tokens': 8192,
+                'temperature': 0.7,
+                'top_p': 0.8,
+                'frequency_penalty': 0.2,
+                'presence_penalty': self.default_presence_penalty,
+                'is_reasoning': False,  # 是否使用Reasoning
+                'input_group_size': int((32 - 8) * 1024 * 1.5 * 0.7),  # 输入分组大小
+            }
+        }
