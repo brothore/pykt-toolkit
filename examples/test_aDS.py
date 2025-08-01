@@ -2,7 +2,7 @@
 import asyncio
 from openai import AsyncOpenAI
 
-client = AsyncOpenAI(api_key="sk-8266b5874a8e4dfdbfc7e4a4d8913dc2", base_url="https://api.deepseek.com")
+client = AsyncOpenAI(api_key="", base_url="https://api.deepseek.com")
 
 async def call_api(message):
     response = await client.chat.completions.create(

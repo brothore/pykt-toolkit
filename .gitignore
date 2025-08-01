@@ -67,6 +67,5 @@ examples/models/
 docs/
 *.vsix
 .private
-deepseekv3.py
 *.npy
 deepseekv3_config.py

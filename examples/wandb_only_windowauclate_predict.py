@@ -41,7 +41,7 @@ def main(params):
                 model_config["seq_len"] = seq_len
     elif params["model_name"] == "deepseekv3":
         model_name, dataset_name, emb_type = "deepseekv3", params["dataset_name"], "qid"
-        model_config = {"api_key": "sk-8266b5874a8e4dfdbfc7e4a4d8913dc2"}
+        model_config = {"api_key": ""}
         
     with open("../configs/data_config.json") as fin:
         curconfig = copy.deepcopy(json.load(fin))
