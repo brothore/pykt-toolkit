@@ -335,16 +335,12 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
         # print(f"[DEBUG] orirows[bz].shape: {orirows[bz].shape} (type: {type(orirows[bz].shape)})")
         currows = ([-1] + orirows[bz].cpu().tolist())
 
-        if model_name not in ["deepseekv3"]:    
-            curps = ([-1] + ps[bz].cpu().tolist())
+           
+        curps = ([-1] + ps[bz].cpu().tolist())
         # print(f"qid: {len(curqidxs)}, select: {len(cursm)}, response: {len(rs[bz].cpu().tolist())}, preds: {len(curps)}")
-            df = pd.DataFrame({"qidx": curqidxs, "rest": currests, "row": currows, "select": cursm, 
-                    "questions": cq[bz].cpu().tolist(), "concepts": cc[bz].cpu().tolist(), "response": rs[bz].cpu().tolist(), "preds": curps})
-        else:
-            curps = (ps[bz].cpu().tolist())
-            df = pd.DataFrame({"qidx": curqidxs, "rest": currests, "row": currows, "select": cursm, 
-                    "questions": cq[bz].cpu().tolist(), "concepts": cc[bz].cpu().tolist(), "response": rs[bz].cpu().tolist(), "preds": curps})
-
+        df = pd.DataFrame({"qidx": curqidxs, "rest": currests, "row": currows, "select": cursm, 
+                "questions": cq[bz].cpu().tolist(), "concepts": cc[bz].cpu().tolist(), "response": rs[bz].cpu().tolist(), "preds": curps})
+    
         if model_name in hasearly and model_name not in ["kqn","lpkt","deep_irt"]:
             df["hidden"] = [np.array(a) for a in hs[0][bz].cpu().tolist()]
         elif model_name == "kqn":
@@ -358,11 +354,9 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
         elif model_name == "deep_irt":
             df["h"] = [np.array(a) for a in hs[0][bz].cpu().tolist()]
             df["k"] = [np.array(a) for a in hs[1][bz].cpu().tolist()]
-        if model_name not in ["deepseekv3"]: 
-            df = df[df["select"] != 0]
-        else:
-            df = df[df["select"] != 0].copy()
-            df["preds"] = curps  # 保持preds字段不变
+
+        df = df[df["select"] != 0]
+
         alldfs.append(df)
     
     effective_dfs, rest_start = [], -1
@@ -462,7 +456,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         for batch_idx, data in enumerate(test_loader):
             total_batches = len(test_loader)
             current_batch = batch_idx + 1  # 从1开始计数
-            if current_batch > 10:
+            if current_batch > 5:
                 break
             print(f"正在处理第 {current_batch}/{total_batches} 个batch")
             if model_name in ["dkt_forget", "bakt_time", "dbakt"]:

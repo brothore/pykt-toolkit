@@ -318,7 +318,7 @@ class DEEPSEEKV3:
         self,
         api_key: str = "sk-8266b5874a8e4dfdbfc7e4a4d8913dc2",
         max_retries: int = 99999,
-        max_concurrent_requests: int = 64,
+        max_concurrent_requests: int = 4,
         base_url: str = "https://api.deepseek.com",
         model_name: str = "Qwen2.5-14B-Instruct-1M"
     ):
@@ -342,7 +342,7 @@ class DEEPSEEKV3:
         self.system_prompt = """你是一个知识追踪专家，需要根据学生的答题序列预测他们下一步答题的正确概率。
     请严格按照以下要求执行任务：
     1. 输入将提供学生的历史答题记录，格式为：(问题ID, 问题内容, 回答是否正确)
-    2. 你需要分析这些历史记录，预测学生回答最后一个个问题的正确概率
+    2. 你需要分析这些历史记录，预测学生回答下一个问题的正确概率
     3. 输出必须是一个0到1之间的浮点数，表示预测的正确概率
     4. 只输出数字，不要包含任何其他文字或解释"""
 
@@ -405,7 +405,8 @@ class DEEPSEEKV3:
         self,
         q_data: List[int],
         pid_data: List[int],
-        target_data: List[int]
+        target_data: List[int],
+        predict_step: int
     ) -> str:
         """
         为单行数据构造提示词
@@ -414,26 +415,62 @@ class DEEPSEEKV3:
             q_data: 问题内容列表
             pid_data: 问题ID列表
             target_data: 回答是否正确列表 (0或1)
+            predict_step: 要预测的时间步索引
             
         返回:
             构造好的提示词字符串
         """
         history = []
-        for i, (q, pid, target) in enumerate(zip(q_data, pid_data, target_data)):
-            if i < len(q_data) - 1:  # 非最后一条记录：显示完整信息
-                correctness = "正确" if target == 1 else "错误"
-                history.append(f"(问题编号{pid}, 知识点编号{q}, 答题情况{correctness})\n")
-            else:  # 最后一条记录：隐藏答题情况
-                history.append(f"(问题编号{pid}, 知识点编号{q}, 答题情况待预测)\n")
+        for i in range(predict_step):
+            q = q_data[i]
+            pid = pid_data[i]
+            target = target_data[i]
+            correctness = "正确" if target == 1 else "错误"
+            history.append(f"(问题编号{pid}, 知识点编号{q}, 答题情况{correctness})\n")
+        
+        current_q = q_data[predict_step]
+        current_pid = pid_data[predict_step]
+        history.append(f"(问题编号{current_pid}, 知识点编号{current_q}, 答题情况待预测)\n")
 
         return "历史答题记录:\n" + "\n".join(history) + "\n\n请预测下一个问题的正确概率:"
+
+    async def _process_sequence(
+        self,
+        q_data: List[int],
+        pid_data: List[int],
+        target_data: List[int]
+    ) -> List[float]:
+        """
+        处理单个序列，逐步预测每个时间步
+        
+        参数:
+            q_data: 问题内容列表 [seq_len]
+            pid_data: 问题ID列表 [seq_len]
+            target_data: 回答是否正确列表 [seq_len]
+            
+        返回:
+            预测概率列表 [seq_len]
+        """
+        predictions = []
+        seq_len = len(q_data)
+        
+        # 第一个时间步没有历史信息，可以跳过或使用默认值
+        if seq_len > 0:
+            predictions.append(0.5)  # 默认值
+            
+        for step in range(1, seq_len):
+            prompt = self._construct_prompt(q_data, pid_data, target_data, step)
+            prob = await self._call_api_with_retry(prompt)
+            predictions.append(prob if prob is not None else np.nan)
+        
+        return predictions
 
     async def _process_batch(
         self,
         batch_q_data: List[List[int]],
         batch_pid_data: List[List[int]],
         batch_target_data: List[List[int]]
-    ) -> List[Optional[float]]:
+    ) -> List[List[float]]:
         """
         处理一个批次的数据
         
@@ -443,10 +480,10 @@ class DEEPSEEKV3:
             batch_target_data: 批次回答是否正确 [batch_size, seq_len]
             
         返回:
-            预测概率列表 [batch_size]
+            预测概率列表 [batch_size, seq_len]
         """
         tasks = [
-            self._call_api_with_retry(self._construct_prompt(q_data, pid_data, target_data))
+            self._process_sequence(q_data, pid_data, target_data)
             for q_data, pid_data, target_data in zip(batch_q_data, batch_pid_data, batch_target_data)
         ]
         return await asyncio.gather(*tasks)
@@ -467,11 +504,11 @@ class DEEPSEEKV3:
             batch_target_data: 批次回答是否正确 [batch_size, seq_len]
             
         返回:
-            预测概率的numpy数组 [batch_size]
+            预测概率的numpy数组 [batch_size, seq_len]
         """
         async def async_forward():
             return await self._process_batch(batch_q_data, batch_pid_data, batch_target_data)
             
         loop = asyncio.get_event_loop()
         results = loop.run_until_complete(async_forward())
-        return np.array([r if r is not None else np.nan for r in results])
+        return np.array(results)
