@@ -318,7 +318,7 @@ class DEEPSEEKV3:
         self,
         api_key: str = "sk-8266b5874a8e4dfdbfc7e4a4d8913dc2",
         max_retries: int = 99999,
-        max_concurrent_requests: int = 4,
+        max_concurrent_requests: int = 64,
         base_url: str = "https://api.deepseek.com",
         model_name: str = "Qwen2.5-14B-Instruct-1M"
     ):

@@ -151,7 +151,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             elif model_name == "saint":
                 y = model(cq.long(), cc.long(), r.long())
                 y = y[:, 1:]
-            elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt",   "Transformer_template", "balance_akt"]:                                
+            elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt",   "Transformer_template", "balance_akt", "qwen"]:                                
                 y, reg_loss = model(cc.long(), cr.long(), cq.long())
                 y = y[:,1:]
             elif model_name == "deepseekv3":
@@ -228,7 +228,7 @@ def early_fusion(curhs, model, model_name):
         que_diff = model.diff_layer(curhs[1])#equ 13
         p = torch.sigmoid(3.0*stu_ability-que_diff)#equ 14
         p = p.squeeze(-1)
-    elif model_name in ["akt","extrakt", "folibikt","robustkt", "dtransformer","simplekt","stablekt","cskt", "fluckt", "bakt_time", "sparsekt", "lefokt_akt", "ukt", "hcgkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "dbakt", "balance_akt", "deepseekv3"]:
+    elif model_name in ["akt","extrakt", "folibikt","robustkt", "dtransformer","simplekt","stablekt","cskt", "fluckt", "bakt_time", "sparsekt", "lefokt_akt", "ukt", "hcgkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "dbakt", "balance_akt", "deepseekv3", "qwen"]:
         output = model.out(curhs[0]).squeeze(-1)
         m = nn.Sigmoid()
         p = m(output)
@@ -274,7 +274,7 @@ def effective_fusion(df, model, model_name, fusion_type):
 
     curhs, curr = [[], []], []
     dcur = {"late_trues": [], "qidxs": [], "questions": [], "concepts": [], "row": [], "concept_preds": []}
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "akt","extrakt", "folibikt", "robustkt", "dtransformer", "simplekt","stablekt","cskt","fluckt", "ukt", "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt", "Transformer_template", "dbakt", "balance_akt"]
+    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "akt","extrakt", "folibikt", "robustkt", "dtransformer", "simplekt","stablekt","cskt","fluckt", "ukt", "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt", "Transformer_template", "dbakt", "balance_akt", "qwen"]
     for ui in df:
         # 一题一题处理
         curdf = ui[1]
@@ -322,12 +322,13 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
     if cq.shape[1] == 0:
         cq = cc
 
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","robustkt", "extrakt", "folibikt","simplekt","stablekt","cskt", "fluckt", "ukt",  "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt"]
+    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","robustkt", "extrakt", "folibikt","simplekt","stablekt","cskt", "fluckt", "ukt",  "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt", "qwen"]
     
     alldfs, drest = [], dict() # not predict infos!
     # print(f"real bz in group fusion: {rs.shape[0]}")
     realbz = rs.shape[0]
     for bz in range(rs.shape[0]):
+
         cursm = ([0] + sms[bz].cpu().tolist())
         curqidxs = ([-1] + qidxs[bz].cpu().tolist())
         currests = ([-1] + rests[bz].cpu().tolist())
@@ -443,7 +444,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             num_layers=num_layers,
             mode="eval"  # 标记为评估模式，确保与训练模式分离
         )
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","extrakt","folibikt", "robustkt", "simplekt","cskt","fluckt", "stablekt", "ukt", "hcgkt", "bakt_time", "sparsekt", "lefokt_akt", "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt"]
+    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","extrakt","folibikt", "robustkt", "simplekt","cskt","fluckt", "stablekt", "ukt", "hcgkt", "bakt_time", "sparsekt", "lefokt_akt", "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt", "qwen"]
     if save_path != "":
         fout = open(save_path, "w", encoding="utf8")
         if model_name in hasearly:
@@ -458,9 +459,12 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         #     dhistory[key] = []
         y_trues, y_scores = [], []
         lenc = 0
-        for data in test_loader:
+        for batch_idx, data in enumerate(test_loader):
             total_batches = len(test_loader)
-            print(f"测试集将被迭代 {total_batches} 次")
+            current_batch = batch_idx + 1  # 从1开始计数
+            if current_batch > 10:
+                break
+            print(f"正在处理第 {current_batch}/{total_batches} 个batch")
             if model_name in ["dkt_forget", "bakt_time", "dbakt"]:
                 dcurori, dgaps, dqtest = data
             else:
@@ -505,7 +509,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
                 y = y[:,1:]
             elif model_name in ["rekt"]:
                 y, h = model(dcurori, qtest=True, train=False)
-            elif model_name in ["akt","extrakt", "folibikt","fluckt","robustkt", "lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt"]:
+            elif model_name in ["akt","extrakt", "folibikt","fluckt","robustkt", "lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "qwen"]:
                 y, reg_loss, h = model(cc.long(), cr.long(), cq.long(), True)
                 y = y[:,1:]
             elif model_name == "deepseekv3":
@@ -514,7 +518,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
                 batch_target_data = cr.long()
                 # 生成缓存文件名
                 
-                cache_dir = f"deepseekv3_cache_{current_time}"
+                cache_dir = f"deepseekv3_cache"
                 os.makedirs(cache_dir, exist_ok=True)
                 cache_file = os.path.join(cache_dir, f"pred_{hash(tuple(batch_q_data.cpu().numpy().tobytes()))}.npy")
                 
@@ -522,15 +526,35 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
                 if os.path.exists(cache_file):
                     print(f"[DEBUG] 从缓存加载预测结果: {cache_file}")
                     predictions = np.load(cache_file)
+                    
+                    # 检查缓存数据中是否有NaN值
+                    if np.isnan(predictions).any():
+                        print(f"[WARNING] 缓存文件 {cache_file} 包含NaN值，将删除并重新计算")
+                        # os.remove(cache_file)  # 删除包含NaN的缓存文件
+                        # 重新进行前向传播
+                        print(f"[DEBUG] 正在进行前向传播（因NaN值重新计算）")
+                        predictions = model.forward(
+                            batch_q_data.cpu().numpy().tolist(),  # 转换为Python列表
+                            batch_pid_data.cpu().numpy().tolist(),
+                            batch_target_data.cpu().numpy().tolist()
+                        )
+                        # 再次检查新计算的预测结果是否有NaN
+                        if np.isnan(predictions).any():
+                            raise ValueError("前向传播结果仍然包含NaN值，请检查模型或输入数据")
+                        # 保存新的预测结果到缓存
+                        np.save(cache_file, predictions)
+                        print(f"[DEBUG] 预测结果已保存到: {cache_file}")
                 else:
                     # 没有缓存则进行预测
                     print(f"[DEBUG] 正在进行前向传播")
-                    # 直接同步调用forward方法，不再需要asyncio.run
                     predictions = model.forward(
                         batch_q_data.cpu().numpy().tolist(),  # 转换为Python列表
                         batch_pid_data.cpu().numpy().tolist(),
                         batch_target_data.cpu().numpy().tolist()
                     )
+                    # 检查预测结果是否有NaN
+                    if np.isnan(predictions).any():
+                        raise ValueError("前向传播结果包含NaN值，请检查模型或输入数据")
                     # 保存预测结果到缓存
                     np.save(cache_file, predictions)
                     print(f"[DEBUG] 预测结果已保存到: {cache_file}")
@@ -538,7 +562,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
                 y = torch.from_numpy(predictions).float().to(device)
                 # 不需要[:,1:]，因为已经是最终预测
                 y = y
-                print(f"[DEBUG] y: {y} (type: {type(y)})")
+                # print(f"[DEBUG] y: {y} (type: {type(y)})")
             elif model_name in ["dtransformer"]:
                 output, h, *_ = model.predict(cc.long(), cr.long(), cq.long())
                 sg = nn.Sigmoid()
@@ -660,9 +684,13 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             # sys.exit()
         # ori concept eval
         aucs, accs = dict(), dict()
+        print(f"Length of ts: {(y_trues)}, Length of ps: {(y_scores)}")  # 调试输出
+        assert len(y_trues) == len(y_scores), "Mismatch in label and prediction lengths"
+        for i in range(len(y_trues)):
+            print(f"Batch {i}: y_trues shape {y_trues[i].shape}, y_scores shape {y_scores[i].shape}")
         ts = np.concatenate(y_trues, axis=0)
         ps = np.concatenate(y_scores, axis=0)
-        # print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
+        print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
         auc = metrics.roc_auc_score(y_true=ts, y_score=ps)
         prelabels = [1 if p >= 0.5 else 0 for p in ps]
         acc = metrics.accuracy_score(ts, prelabels)
@@ -1067,7 +1095,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             # 应该用预测的r更新memory value，但是这里一个知识点一个知识点预测，所以curr不起作用！
             y = model(cin.long(), rin.long())
             pred = y[0][-1]
-        elif model_name in ["akt","extrakt","folibikt","fluckt", "robustkt","lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "deepseekv3"]:  
+        elif model_name in ["akt","extrakt","folibikt","fluckt", "robustkt","lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "deepseekv3", "qwen"]:  
             #### 输入有question！     
             if qout != None:
                 curq = torch.tensor([[qout.item()]]).to(device)
@@ -1454,7 +1482,7 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
         elif model_name == "saint":
             y = model(ccq.long(), ccc.long(), curr.long())
             y = y[:, 1:]
-        elif model_name in ["akt","extrakt","folibikt", "robustkt", "cakt","fluckt","lefokt_akt",  "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "deepseekv3"]:                                
+        elif model_name in ["akt","extrakt","folibikt", "robustkt", "cakt","fluckt","lefokt_akt",  "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "deepseekv3", "qwen"]:                                
             y, reg_loss = model(ccc.long(), ccr.long(), ccq.long())
             y = y[:,1:]
         elif model_name in ["dtransformer"]:

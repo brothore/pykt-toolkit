@@ -1,0 +1,15 @@
+模型操作记录
+时间: 2025-08-03 01:44:08
+基底模型: akt
+新模型: qwen
+操作类型: 添加模型
+
+执行的操作:
+1. 复制文件: examples/wandb_akt_train.py -> examples/wandb_qwen_train.py
+2. 修改 examples/wandb_qwen_train.py 中的默认模型名
+3. 更新 examples/wandb_train.py 中的模型列表
+4. 复制文件: pykt/models/akt.py -> pykt/models/qwen.py
+5. 修改 pykt/models/qwen.py 中的类名和模型名
+6. 更新 pykt/models/evaluate_model.py 中的模型列表
+7. 更新 pykt/models/train_model.py 中的模型列表
+8. 更新 pykt/models/init_model.py 中的导入和初始化
