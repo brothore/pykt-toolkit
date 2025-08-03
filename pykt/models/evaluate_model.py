@@ -420,6 +420,221 @@ def save_question_res(dres, fout, early=False):
             curres = curres + [et, ep]
         curstr = "\t".join([str(round(s, 4)) if type(s) == type(0.1) or type(s) == np.float32 else str(s) for s in curres])
         fout.write(curstr + "\n")
+from concurrent.futures import ThreadPoolExecutor
+import threading
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
+import time
+from tqdm import tqdm  # 用于进度条显示
+
+def evaluate_llm_question_concurrent(model, test_loader, model_name, fusion_type=["early_fusion", "late_fusion"], save_path="", max_workers=4):
+    """高度并发的LLM评估函数（带详细反馈）"""
+    print(f"🚀 开始并发评估 (workers={max_workers})")
+    start_time = time.time()
+    
+    if save_path != "":
+        fout = open(save_path, "w", encoding="utf8")
+        fout.write("\t".join(["orirow", "qidx", "questions", "concepts", "concept_preds", "late_trues", "late_mean", "late_vote", "late_all", "early_trues", "early_preds"]) + "\n")
+    
+    with torch.no_grad():
+        # 线程安全的存储结构
+        lock = threading.Lock()
+        dinfos = dict()
+        dhistory = dict()
+        history_keys = ["hs", "sm", "cq", "cc", "cr", "y", "qidxs", "rests", "orirow"]
+        y_trues, y_scores = [], []
+        lenc = 0
+        processed_batches = 0
+        total_batches = len(test_loader)
+        
+        # 进度统计
+        progress_stats = {
+            'total': total_batches,
+            'completed': 0,
+            'cached': 0,
+            'processed': 0,
+            'last_update': time.time()
+        }
+        
+        def log_progress():
+            """记录和打印进度信息"""
+            with lock:
+                elapsed = time.time() - start_time
+                avg_time = elapsed / (progress_stats['completed'] + 1e-6)
+                remaining = avg_time * (progress_stats['total'] - progress_stats['completed'])
+                
+                print(f"\n📊 进度: {progress_stats['completed']}/{progress_stats['total']} batches | "
+                      f"缓存命中: {progress_stats['cached']} | "
+                      f"处理中: {progress_stats['processed']} | "
+                      f"耗时: {elapsed:.1f}s | "
+                      f"预计剩余: {remaining:.1f}s")
+        
+        def process_batch(data, batch_idx):
+            nonlocal lenc, processed_batches
+            batch_start = time.time()
+            
+            with lock:
+                progress_stats['processed'] += 1
+                if time.time() - progress_stats['last_update'] > 5:  # 每5秒更新一次进度
+                    log_progress()
+                    progress_stats['last_update'] = time.time()
+            
+            try:
+                dcurori, dqtest = data
+                q, c, r = dcurori["qseqs"], dcurori["cseqs"], dcurori["rseqs"]
+                qshft, cshft, rshft = dcurori["shft_qseqs"], dcurori["shft_cseqs"], dcurori["shft_rseqs"]
+                m, sm = dcurori["masks"], dcurori["smasks"]
+                
+                # 移动到设备
+                device_str = f" (device: {device})" if isinstance(device, str) else ""
+                print(f"🔧 处理批次 {batch_idx+1}: 移动数据到设备{device_str}")
+                q, c, r, qshft, cshft, rshft, m, sm = q.to(device), c.to(device), r.to(device), qshft.to(device), cshft.to(device), rshft.to(device), m.to(device), sm.to(device)
+                qidxs, rests, orirow = dqtest["qidxs"], dqtest["rests"], dqtest["orirow"]
+                
+                # 处理LLM预测
+                batch_q_data = torch.cat((q[:,0:1], qshft), dim=1).long()
+                batch_pid_data = torch.cat((c[:,0:1], cshft), dim=1).long()
+                batch_target_data = torch.cat((r[:,0:1], rshft), dim=1).long()
+                
+                # 缓存处理
+                cache_dir = f"llm_cache_{model.emb_type}"
+                os.makedirs(cache_dir, exist_ok=True)
+                cache_file = os.path.join(cache_dir, f"pred_{hash(tuple(batch_q_data.cpu().numpy().tobytes()))}.npy")
+                
+                cache_status = ""
+                if os.path.exists(cache_file):
+                    predictions = np.load(cache_file)
+                    cache_status = "缓存命中"
+                    with lock:
+                        progress_stats['cached'] += 1
+                    
+                    if np.isnan(predictions).any():
+                        print(f"⚠️ 批次 {batch_idx+1}: 缓存包含NaN值，重新计算")
+                        predictions = model.forward(
+                            batch_q_data.cpu().numpy().tolist(),
+                            batch_pid_data.cpu().numpy().tolist(),
+                            batch_target_data.cpu().numpy().tolist()
+                        )
+                        if np.isnan(predictions).any():
+                            raise ValueError("前向传播结果包含NaN值")
+                        np.save(cache_file, predictions)
+                        cache_status += "→重新计算"
+                else:
+                    print(f"🔄 批次 {batch_idx+1}: 计算新预测")
+                    predictions = model.forward(
+                        batch_q_data.cpu().numpy().tolist(),
+                        batch_pid_data.cpu().numpy().tolist(),
+                        batch_target_data.cpu().numpy().tolist()
+                    )
+                    if np.isnan(predictions).any():
+                        raise ValueError("前向传播结果包含NaN值")
+                    np.save(cache_file, predictions)
+                    cache_status = "新计算"
+                
+                y = torch.from_numpy(predictions).float().to(device)
+                y = y[:, 1:]
+                
+                concepty = torch.masked_select(y, sm).detach().cpu()
+                conceptt = torch.masked_select(rshft, sm).detach().cpu()
+                
+                # 线程安全地更新共享变量
+                with lock:
+                    lenc += q.shape[0]
+                    y_trues.append(conceptt.numpy())
+                    y_scores.append(concepty.numpy())
+                    
+                    dcur = {
+                        "hs": [torch.zeros_like(y).unsqueeze(0)],
+                        "sm": sm,
+                        "cq": torch.cat((q[:,0:1], qshft), dim=1),
+                        "cc": torch.cat((c[:,0:1], cshft), dim=1),
+                        "cr": torch.cat((r[:,0:1], rshft), dim=1),
+                        "y": y,
+                        "qidxs": qidxs,
+                        "rests": rests,
+                        "orirow": orirow
+                    }
+                    
+                    # 合并历史数据
+                    dmerge = dict()
+                    for key in history_keys:
+                        if len(dhistory) == 0:
+                            dmerge[key] = dcur[key]
+                        else:
+                            if key == "hs":
+                                dmerge[key] = [torch.cat((dhistory[key][0], dcur[key][0]), dim=0)]
+                            else:
+                                dmerge[key] = torch.cat((dhistory[key], dcur[key]), dim=0)
+                    
+                    dcur, dhistory = group_fusion(dmerge, model, model_name, fusion_type, fout)
+                    for key in dcur:
+                        dinfos.setdefault(key, [])
+                        dinfos[key].append(dcur[key])
+                    
+                    progress_stats['completed'] += 1
+                    progress_stats['processed'] -= 1
+                    batch_time = time.time() - batch_start
+                    
+                    print(f"✅ 完成批次 {batch_idx+1}: {cache_status} | "
+                          f"样本数: {q.shape[0]} | "
+                          f"耗时: {batch_time:.2f}s | "
+                          f"进度: {progress_stats['completed']}/{progress_stats['total']}")
+            
+            except Exception as e:
+                print(f"❌ 批次 {batch_idx+1} 处理失败: {str(e)}")
+                raise
+        
+        # 使用线程池并发处理批次
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # 使用tqdm进度条
+            with tqdm(total=total_batches, desc="评估进度") as pbar:
+                futures = {executor.submit(process_batch, data, batch_idx): batch_idx 
+                          for batch_idx, data in enumerate(test_loader)}
+                
+                for future in as_completed(futures):
+                    batch_idx = futures[future]
+                    try:
+                        future.result()
+                        pbar.update(1)
+                    except Exception as e:
+                        pbar.close()
+                        print(f"评估失败于批次 {batch_idx+1}: {str(e)}")
+                        raise
+        
+        # 最终进度报告
+        log_progress()
+        print(f"🎉 所有批次处理完成! 总耗时: {time.time() - start_time:.2f}秒")
+        
+        # 计算评估指标
+        print("\n📈 计算评估指标...")
+        aucs, accs = dict(), dict()
+        ts = np.concatenate(y_trues, axis=0)
+        ps = np.concatenate(y_scores, axis=0)
+        
+        auc = metrics.roc_auc_score(y_true=ts, y_score=ps)
+        prelabels = [1 if p >= 0.5 else 0 for p in ps]
+        acc = metrics.accuracy_score(ts, prelabels)
+        aucs["concepts"] = auc
+        accs["concepts"] = acc
+        print(f"📊 概念级 AUC: {auc:.4f}, 准确率: {acc:.4f}")
+
+        for key in dinfos:
+            if key not in ["late_mean", "late_vote", "late_all", "early_preds"]:
+                continue
+            ts = np.concatenate(dinfos['late_trues'], axis=0)
+            ps = np.concatenate(dinfos[key], axis=0)
+            auc = metrics.roc_auc_score(y_true=ts, y_score=ps)
+            prelabels = [1 if p >= 0.5 else 0 for p in ps]
+            acc = metrics.accuracy_score(ts, prelabels)
+            aucs[key] = auc
+            accs[key] = acc
+            print(f"📊 {key} AUC: {auc:.4f}, 准确率: {acc:.4f}")
+    
+    if save_path != "":
+        fout.close()
+        
+    return aucs, accs
 
 def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion", "late_fusion"], save_path=""):
     # dkt / dkt+ / dkt_forget / atkt: give past -> predict all. has no early fusion!!!
@@ -456,8 +671,8 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         for batch_idx, data in enumerate(test_loader):
             total_batches = len(test_loader)
             current_batch = batch_idx + 1  # 从1开始计数
-            if current_batch > 4:
-                break
+            # if current_batch > 4:
+            #     break
             print(f"正在处理第 {current_batch}/{total_batches} 个batch")
             if model_name in ["dkt_forget", "bakt_time", "dbakt"]:
                 dcurori, dgaps, dqtest = data

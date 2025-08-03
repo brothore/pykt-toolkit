@@ -5,7 +5,7 @@ import copy
 import torch
 import pandas as pd
 # from pykt.config import ERR_PATH,stu_pk,SET_TARGET_STU
-from pykt.models import evaluate, evaluate_question, load_model
+from pykt.models import evaluate, evaluate_question, load_model,evaluate_llm_question_concurrent
 from pykt.datasets import init_test_datasets
 #只进行windows_acc/auc_late的predict
 device = "cpu" if not torch.cuda.is_available() else "cuda"
@@ -111,7 +111,11 @@ def main(params):
     if "test_question_window_file" in data_config and not test_question_window_loader is None:
         save_test_question_window_path = os.path.join(save_dir, f"{model.emb_type}_test_question_window_predictions.txt")
         # print(f"stu_id: {SET_TARGET_STU}")
-        qw_testaucs, qw_testaccs = evaluate_question(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
+        if model_name != "llm":
+            qw_testaucs, qw_testaccs = evaluate_question(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
+        else:
+            qw_testaucs, qw_testaccs = evaluate_llm_question_concurrent(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
+
         for key in qw_testaucs:
             dres["windowauc" + key] = qw_testaucs[key]
         for key in qw_testaccs:
@@ -139,7 +143,7 @@ def main(params):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--bz", type=int, default=256)
+    parser.add_argument("--bz", type=int, default=1)
     parser.add_argument("--save_dir", type=str, default="saved_model")
     parser.add_argument("--fusion_type", type=str, default="early_fusion,late_fusion")
     parser.add_argument("--use_wandb", type=int, default=0)

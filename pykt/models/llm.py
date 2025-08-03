@@ -325,7 +325,7 @@ class LLM:
         base_url: str = "http://localhost:8102",
         model_path: str = "/root/qwen/Qwen3-8B",
         max_retries: int = 3,
-        max_concurrent_requests: int = 64,
+        max_concurrent_requests: int = 255,
         timeout: int = 60
     ):
         """
@@ -345,15 +345,16 @@ class LLM:
         self.max_retries = max_retries
         self.max_concurrent_requests = max_concurrent_requests
         self.timeout = timeout
-        
-        # 初始化 OpenAI 兼容客户端
-        self.client = AsyncOpenAI(
-            base_url=f"{base_url}/v1",
-            api_key="no-key-required",
-            timeout=timeout,
-            max_retries=max_retries
-        )
-        
+        if self.emb_type == "qwen3-8b":
+            # 初始化 OpenAI 兼容客户端
+            self.client = AsyncOpenAI(
+                base_url=f"{base_url}/v1",
+                api_key="no-key-required",
+                timeout=timeout,
+                max_retries=max_retries
+            )
+        elif self.emb_type == "deepseekv3":
+            self.client = AsyncOpenAI(api_key=Config.api_key, base_url="https://api.deepseek.com")
         # 系统 prompt 定义
         self.system_prompt = """你是一个知识追踪专家，需要根据学生的答题序列预测他们下一步答题的正确概率。
 请严格按照以下要求执行任务：
@@ -364,17 +365,22 @@ class LLM:
 
     async def _call_openai_api(self, prompt: str, retry_count: int = 0) -> Optional[float]:
         try:
-            response = await self.client.completions.create(  # 注意这里是 completions 而非 chat.completions
+            response = await self.client.completions.create(
                 model=self.model_path,
-                prompt=f"{self.system_prompt}\n\n{prompt}",  # 将 system_prompt 和用户提示合并
+                prompt=f"{self.system_prompt}\n\n{prompt}",
                 max_tokens=20,
                 temperature=0.1,
                 stop=["\n"]
             )
-            # print(f"[DEBUG] response: {response} (type: {type(response)})")
-            text = response.choices[0].text.strip()  # 注意这里是 .text 而非 .message.content
+            text = response.choices[0].text.strip()
             print(f"[DEBUG] 接收到返回text: {text} (type: {type(text)})")
-            return float(text)
+            try:
+                prob = float(text)
+                if 0 <= prob <= 1:  # 验证概率值在有效范围内
+                    return prob
+                raise ValueError("概率值不在0-1范围内")
+            except ValueError:
+                raise ValueError(f"无法解析为有效概率值: {text}")
         except Exception as e:
             print(f"[ERROR] 请求失败: {str(e)}")
             if retry_count < self.max_retries:
@@ -416,13 +422,13 @@ class LLM:
         return "历史答题记录:\n" + "\n".join(history) + "\n\n请预测下一个问题的正确概率(只输出0到1的数字):"
 
     async def _process_sequence(
-        self,
-        q_data: List[int],
-        pid_data: List[int],
-        target_data: List[int]
-    ) -> List[float]:
+    self,
+    q_data: List[int],
+    pid_data: List[int],
+    target_data: List[int]
+) -> List[float]:
         """
-        处理单个序列，逐步预测每个时间步
+        处理单个序列，并行预测每个时间步
         
         参数:
             q_data: 问题内容列表 [seq_len]
@@ -432,20 +438,40 @@ class LLM:
         返回:
             预测概率列表 [seq_len]
         """
-        predictions = []
         seq_len = len(q_data)
+        if seq_len == 0:
+            return []
         
-        # 第一个时间步没有历史信息，使用默认值
-        if seq_len > 0:
-            predictions.append(0.5)  # 默认值
-            
-        for step in range(1, seq_len):
+        # 创建所有时间步的prompt
+        prompts = []
+        for step in range(seq_len):
+            if step == 0:
+                continue
             prompt = self._construct_prompt(q_data, pid_data, target_data, step)
-            prob = await self._call_openai_api(prompt)
-            predictions.append(prob if prob is not None else np.nan)
+            prompts.append((step, prompt))
+        
+        # 并行处理所有时间步
+        semaphore = asyncio.Semaphore(self.max_concurrent_requests)
+        
+        async def process_step(step, prompt):
+            async with semaphore:
+                retry_count = 0
+                while retry_count <= self.max_retries:
+                    prob = await self._call_openai_api(prompt)
+                    if prob is not None:
+                        return step, prob
+                    retry_count += 1
+                    await asyncio.sleep(1 + retry_count)
+                return step, np.nan  # 最终失败时返回默认值
+        
+        tasks = [process_step(step, prompt) for step, prompt in prompts]
+        results = await asyncio.gather(*tasks)
+        
+        # 组装结果
+        predictions = [0.5]  # 第一个时间步默认值
+        predictions.extend(prob for _, prob in sorted(results, key=lambda x: x[0]))
         
         return predictions
-
     async def _process_batch(
         self,
         batch_q_data: List[List[int]],
