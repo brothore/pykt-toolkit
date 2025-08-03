@@ -16,7 +16,7 @@ from .mamba_atakt import MAMBA_ATAKT
 from .dkt_forget import DKTForget
 from .akt import AKT
 from .qwen import QWEN
-from .deepseekv3 import DEEPSEEKV3
+from .llm import LLM
 from .balance_akt import BALANCE_AKT
 from .Transformer_template import TRANSFORMER_TEMPLATE
 from .gkt import GKT
@@ -72,8 +72,8 @@ def init_model(model_name, model_config, data_config, emb_type):
         model = AKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "qwen":
         model = QWEN(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
-    elif model_name == "deepseekv3":
-        model = DEEPSEEKV3()
+    elif model_name == "llm":
+        model = LLM()
     elif model_name == "balance_akt":
         model = BALANCE_AKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "Transformer_template":
@@ -172,7 +172,7 @@ def init_model(model_name, model_config, data_config, emb_type):
 
 def load_model(model_name, model_config, data_config, emb_type, ckpt_path):
     model = init_model(model_name, model_config, data_config, emb_type)
-    if model_name not in ["deepseekv3"]:
+    if model_name not in ["llm"]:
         net = torch.load(os.path.join(ckpt_path, emb_type+"_model.ckpt"))
         model.load_state_dict(net)
     return model

@@ -39,8 +39,8 @@ def main(params):
                 train_config = config["train_config"]
                 seq_len = train_config["seq_len"]
                 model_config["seq_len"] = seq_len
-    elif params["model_name"] == "deepseekv3":
-        model_name, dataset_name, emb_type = "deepseekv3", params["dataset_name"], "qid"
+    elif params["model_name"] == "llm":
+        model_name, dataset_name, emb_type = "llm", params["dataset_name"], "qid"
         model_config = {"api_key": ""}
         
     with open("../configs/data_config.json") as fin:
@@ -118,7 +118,7 @@ def main(params):
             dres["windowacc" + key] = qw_testaccs[key]
 
     print(dres)
-    if model_name not in ["deepseekv3"]:
+    if model_name not in ["llm"]:
         raw_config = json.load(open(os.path.join(save_dir, "config.json")))
         dres.update(raw_config['params'])
 

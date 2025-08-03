@@ -86,7 +86,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             q, c, r, qshft, cshft, rshft, m, sm = q.to(device), c.to(device), r.to(device), qshft.to(device), cshft.to(device), rshft.to(device), m.to(device), sm.to(device)
             if model.model_name in que_type_models and model_name not in ["lpkt", "rkt", "promptkt", "unikt"]:
                 model.model.eval()
-            elif model_name not in ["deepseekv3"]:
+            elif model_name not in ["llm"]:
                 model.eval()
 
             # print(f"before y: {y.shape}")
@@ -154,7 +154,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt",   "Transformer_template", "balance_akt", "qwen"]:                                
                 y, reg_loss = model(cc.long(), cr.long(), cq.long())
                 y = y[:,1:]
-            elif model_name == "deepseekv3":
+            elif model_name == "llm":
                 batch_q_data = cc.long()
                 batch_pid_data = cq.long()
                 batch_target_data = cr.long()
@@ -198,7 +198,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             if save_path != "":
                 result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y)
                 fout.write(result+"\n")
-            if model_name not in ["deepseekv3"]:
+            if model_name not in ["llm"]:
                 y = torch.masked_select(y, sm).detach().cpu()
             # print(f"pred_results:{y}")  
             t = torch.masked_select(rshft, sm).detach().cpu()
@@ -228,7 +228,7 @@ def early_fusion(curhs, model, model_name):
         que_diff = model.diff_layer(curhs[1])#equ 13
         p = torch.sigmoid(3.0*stu_ability-que_diff)#equ 14
         p = p.squeeze(-1)
-    elif model_name in ["akt","extrakt", "folibikt","robustkt", "dtransformer","simplekt","stablekt","cskt", "fluckt", "bakt_time", "sparsekt", "lefokt_akt", "ukt", "hcgkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "dbakt", "balance_akt", "deepseekv3", "qwen"]:
+    elif model_name in ["akt","extrakt", "folibikt","robustkt", "dtransformer","simplekt","stablekt","cskt", "fluckt", "bakt_time", "sparsekt", "lefokt_akt", "ukt", "hcgkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "dbakt", "balance_akt", "llm", "qwen"]:
         output = model.out(curhs[0]).squeeze(-1)
         m = nn.Sigmoid()
         p = m(output)
@@ -456,7 +456,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         for batch_idx, data in enumerate(test_loader):
             total_batches = len(test_loader)
             current_batch = batch_idx + 1  # 从1开始计数
-            if current_batch > 5:
+            if current_batch > 4:
                 break
             print(f"正在处理第 {current_batch}/{total_batches} 个batch")
             if model_name in ["dkt_forget", "bakt_time", "dbakt"]:
@@ -477,7 +477,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             lenc += q.shape[0]
             # print("="*20)
             # print(f"start predict seqlen: {lenc}")
-            if model_name not in ["deepseekv3"]:
+            if model_name not in ["llm"]:
                 model.eval()
 
             # print(f"before y: {y.shape}")
@@ -506,13 +506,13 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             elif model_name in ["akt","extrakt", "folibikt","fluckt","robustkt", "lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "qwen"]:
                 y, reg_loss, h = model(cc.long(), cr.long(), cq.long(), True)
                 y = y[:,1:]
-            elif model_name == "deepseekv3":
+            elif model_name == "llm":
                 batch_q_data = cc.long()
                 batch_pid_data = cq.long()
                 batch_target_data = cr.long()
                 # 生成缓存文件名
                 
-                cache_dir = f"deepseekv3_cache"
+                cache_dir = f"llm_cache_{model.emb_type}"
                 os.makedirs(cache_dir, exist_ok=True)
                 cache_file = os.path.join(cache_dir, f"pred_{hash(tuple(batch_q_data.cpu().numpy().tobytes()))}.npy")
                 
@@ -552,10 +552,10 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
                     # 保存预测结果到缓存
                     np.save(cache_file, predictions)
                     print(f"[DEBUG] 预测结果已保存到: {cache_file}")
-                
+                    
                 y = torch.from_numpy(predictions).float().to(device)
                 # 不需要[:,1:]，因为已经是最终预测
-                y = y
+                y = y[:, 1:]
                 # print(f"[DEBUG] y: {y} (type: {type(y)})")
             elif model_name in ["dtransformer"]:
                 output, h, *_ = model.predict(cc.long(), cr.long(), cq.long())
@@ -622,10 +622,9 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
                 y = y[:, 1:]
             elif model_name == "dimkt":
                 y = model(q.long(),c.long(),sd.long(),qd.long(),r.long(),qshft.long(),cshft.long(),sdshft.long(),qdshft.long())
-            if model_name not in ["deepseekv3"]:
-                concepty = torch.masked_select(y, sm).detach().cpu()
-            else:
-                concepty = y.cpu()
+
+            print(f"[DEBUG] concepty: {y.shape} (type: {type(y)})")
+            concepty = torch.masked_select(y, sm).detach().cpu()
             conceptt = torch.masked_select(rshft, sm).detach().cpu()
 
             y_trues.append(conceptt.numpy())
@@ -1089,7 +1088,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             # 应该用预测的r更新memory value，但是这里一个知识点一个知识点预测，所以curr不起作用！
             y = model(cin.long(), rin.long())
             pred = y[0][-1]
-        elif model_name in ["akt","extrakt","folibikt","fluckt", "robustkt","lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "deepseekv3", "qwen"]:  
+        elif model_name in ["akt","extrakt","folibikt","fluckt", "robustkt","lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "llm", "qwen"]:  
             #### 输入有question！     
             if qout != None:
                 curq = torch.tensor([[qout.item()]]).to(device)
@@ -1476,7 +1475,7 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
         elif model_name == "saint":
             y = model(ccq.long(), ccc.long(), curr.long())
             y = y[:, 1:]
-        elif model_name in ["akt","extrakt","folibikt", "robustkt", "cakt","fluckt","lefokt_akt",  "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "deepseekv3", "qwen"]:                                
+        elif model_name in ["akt","extrakt","folibikt", "robustkt", "cakt","fluckt","lefokt_akt",  "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "llm", "qwen"]:                                
             y, reg_loss = model(ccc.long(), ccr.long(), ccq.long())
             y = y[:,1:]
         elif model_name in ["dtransformer"]:

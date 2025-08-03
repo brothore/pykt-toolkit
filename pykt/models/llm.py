@@ -3,7 +3,7 @@ from typing import List, Tuple, Optional
 from openai import AsyncOpenAI
 import numpy as np
 from typing import *
-from pykt.models.deepseekv3_config import  Config
+from pykt.models.llm_config import  Config
 from pydantic import BaseModel
 import json
 import logging
@@ -313,92 +313,73 @@ async def stream_chat(model_name: str,
             except:
                 pass
     pass
-class DEEPSEEKV3:
+import aiohttp
+import asyncio
+import numpy as np
+from typing import List, Optional
+from openai import AsyncOpenAI
+
+class LLM:
     def __init__(
         self,
-        api_key: str = "sk-8266b5874a8e4dfdbfc7e4a4d8913dc2",
-        max_retries: int = 99999,
-        max_concurrent_requests: int = 4,
-        base_url: str = "https://api.deepseek.com",
-        model_name: str = "Qwen2.5-14B-Instruct-1M"
+        base_url: str = "http://localhost:8102",
+        model_path: str = "/root/qwen/Qwen3-8B",
+        max_retries: int = 3,
+        max_concurrent_requests: int = 64,
+        timeout: int = 60
     ):
         """
-        初始化 DeepSeek 知识追踪模型
+        初始化本地 vLLM 知识追踪模型 (OpenAI 兼容版本)
         
         参数:
-            api_key: DeepSeek API 密钥
-            max_retries: 解析失败时的最大重试次数
+            base_url: vLLM 服务地址 (默认: http://localhost:8102)
+            model_path: 模型路径 (默认: /root/qwen/Qwen3-8B)
+            max_retries: 最大重试次数
             max_concurrent_requests: 最大并发请求数
-            base_url: API 基础 URL
-            model_name: 使用的模型名称
+            timeout: 请求超时时间(秒)
         """
-        self.emb_type = "qid"  # 假设使用问题ID作为嵌入类型
-        self.client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+        self.emb_type = "qwen3-8b"
+        self.model_name = "llm"
+        self.base_url = base_url
+        self.model_path = model_path
         self.max_retries = max_retries
         self.max_concurrent_requests = max_concurrent_requests
-        self.model_name = model_name
+        self.timeout = timeout
+        
+        # 初始化 OpenAI 兼容客户端
+        self.client = AsyncOpenAI(
+            base_url=f"{base_url}/v1",
+            api_key="no-key-required",
+            timeout=timeout,
+            max_retries=max_retries
+        )
         
         # 系统 prompt 定义
         self.system_prompt = """你是一个知识追踪专家，需要根据学生的答题序列预测他们下一步答题的正确概率。
-    请严格按照以下要求执行任务：
-    1. 输入将提供学生的历史答题记录，格式为：(问题ID, 问题内容, 回答是否正确)
-    2. 你需要分析这些历史记录，预测学生回答下一个问题的正确概率
-    3. 输出必须是一个0到1之间的浮点数，表示预测的正确概率
-    4. 只输出数字，不要包含任何其他文字或解释"""
+请严格按照以下要求执行任务：
+1. 输入将提供学生的历史答题记录，格式为：(问题ID, 问题内容, 回答是否正确)
+2. 你需要分析这些历史记录，预测学生回答下一个问题的正确概率
+3. 输出必须是一个0到1之间的浮点数，表示预测的正确概率
+4. 只输出数字，不要包含任何其他文字或解释"""
 
-    async def _call_api_with_retry(
-        self,
-        prompt: str,
-        retry_count: int = 0
-    ) -> Optional[float]:
-        """
-        带重试机制的API调用
-        
-        参数:
-            prompt: 构造的提示词
-            retry_count: 当前重试次数
-            
-        返回:
-            预测概率 (0-1) 或 None (如果所有重试都失败)
-        """
-        semaphore = asyncio.Semaphore(self.max_concurrent_requests)
+    async def _call_openai_api(self, prompt: str, retry_count: int = 0) -> Optional[float]:
         try:
-            async with semaphore:
-                print(f"准备发送API请求 (重试次数: {retry_count})")
-                
-                # 使用stream_chat进行流式调用
-                content = ""
-                async for chat_result in stream_chat(
-                    model_name=self.model_name,
-                    messages=[
-                        {"role": "system", "content": self.system_prompt},
-                        {"role": "user", "content": prompt}
-                    ],
-                    is_reasoning=False,
-                ):
-                    if chat_result.current_content:
-                        content += chat_result.current_content
-                
-                print(f"[DEBUG] 得到响应: {content}")
-                
-                # 尝试解析响应
-                try:
-                    prob = float(content.strip())
-                    print(f"[DEBUG] 解析成功: {prob}")
-                    if 0 <= prob <= 1:
-                        return prob
-                    raise ValueError("Probability out of range")
-                except (ValueError, AttributeError):
-                    error_msg = f"无法解析API响应: {content}"
-                    print(f"[ERROR] {error_msg}")
-                    raise ValueError(error_msg)
-                    
+            response = await self.client.completions.create(  # 注意这里是 completions 而非 chat.completions
+                model=self.model_path,
+                prompt=f"{self.system_prompt}\n\n{prompt}",  # 将 system_prompt 和用户提示合并
+                max_tokens=20,
+                temperature=0.1,
+                stop=["\n"]
+            )
+            # print(f"[DEBUG] response: {response} (type: {type(response)})")
+            text = response.choices[0].text.strip()  # 注意这里是 .text 而非 .message.content
+            print(f"[DEBUG] 接收到返回text: {text} (type: {type(text)})")
+            return float(text)
         except Exception as e:
-            print(f"[ERROR] 请求异常: {str(e)}")
+            print(f"[ERROR] 请求失败: {str(e)}")
             if retry_count < self.max_retries:
-                await asyncio.sleep(1 + retry_count)  # 指数退避
-                return await self._call_api_with_retry(prompt, retry_count + 1)
-            print(f"[ERROR] 请求失败，已达到最大重试次数: {str(e)}")
+                await asyncio.sleep(1 + retry_count)
+                return await self._call_openai_api(prompt, retry_count + 1)
             return None
 
     def _construct_prompt(
@@ -409,7 +390,7 @@ class DEEPSEEKV3:
         predict_step: int
     ) -> str:
         """
-        为单行数据构造提示词
+        构造 vLLM 提示词
         
         参数:
             q_data: 问题内容列表
@@ -426,13 +407,13 @@ class DEEPSEEKV3:
             pid = pid_data[i]
             target = target_data[i]
             correctness = "正确" if target == 1 else "错误"
-            history.append(f"(问题编号{pid}, 知识点编号{q}, 答题情况{correctness})\n")
+            history.append(f"(问题编号{pid}, 知识点编号{q}, 答题情况{correctness})")
         
         current_q = q_data[predict_step]
         current_pid = pid_data[predict_step]
-        history.append(f"(问题编号{current_pid}, 知识点编号{current_q}, 答题情况待预测)\n")
+        history.append(f"(问题编号{current_pid}, 知识点编号{current_q}, 答题情况待预测)")
 
-        return "历史答题记录:\n" + "\n".join(history) + "\n\n请预测下一个问题的正确概率:"
+        return "历史答题记录:\n" + "\n".join(history) + "\n\n请预测下一个问题的正确概率(只输出0到1的数字):"
 
     async def _process_sequence(
         self,
@@ -454,13 +435,13 @@ class DEEPSEEKV3:
         predictions = []
         seq_len = len(q_data)
         
-        # 第一个时间步没有历史信息，可以跳过或使用默认值
+        # 第一个时间步没有历史信息，使用默认值
         if seq_len > 0:
             predictions.append(0.5)  # 默认值
             
         for step in range(1, seq_len):
             prompt = self._construct_prompt(q_data, pid_data, target_data, step)
-            prob = await self._call_api_with_retry(prompt)
+            prob = await self._call_openai_api(prompt)
             predictions.append(prob if prob is not None else np.nan)
         
         return predictions
@@ -482,8 +463,14 @@ class DEEPSEEKV3:
         返回:
             预测概率列表 [batch_size, seq_len]
         """
+        semaphore = asyncio.Semaphore(self.max_concurrent_requests)
+        
+        async def process_one(q_data, pid_data, target_data):
+            async with semaphore:
+                return await self._process_sequence(q_data, pid_data, target_data)
+        
         tasks = [
-            self._process_sequence(q_data, pid_data, target_data)
+            process_one(q_data, pid_data, target_data)
             for q_data, pid_data, target_data in zip(batch_q_data, batch_pid_data, batch_target_data)
         ]
         return await asyncio.gather(*tasks)
@@ -495,8 +482,7 @@ class DEEPSEEKV3:
         batch_target_data: List[List[int]]
     ) -> np.ndarray:
         """
-        前向传播 (类似PyTorch模型接口)
-        改造为同步方法，内部使用异步事件循环
+        前向传播 (同步接口)
         
         参数:
             batch_q_data: 批次问题内容 [batch_size, seq_len]
@@ -512,3 +498,7 @@ class DEEPSEEKV3:
         loop = asyncio.get_event_loop()
         results = loop.run_until_complete(async_forward())
         return np.array(results)
+
+    async def close(self):
+        """关闭客户端会话"""
+        await self.client.close()
