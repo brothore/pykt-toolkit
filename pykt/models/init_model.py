@@ -12,11 +12,12 @@ from .sakt import SAKT
 from .saint import SAINT
 from .kqn import KQN
 from .atkt import ATKT
-from .mamba_atakt import MAMBA_ATAKT
+# from .mamba_atakt import MAMBA_ATAKT
 from .dkt_forget import DKTForget
 from .akt import AKT
 from .qwen import QWEN
 from .llm import LLM
+from .mpllm import MPLLM
 from .balance_akt import BALANCE_AKT
 from .Transformer_template import TRANSFORMER_TEMPLATE
 from .gkt import GKT
@@ -29,9 +30,9 @@ from .iekt import IEKT
 from .atdkt import ATDKT
 from .simplekt import simpleKT
 from .bakt_time import BAKTTime
-from .dbakt import DBAKT
+# from .dbakt import DBAKT
 from .qdkt import QDKT
-from .qikt import QIKT
+# from .qikt import QIKT
 from .dimkt import DIMKT
 from .sparsekt import sparseKT
 from .rkt import RKT
@@ -74,6 +75,10 @@ def init_model(model_name, model_config, data_config, emb_type):
         model = QWEN(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "llm":
         model = LLM()
+    elif model_name == "balance_akt":
+        model = BALANCE_AKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "mpllm":
+        model = MPLLM()
     elif model_name == "balance_akt":
         model = BALANCE_AKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "Transformer_template":
@@ -172,7 +177,7 @@ def init_model(model_name, model_config, data_config, emb_type):
 
 def load_model(model_name, model_config, data_config, emb_type, ckpt_path):
     model = init_model(model_name, model_config, data_config, emb_type)
-    if model_name not in ["llm"]:
+    if model_name not in ["llm","mpllm"]:
         net = torch.load(os.path.join(ckpt_path, emb_type+"_model.ckpt"))
         model.load_state_dict(net)
     return model

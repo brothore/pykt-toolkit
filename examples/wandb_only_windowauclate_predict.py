@@ -5,12 +5,12 @@ import copy
 import torch
 import pandas as pd
 # from pykt.config import ERR_PATH,stu_pk,SET_TARGET_STU
-from pykt.models import evaluate, evaluate_question, load_model,evaluate_llm_question_concurrent
+from pykt.models import evaluate, evaluate_question, load_model,evaluate_llm_question_async
 from pykt.datasets import init_test_datasets
 #只进行windows_acc/auc_late的predict
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:2'
-
+import asyncio
 
 
 def main(params):
@@ -39,10 +39,12 @@ def main(params):
                 train_config = config["train_config"]
                 seq_len = train_config["seq_len"]
                 model_config["seq_len"] = seq_len
-    elif params["model_name"] == "llm":
+    elif params["model_name"] in ["llm"]:
         model_name, dataset_name, emb_type = "llm", params["dataset_name"], "qid"
         model_config = {"api_key": ""}
-        
+    elif params["model_name"] in ["mpllm"]:
+        model_name, dataset_name, emb_type = "mpllm", params["dataset_name"], "qid"
+        model_config = {"api_key": ""}   
     with open("../configs/data_config.json") as fin:
         curconfig = copy.deepcopy(json.load(fin))
         data_config = curconfig[dataset_name]
@@ -111,18 +113,27 @@ def main(params):
     if "test_question_window_file" in data_config and not test_question_window_loader is None:
         save_test_question_window_path = os.path.join(save_dir, f"{model.emb_type}_test_question_window_predictions.txt")
         # print(f"stu_id: {SET_TARGET_STU}")
-        if model_name != "llm":
+        if model_name != "llm_con":
             qw_testaucs, qw_testaccs = evaluate_question(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
         else:
-            qw_testaucs, qw_testaccs = evaluate_llm_question_concurrent(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
-
+            loop = asyncio.get_event_loop()
+            qw_testaucs, qw_testaccs = loop.run_until_complete(
+                evaluate_llm_question_async(
+                    model, 
+                    test_question_window_loader, 
+                    model_name, 
+                    fusion_type, 
+                    save_test_question_window_path,
+                    max_concurrent_batches=params["num_workers"]
+                )
+            )
         for key in qw_testaucs:
             dres["windowauc" + key] = qw_testaucs[key]
         for key in qw_testaccs:
             dres["windowacc" + key] = qw_testaccs[key]
 
     print(dres)
-    if model_name not in ["llm"]:
+    if model_name not in ["llm","mpllm"]:
         raw_config = json.load(open(os.path.join(save_dir, "config.json")))
         dres.update(raw_config['params'])
 
@@ -143,12 +154,13 @@ def main(params):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--bz", type=int, default=1)
+    parser.add_argument("--bz", type=int, default=4)
     parser.add_argument("--save_dir", type=str, default="saved_model")
     parser.add_argument("--fusion_type", type=str, default="early_fusion,late_fusion")
     parser.add_argument("--use_wandb", type=int, default=0)
     parser.add_argument("--model_name", type=str, default="")
     parser.add_argument("--dataset_name", type=str, default="")
+    parser.add_argument("--num_workers", type=int, default=1)
 
     args = parser.parse_args()
     print(args)

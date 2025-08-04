@@ -86,7 +86,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             q, c, r, qshft, cshft, rshft, m, sm = q.to(device), c.to(device), r.to(device), qshft.to(device), cshft.to(device), rshft.to(device), m.to(device), sm.to(device)
             if model.model_name in que_type_models and model_name not in ["lpkt", "rkt", "promptkt", "unikt"]:
                 model.model.eval()
-            elif model_name not in ["llm"]:
+            elif model_name not in ["llm", "mpllm"]:
                 model.eval()
 
             # print(f"before y: {y.shape}")
@@ -154,7 +154,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt",   "Transformer_template", "balance_akt", "qwen"]:                                
                 y, reg_loss = model(cc.long(), cr.long(), cq.long())
                 y = y[:,1:]
-            elif model_name == "llm":
+            elif model_name in ["llm", "mpllm"]:
                 batch_q_data = cc.long()
                 batch_pid_data = cq.long()
                 batch_target_data = cr.long()
@@ -198,7 +198,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             if save_path != "":
                 result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y)
                 fout.write(result+"\n")
-            if model_name not in ["llm"]:
+            if model_name not in ["llm", "mpllm"]:
                 y = torch.masked_select(y, sm).detach().cpu()
             # print(f"pred_results:{y}")  
             t = torch.masked_select(rshft, sm).detach().cpu()
@@ -228,7 +228,7 @@ def early_fusion(curhs, model, model_name):
         que_diff = model.diff_layer(curhs[1])#equ 13
         p = torch.sigmoid(3.0*stu_ability-que_diff)#equ 14
         p = p.squeeze(-1)
-    elif model_name in ["akt","extrakt", "folibikt","robustkt", "dtransformer","simplekt","stablekt","cskt", "fluckt", "bakt_time", "sparsekt", "lefokt_akt", "ukt", "hcgkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "dbakt", "balance_akt", "llm", "qwen"]:
+    elif model_name in ["akt","extrakt", "folibikt","robustkt", "dtransformer","simplekt","stablekt","cskt", "fluckt", "bakt_time", "sparsekt", "lefokt_akt", "ukt", "hcgkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "dbakt", "balance_akt", "llm", "qwen", "mpllm"]:
         output = model.out(curhs[0]).squeeze(-1)
         m = nn.Sigmoid()
         p = m(output)
@@ -428,186 +428,122 @@ import threading
 import time
 from tqdm import tqdm  # 用于进度条显示
 
-def evaluate_llm_question_concurrent(model, test_loader, model_name, fusion_type=["early_fusion", "late_fusion"], save_path="", max_workers=4):
-    """高度并发的LLM评估函数（带详细反馈）"""
-    print(f"🚀 开始并发评估 (workers={max_workers})")
-    start_time = time.time()
-    
+async def evaluate_llm_question_async(
+    model, 
+    test_loader, 
+    model_name, 
+    fusion_type=["early_fusion", "late_fusion"], 
+    save_path="",
+    max_concurrent_batches=10
+):
+    """高度并发的LLM模型评估函数"""
     if save_path != "":
         fout = open(save_path, "w", encoding="utf8")
         fout.write("\t".join(["orirow", "qidx", "questions", "concepts", "concept_preds", "late_trues", "late_mean", "late_vote", "late_all", "early_trues", "early_preds"]) + "\n")
     
     with torch.no_grad():
-        # 线程安全的存储结构
-        lock = threading.Lock()
         dinfos = dict()
         dhistory = dict()
         history_keys = ["hs", "sm", "cq", "cc", "cr", "y", "qidxs", "rests", "orirow"]
         y_trues, y_scores = [], []
         lenc = 0
-        processed_batches = 0
-        total_batches = len(test_loader)
         
-        # 进度统计
-        progress_stats = {
-            'total': total_batches,
-            'completed': 0,
-            'cached': 0,
-            'processed': 0,
-            'last_update': time.time()
-        }
+        # 创建批次处理队列
+        batch_queue = asyncio.Queue()
+        results_queue = asyncio.Queue()
         
-        def log_progress():
-            """记录和打印进度信息"""
-            with lock:
-                elapsed = time.time() - start_time
-                avg_time = elapsed / (progress_stats['completed'] + 1e-6)
-                remaining = avg_time * (progress_stats['total'] - progress_stats['completed'])
+        # 生产者协程：将批次数据放入队列
+        async def producer():
+            for batch_idx, data in enumerate(test_loader):
+                await batch_queue.put((batch_idx, data))
+            await batch_queue.put(None)  # 结束信号
+        
+        # 消费者协程：处理批次数据
+        async def consumer():
+            while True:
+                item = await batch_queue.get()
+                if item is None:
+                    break
                 
-                print(f"\n📊 进度: {progress_stats['completed']}/{progress_stats['total']} batches | "
-                      f"缓存命中: {progress_stats['cached']} | "
-                      f"处理中: {progress_stats['processed']} | "
-                      f"耗时: {elapsed:.1f}s | "
-                      f"预计剩余: {remaining:.1f}s")
-        
-        def process_batch(data, batch_idx):
-            nonlocal lenc, processed_batches
-            batch_start = time.time()
-            
-            with lock:
-                progress_stats['processed'] += 1
-                if time.time() - progress_stats['last_update'] > 5:  # 每5秒更新一次进度
-                    log_progress()
-                    progress_stats['last_update'] = time.time()
-            
-            try:
+                batch_idx, data = item
                 dcurori, dqtest = data
                 q, c, r = dcurori["qseqs"], dcurori["cseqs"], dcurori["rseqs"]
                 qshft, cshft, rshft = dcurori["shft_qseqs"], dcurori["shft_cseqs"], dcurori["shft_rseqs"]
                 m, sm = dcurori["masks"], dcurori["smasks"]
                 
-                # 移动到设备
-                device_str = f" (device: {device})" if isinstance(device, str) else ""
-                print(f"🔧 处理批次 {batch_idx+1}: 移动数据到设备{device_str}")
                 q, c, r, qshft, cshft, rshft, m, sm = q.to(device), c.to(device), r.to(device), qshft.to(device), cshft.to(device), rshft.to(device), m.to(device), sm.to(device)
                 qidxs, rests, orirow = dqtest["qidxs"], dqtest["rests"], dqtest["orirow"]
                 
-                # 处理LLM预测
+                # LLM特有的处理逻辑
                 batch_q_data = torch.cat((q[:,0:1], qshft), dim=1).long()
                 batch_pid_data = torch.cat((c[:,0:1], cshft), dim=1).long()
                 batch_target_data = torch.cat((r[:,0:1], rshft), dim=1).long()
                 
-                # 缓存处理
-                cache_dir = f"llm_cache_{model.emb_type}"
-                os.makedirs(cache_dir, exist_ok=True)
-                cache_file = os.path.join(cache_dir, f"pred_{hash(tuple(batch_q_data.cpu().numpy().tobytes()))}.npy")
-                
-                cache_status = ""
-                if os.path.exists(cache_file):
-                    predictions = np.load(cache_file)
-                    cache_status = "缓存命中"
-                    with lock:
-                        progress_stats['cached'] += 1
-                    
-                    if np.isnan(predictions).any():
-                        print(f"⚠️ 批次 {batch_idx+1}: 缓存包含NaN值，重新计算")
-                        predictions = model.forward(
-                            batch_q_data.cpu().numpy().tolist(),
-                            batch_pid_data.cpu().numpy().tolist(),
-                            batch_target_data.cpu().numpy().tolist()
-                        )
-                        if np.isnan(predictions).any():
-                            raise ValueError("前向传播结果包含NaN值")
-                        np.save(cache_file, predictions)
-                        cache_status += "→重新计算"
-                else:
-                    print(f"🔄 批次 {batch_idx+1}: 计算新预测")
-                    predictions = model.forward(
-                        batch_q_data.cpu().numpy().tolist(),
-                        batch_pid_data.cpu().numpy().tolist(),
-                        batch_target_data.cpu().numpy().tolist()
-                    )
-                    if np.isnan(predictions).any():
-                        raise ValueError("前向传播结果包含NaN值")
-                    np.save(cache_file, predictions)
-                    cache_status = "新计算"
+                # 异步获取预测结果
+                predictions = await model._process_batch(
+                    batch_q_data.cpu().numpy().tolist(),
+                    batch_pid_data.cpu().numpy().tolist(),
+                    batch_target_data.cpu().numpy().tolist()
+                )
+                predictions = np.array(predictions)
                 
                 y = torch.from_numpy(predictions).float().to(device)
                 y = y[:, 1:]
                 
                 concepty = torch.masked_select(y, sm).detach().cpu()
                 conceptt = torch.masked_select(rshft, sm).detach().cpu()
+
+                # 准备数据用于融合
+                dcur = {
+                    "hs": [torch.zeros_like(y).unsqueeze(0)],
+                    "sm": sm,
+                    "cq": torch.cat((q[:,0:1], qshft), dim=1),
+                    "cc": torch.cat((c[:,0:1], cshft), dim=1),
+                    "cr": torch.cat((r[:,0:1], rshft), dim=1),
+                    "y": y,
+                    "qidxs": qidxs,
+                    "rests": rests,
+                    "orirow": orirow
+                }
                 
-                # 线程安全地更新共享变量
-                with lock:
-                    lenc += q.shape[0]
-                    y_trues.append(conceptt.numpy())
-                    y_scores.append(concepty.numpy())
-                    
-                    dcur = {
-                        "hs": [torch.zeros_like(y).unsqueeze(0)],
-                        "sm": sm,
-                        "cq": torch.cat((q[:,0:1], qshft), dim=1),
-                        "cc": torch.cat((c[:,0:1], cshft), dim=1),
-                        "cr": torch.cat((r[:,0:1], rshft), dim=1),
-                        "y": y,
-                        "qidxs": qidxs,
-                        "rests": rests,
-                        "orirow": orirow
-                    }
-                    
-                    # 合并历史数据
-                    dmerge = dict()
-                    for key in history_keys:
-                        if len(dhistory) == 0:
-                            dmerge[key] = dcur[key]
-                        else:
-                            if key == "hs":
-                                dmerge[key] = [torch.cat((dhistory[key][0], dcur[key][0]), dim=0)]
-                            else:
-                                dmerge[key] = torch.cat((dhistory[key], dcur[key]), dim=0)
-                    
-                    dcur, dhistory = group_fusion(dmerge, model, model_name, fusion_type, fout)
-                    for key in dcur:
-                        dinfos.setdefault(key, [])
-                        dinfos[key].append(dcur[key])
-                    
-                    progress_stats['completed'] += 1
-                    progress_stats['processed'] -= 1
-                    batch_time = time.time() - batch_start
-                    
-                    print(f"✅ 完成批次 {batch_idx+1}: {cache_status} | "
-                          f"样本数: {q.shape[0]} | "
-                          f"耗时: {batch_time:.2f}s | "
-                          f"进度: {progress_stats['completed']}/{progress_stats['total']}")
+                await results_queue.put((batch_idx, concepty, conceptt, dcur))
+        
+        # 启动多个消费者
+        consumers = [asyncio.create_task(consumer()) for _ in range(max_concurrent_batches)]
+        
+        # 运行生产者和消费者
+        await asyncio.gather(producer(), *consumers)
+        
+        # 处理结果（按批次顺序）
+        results = []
+        while not results_queue.empty():
+            results.append(await results_queue.get())
+        
+        # 按批次顺序排序
+        results.sort(key=lambda x: x[0])
+        
+        # 合并结果
+        for _, concepty, conceptt, dcur in results:
+            y_trues.append(conceptt.numpy())
+            y_scores.append(concepty.numpy())
             
-            except Exception as e:
-                print(f"❌ 批次 {batch_idx+1} 处理失败: {str(e)}")
-                raise
-        
-        # 使用线程池并发处理批次
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # 使用tqdm进度条
-            with tqdm(total=total_batches, desc="评估进度") as pbar:
-                futures = {executor.submit(process_batch, data, batch_idx): batch_idx 
-                          for batch_idx, data in enumerate(test_loader)}
-                
-                for future in as_completed(futures):
-                    batch_idx = futures[future]
-                    try:
-                        future.result()
-                        pbar.update(1)
-                    except Exception as e:
-                        pbar.close()
-                        print(f"评估失败于批次 {batch_idx+1}: {str(e)}")
-                        raise
-        
-        # 最终进度报告
-        log_progress()
-        print(f"🎉 所有批次处理完成! 总耗时: {time.time() - start_time:.2f}秒")
-        
+            # 合并历史数据
+            dmerge = dict()
+            for key in history_keys:
+                if len(dhistory) == 0:
+                    dmerge[key] = dcur[key]
+                else:
+                    if key == "hs":
+                        dmerge[key] = [torch.cat((dhistory[key][0], dcur[key][0]), dim=0)]
+                    else:
+                        dmerge[key] = torch.cat((dhistory[key], dcur[key]), dim=0)
+            
+            dcur, dhistory = group_fusion(dmerge, model, model_name, fusion_type, fout)
+            for key in dcur:
+                dinfos.setdefault(key, [])
+                dinfos[key].append(dcur[key])
+
         # 计算评估指标
-        print("\n📈 计算评估指标...")
         aucs, accs = dict(), dict()
         ts = np.concatenate(y_trues, axis=0)
         ps = np.concatenate(y_scores, axis=0)
@@ -617,7 +553,6 @@ def evaluate_llm_question_concurrent(model, test_loader, model_name, fusion_type
         acc = metrics.accuracy_score(ts, prelabels)
         aucs["concepts"] = auc
         accs["concepts"] = acc
-        print(f"📊 概念级 AUC: {auc:.4f}, 准确率: {acc:.4f}")
 
         for key in dinfos:
             if key not in ["late_mean", "late_vote", "late_all", "early_preds"]:
@@ -629,13 +564,11 @@ def evaluate_llm_question_concurrent(model, test_loader, model_name, fusion_type
             acc = metrics.accuracy_score(ts, prelabels)
             aucs[key] = auc
             accs[key] = acc
-            print(f"📊 {key} AUC: {auc:.4f}, 准确率: {acc:.4f}")
     
     if save_path != "":
         fout.close()
         
     return aucs, accs
-
 def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion", "late_fusion"], save_path=""):
     # dkt / dkt+ / dkt_forget / atkt: give past -> predict all. has no early fusion!!!
     # dkvmn / akt / saint: give cur -> predict cur
@@ -671,8 +604,8 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         for batch_idx, data in enumerate(test_loader):
             total_batches = len(test_loader)
             current_batch = batch_idx + 1  # 从1开始计数
-            # if current_batch > 4:
-            #     break
+            if current_batch > 1:
+                break
             print(f"正在处理第 {current_batch}/{total_batches} 个batch")
             if model_name in ["dkt_forget", "bakt_time", "dbakt"]:
                 dcurori, dgaps, dqtest = data
@@ -692,7 +625,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             lenc += q.shape[0]
             # print("="*20)
             # print(f"start predict seqlen: {lenc}")
-            if model_name not in ["llm"]:
+            if model_name not in ["llm", "mpllm"]:
                 model.eval()
 
             # print(f"before y: {y.shape}")
@@ -721,57 +654,28 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             elif model_name in ["akt","extrakt", "folibikt","fluckt","robustkt", "lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "qwen"]:
                 y, reg_loss, h = model(cc.long(), cr.long(), cq.long(), True)
                 y = y[:,1:]
-            elif model_name == "llm":
+            elif model_name in ["llm", "mpllm"]:
                 batch_q_data = cc.long()
                 batch_pid_data = cq.long()
                 batch_target_data = cr.long()
-                # 生成缓存文件名
                 
-                cache_dir = f"llm_cache_{model.emb_type}"
-                os.makedirs(cache_dir, exist_ok=True)
-                cache_file = os.path.join(cache_dir, f"pred_{hash(tuple(batch_q_data.cpu().numpy().tobytes()))}.npy")
+                # 直接进行前向传播，不检查缓存
+                print(f"[DEBUG] 正在进行前向传播")
+                predictions = model.forward(
+                    batch_q_data.cpu().numpy().tolist(),  # 转换为Python列表
+                    batch_pid_data.cpu().numpy().tolist(),
+                    batch_target_data.cpu().numpy().tolist()
+                )
                 
-                # 检查是否有缓存
-                if os.path.exists(cache_file):
-                    print(f"[DEBUG] 从缓存加载预测结果: {cache_file}")
-                    predictions = np.load(cache_file)
-                    
-                    # 检查缓存数据中是否有NaN值
-                    if np.isnan(predictions).any():
-                        print(f"[WARNING] 缓存文件 {cache_file} 包含NaN值，将删除并重新计算")
-                        # os.remove(cache_file)  # 删除包含NaN的缓存文件
-                        # 重新进行前向传播
-                        print(f"[DEBUG] 正在进行前向传播（因NaN值重新计算）")
-                        predictions = model.forward(
-                            batch_q_data.cpu().numpy().tolist(),  # 转换为Python列表
-                            batch_pid_data.cpu().numpy().tolist(),
-                            batch_target_data.cpu().numpy().tolist()
-                        )
-                        # 再次检查新计算的预测结果是否有NaN
-                        if np.isnan(predictions).any():
-                            raise ValueError("前向传播结果仍然包含NaN值，请检查模型或输入数据")
-                        # 保存新的预测结果到缓存
-                        np.save(cache_file, predictions)
-                        print(f"[DEBUG] 预测结果已保存到: {cache_file}")
-                else:
-                    # 没有缓存则进行预测
-                    print(f"[DEBUG] 正在进行前向传播")
-                    predictions = model.forward(
-                        batch_q_data.cpu().numpy().tolist(),  # 转换为Python列表
-                        batch_pid_data.cpu().numpy().tolist(),
-                        batch_target_data.cpu().numpy().tolist()
-                    )
-                    # 检查预测结果是否有NaN
-                    if np.isnan(predictions).any():
-                        raise ValueError("前向传播结果包含NaN值，请检查模型或输入数据")
-                    # 保存预测结果到缓存
-                    np.save(cache_file, predictions)
-                    print(f"[DEBUG] 预测结果已保存到: {cache_file}")
-                    
+                # 检查预测结果是否有NaN
+                if np.isnan(predictions).any():
+                    raise ValueError("前向传播结果包含NaN值，请检查模型或输入数据")
+                
                 y = torch.from_numpy(predictions).float().to(device)
-                # 不需要[:,1:]，因为已经是最终预测
-                y = y[:, 1:]
-                # print(f"[DEBUG] y: {y} (type: {type(y)})")
+                # print(f"[DEBUG] y.shape: {y.shape} (type: {type(y.shape)})")
+                y = y[:, 1:]  # 不需要[:,1:]，因为已经是最终预测
+                # print(f"[DEBUG] y2.shape: {y.shape} (type: {type(y.shape)})")
+
             elif model_name in ["dtransformer"]:
                 output, h, *_ = model.predict(cc.long(), cr.long(), cq.long())
                 sg = nn.Sigmoid()
@@ -1303,7 +1207,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             # 应该用预测的r更新memory value，但是这里一个知识点一个知识点预测，所以curr不起作用！
             y = model(cin.long(), rin.long())
             pred = y[0][-1]
-        elif model_name in ["akt","extrakt","folibikt","fluckt", "robustkt","lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "llm", "qwen"]:  
+        elif model_name in ["akt","extrakt","folibikt","fluckt", "robustkt","lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "llm", "qwen", "mpllm"]:  
             #### 输入有question！     
             if qout != None:
                 curq = torch.tensor([[qout.item()]]).to(device)
@@ -1690,7 +1594,7 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
         elif model_name == "saint":
             y = model(ccq.long(), ccc.long(), curr.long())
             y = y[:, 1:]
-        elif model_name in ["akt","extrakt","folibikt", "robustkt", "cakt","fluckt","lefokt_akt",  "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "llm", "qwen"]:                                
+        elif model_name in ["akt","extrakt","folibikt", "robustkt", "cakt","fluckt","lefokt_akt",  "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "llm", "qwen", "mpllm"]:                                
             y, reg_loss = model(ccc.long(), ccr.long(), ccq.long())
             y = y[:,1:]
         elif model_name in ["dtransformer"]:

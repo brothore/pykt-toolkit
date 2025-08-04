@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import json
 import logging
 import uuid
-
+import os
 import json
 from typing import *
 import textwrap
@@ -26,335 +26,77 @@ import uuid
 import aiohttp
 import logging
 
-
-async def post(
-        url: str,
-        headers: Dict,
-        data: Dict,
-        return_dict: bool = True,
-        timeout: int = 3600,
-) -> Union[Dict, str]:
-    client_req_id = uuid.uuid4().hex
-
-    logging.info(
-        textwrap.dedent(
-            f"""
-Client Request ID: {client_req_id}
-Sending POST request to: {url}
-Headers: {json.dumps(headers, indent=2)}
-Payload: {json.dumps(data, indent=2)}
-"""
-        )
-    )
-
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
-        async with session.post(url, headers=headers, json=data, ) as response:
-            logging.info(
-                textwrap.dedent(
-                    f"""
-Client Request ID: {client_req_id}
-Response status code: {response.status}
-Response headers: {json.dumps(dict(response.headers), indent=2)}
-Response content: {await response.text()}
-"""
-                )
-            )
-
-            if not str(response.status).startswith("2"):
-                raise Exception(
-                    textwrap.dedent(
-                        f"""
-Post request failed with status code {response.status}
-Client Request ID: {client_req_id}
-Url: {url}
-Headers: {json.dumps(headers, indent=2)}
-Payload: {json.dumps(data, indent=2)}
-Response headers: {json.dumps(dict(response.headers), indent=2)}
-Response content: {await response.text()}
-"""
-                    )
-                )
-
-            return await response.json() if return_dict else await response.text()
-
-
-async def post_stream(
-        url: str, headers: Dict, data: Dict, timeout: int = 3600,
-) -> AsyncGenerator[str, None]:
-    client_req_id = uuid.uuid4().hex
-
-    logging.info(
-        textwrap.dedent(
-            f"""
-Client Request ID: {client_req_id}
-Sending POST request to: {url}
-Headers: {json.dumps(headers, ensure_ascii=False, indent=2)}
-Payload: {json.dumps(data, ensure_ascii=False, indent=2)}
-"""
-        )
-    )
-
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
-        async with session.post(url, headers=headers, json=data, ) as response:
-            logging.info(
-                textwrap.dedent(
-                    f"""
-Client Request ID: {client_req_id}
-Response status code: {response.status}
-Response headers: {json.dumps(dict(response.headers), ensure_ascii=False, indent=2)}
-"""
-                )
-            )
-
-            if not str(response.status).startswith("2"):
-                raise Exception(
-                    textwrap.dedent(
-                        f"""
-Post request failed with status code {response.status}
-Client Request ID: {client_req_id}
-Url: {url}
-Headers: {json.dumps(headers, ensure_ascii=False, indent=2)}
-Payload: {json.dumps(data, ensure_ascii=False, indent=2)}
-Response headers: {json.dumps(dict(response.headers), ensure_ascii=False, indent=2)}
-Response content: {await response.text()}
-"""
-                    )
-                )
-
-            async for line in response.content:
-                if line:
-                    line_s: str = line.decode("utf-8").strip()
-                    if line_s:
-                        yield line_s
-
-
-class EConfig(Config):
-    def __init__(self):
-        super().__init__()
-
-    pass
-
-
-config = EConfig()
-logging.basicConfig(
-    level=logging.ERROR,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),  # Output to console
-        # logging.FileHandler('http_requests.log')  # Save to file
-    ]
-)
-
-urllib3_logger = logging.getLogger('urllib3')
-urllib3_logger.setLevel(logging.INFO)
-async def post(
-        url: str,
-        headers: Dict,
-        data: Dict,
-        return_dict: bool = True,
-        timeout: int = 3600,
-) -> Union[Dict, str]:
-    client_req_id = uuid.uuid4().hex
-
-    logging.info(
-        textwrap.dedent(
-            f"""
-Client Request ID: {client_req_id}
-Sending POST request to: {url}
-Headers: {json.dumps(headers, indent=2)}
-Payload: {json.dumps(data, indent=2)}
-"""
-        )
-    )
-
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
-        async with session.post(url, headers=headers, json=data, ) as response:
-            logging.info(
-                textwrap.dedent(
-                    f"""
-Client Request ID: {client_req_id}
-Response status code: {response.status}
-Response headers: {json.dumps(dict(response.headers), indent=2)}
-Response content: {await response.text()}
-"""
-                )
-            )
-
-            if not str(response.status).startswith("2"):
-                raise Exception(
-                    textwrap.dedent(
-                        f"""
-Post request failed with status code {response.status}
-Client Request ID: {client_req_id}
-Url: {url}
-Headers: {json.dumps(headers, indent=2)}
-Payload: {json.dumps(data, indent=2)}
-Response headers: {json.dumps(dict(response.headers), indent=2)}
-Response content: {await response.text()}
-"""
-                    )
-                )
-
-            return await response.json() if return_dict else await response.text()
-
-
-async def post_stream(
-        url: str, headers: Dict, data: Dict, timeout: int = 3600,
-) -> AsyncGenerator[str, None]:
-    client_req_id = uuid.uuid4().hex
-
-    logging.info(
-        textwrap.dedent(
-            f"""
-Client Request ID: {client_req_id}
-Sending POST request to: {url}
-Headers: {json.dumps(headers, ensure_ascii=False, indent=2)}
-Payload: {json.dumps(data, ensure_ascii=False, indent=2)}
-"""
-        )
-    )
-
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
-        async with session.post(url, headers=headers, json=data, ) as response:
-            logging.info(
-                textwrap.dedent(
-                    f"""
-Client Request ID: {client_req_id}
-Response status code: {response.status}
-Response headers: {json.dumps(dict(response.headers), ensure_ascii=False, indent=2)}
-"""
-                )
-            )
-
-            if not str(response.status).startswith("2"):
-                raise Exception(
-                    textwrap.dedent(
-                        f"""
-Post request failed with status code {response.status}
-Client Request ID: {client_req_id}
-Url: {url}
-Headers: {json.dumps(headers, ensure_ascii=False, indent=2)}
-Payload: {json.dumps(data, ensure_ascii=False, indent=2)}
-Response headers: {json.dumps(dict(response.headers), ensure_ascii=False, indent=2)}
-Response content: {await response.text()}
-"""
-                    )
-                )
-
-            async for line in response.content:
-                if line:
-                    line_s: str = line.decode("utf-8").strip()
-                    if line_s:
-                        yield line_s
-
-class ChatResult(BaseModel):
-    current_think: Optional[str] = None
-    current_content: Optional[str] = None
-    think: str = ''
-    content: str = ''
-
-
-def get_model_call_params(kwargs, model_cf: dict, name: str) -> Any:
-    return kwargs[name] if name in kwargs else model_cf[name]
-
-
-async def stream_chat(model_name: str,
-                      model_config: dict = config.llms_config,
-                      messages: List[dict] = None,
-                      **kwargs,
-                      ) -> AsyncGenerator[ChatResult, None,]:
-    model_cf = model_config[model_name]
-
-    url = model_cf['url']
-
-    auth_key = model_cf['auth_key']
-    auth_func = model_cf['auth_func']
-
-    headers = {
-        auth_key: auth_func(model_cf['token']),
-        'Content-Type': 'application/json',
-    }
-
-    data = {
-        "model": model_cf['model_id'],
-        "messages": messages,
-        # "prompt": prompt,
-        "stream": True,
-        "max_tokens": get_model_call_params(kwargs, model_cf, 'max_tokens'),
-        "temperature": get_model_call_params(kwargs, model_cf, 'temperature'),
-        "top_p": get_model_call_params(kwargs, model_cf, 'top_p'),
-        'frequency_penalty': get_model_call_params(kwargs, model_cf, 'frequency_penalty'),
-        'presence_penalty': get_model_call_params(kwargs, model_cf, 'presence_penalty'),
-    }
-
-    is_reasoning = get_model_call_params(kwargs, model_cf, 'is_reasoning')
-
-    if is_reasoning:
-        data['enable_thinking'] = True
-        data["chat_template_kwargs"] = {"enable_thinking": True}
-
-    chat_result = ChatResult()
-
-    async for line in post_stream(url, headers, data, ):
-        if '{' in line:
-            line = line[line.index("{"):].strip()
-        else:
-            line = line.strip()
-        if line:
-            try:
-                jo = json.loads(line)
-                # print(jo)
-                chat_result.current_content = jo['choices'][0]['delta'].get('content')
-                if chat_result.current_content: chat_result.content += chat_result.current_content
-                if is_reasoning:
-                    chat_result.current_think = jo['choices'][0]['delta'].get('reasoning_content')
-                    if chat_result.current_think: chat_result.think += chat_result.current_think
-                yield chat_result
-            except:
-                pass
-    pass
 import aiohttp
 import asyncio
 import numpy as np
 from typing import List, Optional
 from openai import AsyncOpenAI
-
 class LLM:
     def __init__(
         self,
         base_url: str = "http://localhost:8102",
         model_path: str = "/root/qwen/Qwen3-8B",
         max_retries: int = 3,
-        max_concurrent_requests: int = 255,
-        timeout: int = 60
+        max_concurrent_requests: int = 16,
+        timeout: int = 60,
+        cache_dir: str = "llm_cache_qwen3-8b",
+        emb_type: str = "qwen-turbo-latest"
     ):
         """
-        初始化本地 vLLM 知识追踪模型 (OpenAI 兼容版本)
+        初始化LLM模型
         
         参数:
-            base_url: vLLM 服务地址 (默认: http://localhost:8102)
+            base_url: 本地模型服务地址 (默认: http://localhost:8102)
             model_path: 模型路径 (默认: /root/qwen/Qwen3-8B)
             max_retries: 最大重试次数
             max_concurrent_requests: 最大并发请求数
             timeout: 请求超时时间(秒)
+            cache_dir: 缓存文件目录
+            api_key: API密钥 (默认: None)
+            emb_type: 模型类型 (qwen3-8b/qwen-turbo/qwen-plus/deepseekv3)
         """
-        self.emb_type = "qwen3-8b"
+        self.emb_type = emb_type
         self.model_name = "llm"
         self.base_url = base_url
         self.model_path = model_path
         self.max_retries = max_retries
         self.max_concurrent_requests = max_concurrent_requests
+        self.batch_semaphore = asyncio.Semaphore(self.max_concurrent_requests)
         self.timeout = timeout
+        self.cache_dir = cache_dir
+        os.makedirs(self.cache_dir, exist_ok=True)
+
+        # 根据emb_type初始化不同的客户端
         if self.emb_type == "qwen3-8b":
-            # 初始化 OpenAI 兼容客户端
+            # 本地Qwen模型
             self.client = AsyncOpenAI(
                 base_url=f"{base_url}/v1",
                 api_key="no-key-required",
                 timeout=timeout,
                 max_retries=max_retries
             )
+        elif self.emb_type.startswith("qwen")::
+            # 阿里云千问API
+            self.client = AsyncOpenAI(
+                api_key=api_key or os.getenv("DASHSCOPE_API_KEY") or Config.api_key_qwen,
+                base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+                timeout=timeout,
+                max_retries=max_retries
+            )
+            self.model_path = self.emb_type
         elif self.emb_type == "deepseekv3":
-            self.client = AsyncOpenAI(api_key=Config.api_key, base_url="https://api.deepseek.com")
+            # DeepSeek API
+            self.client = AsyncOpenAI(
+                api_key=api_key or Config.api_key_deepseek,
+                base_url="https://api.deepseek.com",
+                timeout=timeout,
+                max_retries=max_retries
+            )
+            self.model_path = "deepseek-chat"  # 固定使用deepseek-chat模型
+        else:
+            raise ValueError(f"不支持的emb_type: {emb_type}")
+
+
         # 系统 prompt 定义
         self.system_prompt = """你是一个知识追踪专家，需要根据学生的答题序列预测他们下一步答题的正确概率。
 请严格按照以下要求执行任务：
@@ -362,21 +104,51 @@ class LLM:
 2. 你需要分析这些历史记录，预测学生回答下一个问题的正确概率
 3. 输出必须是一个0到1之间的浮点数，表示预测的正确概率
 4. 只输出数字，不要包含任何其他文字或解释"""
-
+    def _get_cache_path(self, q_data: List[int]) -> str:
+        """生成单条序列的缓存文件路径"""
+        """生成与旧系统兼容的单条序列缓存文件路径"""
+        # 将输入数据转换为numpy数组并计算哈希（与旧系统相同的方式）
+        batch_q_np = np.array([q_data])  # 模拟旧系统的batch_size=1形式
+        data_hash = hash(tuple(batch_q_np.tobytes()))  # 使用与旧系统完全相同的哈希计算方式
+        
+        # 保持与旧系统相同的文件名格式
+        return os.path.join(self.cache_dir, f"pred_{data_hash}.npy")
     async def _call_openai_api(self, prompt: str, retry_count: int = 0) -> Optional[float]:
         try:
-            response = await self.client.completions.create(
-                model=self.model_path,
-                prompt=f"{self.system_prompt}\n\n{prompt}",
-                max_tokens=20,
-                temperature=0.1,
-                stop=["\n"]
-            )
-            text = response.choices[0].text.strip()
+            if self.emb_type.startswith("qwen"):
+                # 千问API使用chat接口
+                response = await self.client.chat.completions.create(
+                    model=self.emb_type,
+                    messages=[
+                        {"role": "system", "content": self.system_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                    extra_body={"enable_thinking": False}
+                )
+                text = response.choices[0].message.content.strip()
+            elif self.emb_type == "deepseekv3":
+                # DeepSeek API使用chat接口
+                response = await self.client.chat.completions.create(
+                    model=self.emb_type,
+                    messages=[
+                        {"role": "system", "content": self.system_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                    stream=False
+                )
+                text = response.choices[0].message.content.strip()
+            else:
+                # 其他模型使用completions接口
+                response = await self.client.completions.create(
+                    model=self.model_path,
+                    prompt=f"{self.system_prompt}\n\n{prompt}",
+                )
+                text = response.choices[0].text.strip()
+                
             print(f"[DEBUG] 接收到返回text: {text} (type: {type(text)})")
             try:
                 prob = float(text)
-                if 0 <= prob <= 1:  # 验证概率值在有效范围内
+                if 0 <= prob <= 1:
                     return prob
                 raise ValueError("概率值不在0-1范围内")
             except ValueError:
@@ -428,7 +200,7 @@ class LLM:
     target_data: List[int]
 ) -> List[float]:
         """
-        处理单个序列，并行预测每个时间步
+        处理单个序列，并行预测每个时间步，带缓存功能
         
         参数:
             q_data: 问题内容列表 [seq_len]
@@ -438,6 +210,30 @@ class LLM:
         返回:
             预测概率列表 [seq_len]
         """
+        cache_file = self._get_cache_path(q_data)
+        
+        # 检查缓存
+        if os.path.exists(cache_file):
+            try:
+                predictions = np.load(cache_file)
+                
+                # 维度适配：将可能存在的batch维度去除
+                if predictions.ndim == 2:  # 旧格式 [1, seq_len]
+                    predictions = predictions[0]  # 降维到 [seq_len]
+                elif predictions.ndim == 1:  # 新格式 [seq_len]
+                    pass  # 无需处理
+                else:
+                    raise ValueError(f"无效的缓存维度: {predictions.shape}")
+                    
+                if not np.isnan(predictions).any():
+                    print(f"[DEBUG] 从缓存加载预测结果: {cache_file}")
+                    return predictions.tolist()  # 转换为List[float]
+                    
+                print(f"[WARNING] 缓存文件 {cache_file} 包含NaN值，将重新计算")
+            except Exception as e:
+                print(f"[WARNING] 加载缓存文件 {cache_file} 失败: {str(e)}，将重新计算")
+        
+        # 无缓存或缓存无效时进行计算
         seq_len = len(q_data)
         if seq_len == 0:
             return []
@@ -468,8 +264,15 @@ class LLM:
         results = await asyncio.gather(*tasks)
         
         # 组装结果
-        predictions = [0.5]  # 第一个时间步默认值
+        predictions = [0.0]  # 第一个时间步默认值
         predictions.extend(prob for _, prob in sorted(results, key=lambda x: x[0]))
+        
+        # 保存到缓存
+        try:
+            np.save(cache_file, np.array(predictions))
+            print(f"[DEBUG] 预测结果已保存到: {cache_file}")
+        except Exception as e:
+            print(f"[ERROR] 保存缓存文件 {cache_file} 失败: {str(e)}")
         
         return predictions
     async def _process_batch(
@@ -492,7 +295,7 @@ class LLM:
         semaphore = asyncio.Semaphore(self.max_concurrent_requests)
         
         async def process_one(q_data, pid_data, target_data):
-            async with semaphore:
+            async with self.batch_semaphore:
                 return await self._process_sequence(q_data, pid_data, target_data)
         
         tasks = [

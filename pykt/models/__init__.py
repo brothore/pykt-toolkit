@@ -1,4 +1,4 @@
-from .evaluate_model import evaluate,evaluate_question,evaluate_splitpred_question,effective_fusion,evaluate_llm_question_concurrent
+from .evaluate_model import evaluate,evaluate_question,evaluate_splitpred_question,effective_fusion,evaluate_llm_question_async
 from .train_model import train_model
 from .train_model4promptkt import train_model4promptkt
 from .init_model import init_model,load_model
