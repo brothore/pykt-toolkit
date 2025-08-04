@@ -40,11 +40,12 @@ def main(params):
                 seq_len = train_config["seq_len"]
                 model_config["seq_len"] = seq_len
     elif params["model_name"] in ["llm"]:
-        model_name, dataset_name, emb_type = "llm", params["dataset_name"], "qid"
-        model_config = {"api_key": ""}
+        model_name, dataset_name, emb_type = "llm", params["dataset_name"], params.get("emb_type", "qid")
+        model_config = {
+        }
     elif params["model_name"] in ["mpllm"]:
-        model_name, dataset_name, emb_type = "mpllm", params["dataset_name"], "qid"
-        model_config = {"api_key": ""}   
+        model_config = {
+        }
     with open("../configs/data_config.json") as fin:
         curconfig = copy.deepcopy(json.load(fin))
         data_config = curconfig[dataset_name]

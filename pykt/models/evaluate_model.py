@@ -604,8 +604,8 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         for batch_idx, data in enumerate(test_loader):
             total_batches = len(test_loader)
             current_batch = batch_idx + 1  # 从1开始计数
-            if current_batch > 1:
-                break
+            # if current_batch > 1:
+            #     break
             print(f"正在处理第 {current_batch}/{total_batches} 个batch")
             if model_name in ["dkt_forget", "bakt_time", "dbakt"]:
                 dcurori, dgaps, dqtest = data

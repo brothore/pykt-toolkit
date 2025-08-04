@@ -31,16 +31,17 @@ import asyncio
 import numpy as np
 from typing import List, Optional
 from openai import AsyncOpenAI
+
 class LLM:
     def __init__(
         self,
         base_url: str = "http://localhost:8102",
         model_path: str = "/root/qwen/Qwen3-8B",
         max_retries: int = 3,
-        max_concurrent_requests: int = 16,
+        max_concurrent_requests: int = 255,
         timeout: int = 60,
-        cache_dir: str = "llm_cache_qwen3-8b",
-        emb_type: str = "qwen-turbo-latest"
+        cache_dir: str = "llm_cache",
+        emb_type: str = "qwen3-8b"
     ):
         """
         初始化LLM模型
@@ -55,6 +56,7 @@ class LLM:
             api_key: API密钥 (默认: None)
             emb_type: 模型类型 (qwen3-8b/qwen-turbo/qwen-plus/deepseekv3)
         """
+        config = Config()
         self.emb_type = emb_type
         self.model_name = "llm"
         self.base_url = base_url
@@ -63,7 +65,7 @@ class LLM:
         self.max_concurrent_requests = max_concurrent_requests
         self.batch_semaphore = asyncio.Semaphore(self.max_concurrent_requests)
         self.timeout = timeout
-        self.cache_dir = cache_dir
+        self.cache_dir = cache_dir+f"_{emb_type}"
         os.makedirs(self.cache_dir, exist_ok=True)
 
         # 根据emb_type初始化不同的客户端
@@ -75,10 +77,10 @@ class LLM:
                 timeout=timeout,
                 max_retries=max_retries
             )
-        elif self.emb_type.startswith("qwen")::
+        elif self.emb_type.startswith("qwen"):
             # 阿里云千问API
             self.client = AsyncOpenAI(
-                api_key=api_key or os.getenv("DASHSCOPE_API_KEY") or Config.api_key_qwen,
+                api_key=config.api_key_qwen,
                 base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
                 timeout=timeout,
                 max_retries=max_retries
@@ -87,7 +89,7 @@ class LLM:
         elif self.emb_type == "deepseekv3":
             # DeepSeek API
             self.client = AsyncOpenAI(
-                api_key=api_key or Config.api_key_deepseek,
+                api_key=config.api_key_deepseek,
                 base_url="https://api.deepseek.com",
                 timeout=timeout,
                 max_retries=max_retries
@@ -115,7 +117,7 @@ class LLM:
         return os.path.join(self.cache_dir, f"pred_{data_hash}.npy")
     async def _call_openai_api(self, prompt: str, retry_count: int = 0) -> Optional[float]:
         try:
-            if self.emb_type.startswith("qwen"):
+            if self.emb_type.startswith("qwen") and self.emb_type not in ["qwen3-8b"]:
                 # 千问API使用chat接口
                 response = await self.client.chat.completions.create(
                     model=self.emb_type,
@@ -123,7 +125,10 @@ class LLM:
                         {"role": "system", "content": self.system_prompt},
                         {"role": "user", "content": prompt},
                     ],
-                    extra_body={"enable_thinking": False}
+                    extra_body={"enable_thinking": False},
+                    max_tokens=20,
+                    temperature=0.1,
+                    stop=["\n"]
                 )
                 text = response.choices[0].message.content.strip()
             elif self.emb_type == "deepseekv3":
@@ -134,14 +139,21 @@ class LLM:
                         {"role": "system", "content": self.system_prompt},
                         {"role": "user", "content": prompt},
                     ],
-                    stream=False
+                    stream=False,
+                    max_tokens=20,
+                    temperature=0.1,
+                    stop=["\n"]
                 )
                 text = response.choices[0].message.content.strip()
-            else:
+            elif self.emb_type == "qwen3-8b":
                 # 其他模型使用completions接口
                 response = await self.client.completions.create(
                     model=self.model_path,
                     prompt=f"{self.system_prompt}\n\n{prompt}",
+                    max_tokens=20,
+                    temperature=0.1,
+                    stop=["\n"]
+
                 )
                 text = response.choices[0].text.strip()
                 
@@ -194,87 +206,113 @@ class LLM:
         return "历史答题记录:\n" + "\n".join(history) + "\n\n请预测下一个问题的正确概率(只输出0到1的数字):"
 
     async def _process_sequence(
-    self,
-    q_data: List[int],
-    pid_data: List[int],
-    target_data: List[int]
-) -> List[float]:
+        self,
+        q_data: List[int],
+        pid_data: List[int],
+        target_data: List[int]
+    ) -> List[float]:
         """
-        处理单个序列，并行预测每个时间步，带缓存功能
+        处理单个序列，顺序预测每个时间步
         
         参数:
-            q_data: 问题内容列表 [seq_len]
-            pid_data: 问题ID列表 [seq_len]
-            target_data: 回答是否正确列表 [seq_len]
+            q_data: 问题内容列表 [seq_len]（包含填充值）
+            pid_data: 问题ID列表 [seq_len]（包含填充值）
+            target_data: 回答是否正确列表 [seq_len]（包含填充值）
             
         返回:
-            预测概率列表 [seq_len]
+            预测概率列表 [seq_len]，填充-1直到长度200
         """
+        # 检查缓存（使用原始数据计算哈希）
         cache_file = self._get_cache_path(q_data)
         
-        # 检查缓存
+        # 先尝试从缓存加载完整结果
         if os.path.exists(cache_file):
             try:
-                predictions = np.load(cache_file)
+                cached_result = np.load(cache_file).tolist()
                 
-                # 维度适配：将可能存在的batch维度去除
-                if predictions.ndim == 2:  # 旧格式 [1, seq_len]
-                    predictions = predictions[0]  # 降维到 [seq_len]
-                elif predictions.ndim == 1:  # 新格式 [seq_len]
-                    pass  # 无需处理
-                else:
-                    raise ValueError(f"无效的缓存维度: {predictions.shape}")
-                    
-                if not np.isnan(predictions).any():
-                    print(f"[DEBUG] 从缓存加载预测结果: {cache_file}")
-                    return predictions.tolist()  # 转换为List[float]
-                    
-                print(f"[WARNING] 缓存文件 {cache_file} 包含NaN值，将重新计算")
+                # 检查并修复数据结构问题（第0个是列表，其他是float）
+                if isinstance(cached_result, list) and len(cached_result) > 0 and isinstance(cached_result[0], list):
+                    print(f"[DEBUG] 检测到缓存数据结构异常，进行自动修复: {cache_file}")
+                    # 展开第0个列表，并填充-1到200长度
+                    fixed_result = cached_result[0] + [-1.0] * (200 - len(cached_result[0]))
+                    # 保存修复后的数据
+                    np.save(cache_file, np.array(fixed_result))
+                    cached_result = fixed_result
+                
+                # 确保长度正确
+                if len(cached_result) < 200:
+                    cached_result += [-1.0] * (200 - len(cached_result))
+                elif len(cached_result) > 200:
+                    cached_result = cached_result[:200]
+
+                print(f"[DEBUG] 从缓存加载完整预测结果: {cache_file}")
+                assert len(cached_result) == 200, f"预测结果长度应为200，实际为{len(cached_result)}"
+                return cached_result
             except Exception as e:
                 print(f"[WARNING] 加载缓存文件 {cache_file} 失败: {str(e)}，将重新计算")
+
+        # 1. 过滤掉填充值-1（仅用于实际处理）
+        valid_indices = [i for i, val in enumerate(q_data) if val != -1]
+        filtered_q = [q_data[i] for i in valid_indices]
+        filtered_pid = [pid_data[i] for i in valid_indices]
+        filtered_target = [target_data[i] for i in valid_indices]
+        
+        # 如果全是填充值，直接返回全-1的200长度列表
+        if not filtered_q:
+            full_predictions = [-1.0] * 200
+            try:
+                np.save(cache_file, np.array(full_predictions))
+            except Exception as e:
+                print(f"[ERROR] 保存缓存文件 {cache_file} 失败: {str(e)}")
+            return full_predictions
         
         # 无缓存或缓存无效时进行计算
-        seq_len = len(q_data)
-        if seq_len == 0:
-            return []
+        seq_len = len(filtered_q)
+        predictions = [-1.0]  # 第一个时间步默认值
         
-        # 创建所有时间步的prompt
-        prompts = []
-        for step in range(seq_len):
-            if step == 0:
-                continue
-            prompt = self._construct_prompt(q_data, pid_data, target_data, step)
-            prompts.append((step, prompt))
-        
-        # 并行处理所有时间步
-        semaphore = asyncio.Semaphore(self.max_concurrent_requests)
-        
-        async def process_step(step, prompt):
-            async with semaphore:
-                retry_count = 0
-                while retry_count <= self.max_retries:
-                    prob = await self._call_openai_api(prompt)
-                    if prob is not None:
-                        return step, prob
+        # 顺序处理每个时间步
+        for step in range(1, seq_len):
+            # 构造prompt时使用之前的预测结果
+            modified_target = filtered_target.copy()
+            for prev_step in range(1, step):
+                modified_target[prev_step] = 1 if predictions[prev_step] >= 0.5 else 0
+            
+            prompt = self._construct_prompt(filtered_q, filtered_pid, modified_target, step)
+            
+            # 尝试多次调用API
+            retry_count = 0
+            prob = None
+            while retry_count <= self.max_retries and prob is None:
+                prob = await self._call_openai_api(prompt)
+                if prob is None:
                     retry_count += 1
                     await asyncio.sleep(1 + retry_count)
-                return step, np.nan  # 最终失败时返回默认值
+            
+            predictions.append(prob if prob is not None else np.nan)
         
-        tasks = [process_step(step, prompt) for step, prompt in prompts]
-        results = await asyncio.gather(*tasks)
+        # 将预测结果映射回原始位置（包含填充）
+        full_predictions = [-1.0] * len(q_data)
+        for i, idx in enumerate(valid_indices):
+            if i < len(predictions):
+                full_predictions[idx] = float(predictions[i])
         
-        # 组装结果
-        predictions = [0.0]  # 第一个时间步默认值
-        predictions.extend(prob for _, prob in sorted(results, key=lambda x: x[0]))
+        # 填充到200长度
+        if len(full_predictions) < 200:
+            full_predictions += [-1.0] * (200 - len(full_predictions))
+        elif len(full_predictions) > 200:
+            full_predictions = full_predictions[:200]
         
-        # 保存到缓存
+        # 保存完整预测结果（包含填充）
         try:
-            np.save(cache_file, np.array(predictions))
-            print(f"[DEBUG] 预测结果已保存到: {cache_file}")
+            np.save(cache_file, np.array(full_predictions))
+            print(f"[DEBUG] 完整预测结果已保存到: {cache_file}")
         except Exception as e:
             print(f"[ERROR] 保存缓存文件 {cache_file} 失败: {str(e)}")
-        
-        return predictions
+        print(f"[DEBUG] 返回的预测结果长度: {len(full_predictions)}")
+        assert len(full_predictions) == 200, f"预测结果长度应为200，实际为{len(full_predictions)}"
+
+        return full_predictions
+
     async def _process_batch(
         self,
         batch_q_data: List[List[int]],
@@ -322,7 +360,20 @@ class LLM:
             预测概率的numpy数组 [batch_size, seq_len]
         """
         async def async_forward():
-            return await self._process_batch(batch_q_data, batch_pid_data, batch_target_data)
+            results = await self._process_batch(batch_q_data, batch_pid_data, batch_target_data)
+        
+            # print("[DEBUG] 检查 results 的内容和类型:")
+            # for i, res in enumerate(results):
+            #     print(f"序列 {i} 长度: {len(res)}, 类型: {type(res)}")
+            #     # 检查前5个元素的数据类型
+            #     for j in range(200):
+            #         print(f"  元素 {j}: 值={res[j]}, 类型={type(res[j])}")
+            #     # 检查是否有 None 或 nan
+            #     none_count = sum(1 for x in res if x is None)
+            #     nan_count = sum(1 for x in res if isinstance(x, float) and np.isnan(x))
+            #     print(f"  None 数量: {none_count}, NaN 数量: {nan_count}")
+            
+            return results
             
         loop = asyncio.get_event_loop()
         results = loop.run_until_complete(async_forward())
