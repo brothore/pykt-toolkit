@@ -10,6 +10,7 @@ import logging
 import uuid
 import os
 import json
+import traceback as Traceback
 from typing import *
 import textwrap
 
@@ -105,7 +106,7 @@ class LLM:
 1. 输入将提供学生的历史答题记录，格式为：(问题ID, 问题内容, 回答是否正确)
 2. 你需要分析这些历史记录，预测学生回答下一个问题的正确概率
 3. 输出必须是一个0到1之间的浮点数，表示预测的正确概率
-4. 只输出数字，不要包含任何其他文字或解释"""
+4. 只输出数字，不要包含任何其他文字或解释 /no_think"""
     def _get_cache_path(self, q_data: List[int]) -> str:
         """生成单条序列的缓存文件路径"""
         """生成与旧系统兼容的单条序列缓存文件路径"""
@@ -115,62 +116,68 @@ class LLM:
         
         # 保持与旧系统相同的文件名格式
         return os.path.join(self.cache_dir, f"pred_{data_hash}.npy")
-    async def _call_openai_api(self, prompt: str, retry_count: int = 0) -> Optional[float]:
+    # async def _call_openai_api(self, messages: List[Dict[str, str]], retry_count: int = 0) -> Optional[float]:
+    #     """调用OpenAI API，使用messages列表作为输入"""
+    #     try:
+    #         # 所有模型都使用chat.completions接口
+    #         response = await self.client.chat.completions.create(
+    #             model=self.model_path if self.emb_type == "qwen3-8b" else self.emb_type,
+    #             messages=messages,
+    #             max_tokens=20,
+    #             temperature=0.1,
+    #             stop=["\n"]
+    #         )
+            
+    #         # 获取响应内容
+    #         print(f"[DEBUG] response: {response} (type: {type(response)})")
+    #         text = response.choices[0].message.content.strip()
+    #         print(f"[DEBUG] 接收到返回text: {text} (type: {type(text)})")
+    #         try:
+    #             prob = float(text)
+    #             if 0 <= prob <= 1:
+    #                 return prob
+    #             raise ValueError("概率值不在0-1范围内")
+    #         except ValueError:
+    #             raise ValueError(f"无法解析为有效概率值: {text}")
+    #     except Exception as e:
+    #         print(f"[ERROR] 请求失败: {str(e)}")
+    #         Traceback.print_exc()
+    #         if retry_count < self.max_retries:
+    #             await asyncio.sleep(1 + retry_count)
+    #             return await self._call_openai_api(messages, retry_count + 1)
+    #         return None
+    async def _call_openai_api(self, messages: List[Dict[str, str]], retry_count: int = 0) -> Optional[float]:
         try:
-            if self.emb_type.startswith("qwen") and self.emb_type not in ["qwen3-8b"]:
-                # 千问API使用chat接口
-                response = await self.client.chat.completions.create(
-                    model=self.emb_type,
-                    messages=[
-                        {"role": "system", "content": self.system_prompt},
-                        {"role": "user", "content": prompt},
-                    ],
-                    extra_body={"enable_thinking": False},
-                    max_tokens=20,
-                    temperature=0.1,
-                    stop=["\n"]
-                )
-                text = response.choices[0].message.content.strip()
-            elif self.emb_type == "deepseekv3":
-                # DeepSeek API使用chat接口
-                response = await self.client.chat.completions.create(
-                    model=self.emb_type,
-                    messages=[
-                        {"role": "system", "content": self.system_prompt},
-                        {"role": "user", "content": prompt},
-                    ],
-                    stream=False,
-                    max_tokens=20,
-                    temperature=0.1,
-                    stop=["\n"]
-                )
-                text = response.choices[0].message.content.strip()
-            elif self.emb_type == "qwen3-8b":
-                # 其他模型使用completions接口
-                response = await self.client.completions.create(
-                    model=self.model_path,
-                    prompt=f"{self.system_prompt}\n\n{prompt}",
-                    max_tokens=20,
-                    temperature=0.1,
-                    stop=["\n"]
+            # 添加response_format参数确保返回纯文本
+            response = await self.client.chat.completions.create(
+                model=self.model_path if self.emb_type == "qwen3-8b" else self.emb_type,
+                messages=messages,
+                extra_body={"enable_thinking": False},
+                # max_tokens=20,
+                temperature=0.1,
+            )
 
-                )
-                text = response.choices[0].text.strip()
-                
-            print(f"[DEBUG] 接收到返回text: {text} (type: {type(text)})")
+            text = response.choices[0].message.content
+            # print(f"[DEBUG] response: {response} (type: {type(response)})")
+
+
+            # 尝试解析为概率值
             try:
                 prob = float(text)
                 if 0 <= prob <= 1:
+                    print(f"[DEBUG] prob: {prob} (type: {type(prob)})")
                     return prob
-                raise ValueError("概率值不在0-1范围内")
-            except ValueError:
-                raise ValueError(f"无法解析为有效概率值: {text}")
+                raise ValueError(f"概率值{prob}不在0-1范围内")
+            except ValueError as e:
+                print(f"[WARNING] 无法解析概率值: {text}")
+                return 0.5  # 默认值
+
         except Exception as e:
             print(f"[ERROR] 请求失败: {str(e)}")
             if retry_count < self.max_retries:
                 await asyncio.sleep(1 + retry_count)
-                return await self._call_openai_api(prompt, retry_count + 1)
-            return None
+                return await self._call_openai_api(messages, retry_count + 1)
+            return 0.5  # 最终返回默认值
 
     def _construct_prompt(
         self,
@@ -203,7 +210,7 @@ class LLM:
         current_pid = pid_data[predict_step]
         history.append(f"(问题编号{current_pid}, 知识点编号{current_q}, 答题情况待预测)")
 
-        return "历史答题记录:\n" + "\n".join(history) + "\n\n请预测下一个问题的正确概率(只输出0到1的数字):"
+        return "历史答题记录:\n" + "\n".join(history) + "\n\n请预测下一个问题的正确概率(只输出0到1的数字):/no_think"
 
     async def _process_sequence(
         self,
@@ -270,20 +277,40 @@ class LLM:
         seq_len = len(filtered_q)
         predictions = [-1.0]  # 第一个时间步默认值
         
+        # 初始化消息列表（包含系统提示）
+        messages = [
+            {"role": "system", "content": self.system_prompt}
+        ]
+        
         # 顺序处理每个时间步
         for step in range(1, seq_len):
-            # 构造prompt时使用之前的预测结果
-            modified_target = filtered_target.copy()
-            for prev_step in range(1, step):
-                modified_target[prev_step] = 1 if predictions[prev_step] >= 0.5 else 0
+            # 构造当前步骤的历史记录
+            history = []
+            for i in range(step):
+                q = filtered_q[i]
+                pid = filtered_pid[i]
+                # 使用真实历史或模型预测结果
+                target = filtered_target[i] if i < step - 1 else (1 if predictions[i] >= 0.5 else 0)
+                correctness = "正确" if target == 1 else "错误"
+                history.append(f"(问题编号{pid}, 知识点编号{q}, 答题情况{correctness})")
             
-            prompt = self._construct_prompt(filtered_q, filtered_pid, modified_target, step)
+            current_q = filtered_q[step]
+            current_pid = filtered_pid[step]
+            history.append(f"(问题编号{current_pid}, 知识点编号{current_q}, 答题情况待预测)")
+            
+            # 更新消息列表（保留系统提示，替换用户消息）
+            if len(messages) > 1:
+                messages.pop()  # 移除之前的用户消息
+            messages.append({
+                "role": "user",
+                "content": "历史答题记录:\n" + "\n".join(history) + "\n\n请预测下一个问题的正确概率(只输出0到1的浮点数):"
+            })
             
             # 尝试多次调用API
             retry_count = 0
             prob = None
             while retry_count <= self.max_retries and prob is None:
-                prob = await self._call_openai_api(prompt)
+                prob = await self._call_openai_api(messages)
                 if prob is None:
                     retry_count += 1
                     await asyncio.sleep(1 + retry_count)
