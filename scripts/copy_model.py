@@ -160,7 +160,7 @@ def update_init_file(file_path, base_model, new_model):
 def save_operation_record(base_model, new_model, operations):
     """保存操作记录到txt文件"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    record_file = f"model_operations_{timestamp}.txt"
+    record_file = f"./logs/model_operations_{timestamp}.txt"
     
     with open(record_file, 'w', encoding='utf-8') as f:
         f.write(f"模型操作记录\n")
@@ -253,7 +253,7 @@ def undo_operations(base_model, new_model):
         
         # 4. 保存撤销操作记录
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        undo_record_file = f"model_undo_operations_{timestamp}.txt"
+        undo_record_file = f"./logs/model_undo_operations_{timestamp}.txt"
         
         with open(undo_record_file, 'w', encoding='utf-8') as f:
             f.write(f"模型撤销操作记录\n")

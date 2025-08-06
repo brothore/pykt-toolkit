@@ -545,10 +545,8 @@ def main(params):
     print(f"windowacclate_mean: {dres['windowacclate_mean']}")
     
     # 将评估结果保存到 save_dir 目录下的 evaluation_results.json 文件
-    if SET_TARGET_STU != 0:
-        results_path = os.path.join(save_dir, f"evaluation_results_{SET_TARGET_STU}.json")
-    else:    
-        results_path = os.path.join(save_dir, "evaluation_results.json")
+    
+    results_path = os.path.join(save_dir, "evaluation_results.json")
     try:
         with open(results_path, "w") as fout:
             json.dump(dres, fout, indent=4, ensure_ascii=False)

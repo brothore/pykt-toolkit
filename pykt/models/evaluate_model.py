@@ -13,6 +13,10 @@ device = "cpu" if not torch.cuda.is_available() else "cuda"
 import os
 from datetime import datetime
 current_time = datetime.now().strftime('%m_%d')
+# 设置绘图风格
+sns.set(style="whitegrid")
+plt.rcParams['font.size'] = 12
+plt.rcParams['figure.figsize'] = (12, 6)
 def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
     # dres, q, r, qshft, rshft, m, sm, y
     results = []
@@ -167,7 +171,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 sg = nn.Sigmoid()
                 y = sg(output)
                 y = y[:,1:]
-            elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt"]:
+            elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt", "at_dkt"]:
                 y, _ = model(c.long(), r.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name == "gkt":
@@ -604,7 +608,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         for batch_idx, data in enumerate(test_loader):
             total_batches = len(test_loader)
             current_batch = batch_idx + 1  # 从1开始计数
-            # if current_batch > 1:
+            # if current_batch > 14:  # 限制只处理前15个batch
             #     break
             print(f"正在处理第 {current_batch}/{total_batches} 个batch")
             if model_name in ["dkt_forget", "bakt_time", "dbakt"]:
@@ -723,7 +727,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             elif model_name in ["dkt_forget"]:
                 y = model(c.long(), r.long(), dgaps)
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
-            elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt"]:
+            elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt", "at_dkt"]:
                 y, _ = model(c.long(), r.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name == "gkt":
@@ -742,7 +746,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             elif model_name == "dimkt":
                 y = model(q.long(),c.long(),sd.long(),qd.long(),r.long(),qshft.long(),cshft.long(),sdshft.long(),qdshft.long())
 
-            print(f"[DEBUG] concepty: {y.shape} (type: {type(y)})")
+            # print(f"[DEBUG] concepty: {y.shape} (type: {type(y)})")
             concepty = torch.masked_select(y, sm).detach().cpu()
             conceptt = torch.masked_select(rshft, sm).detach().cpu()
 
@@ -796,7 +800,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             # sys.exit()
         # ori concept eval
         aucs, accs = dict(), dict()
-        print(f"Length of ts: {(y_trues)}, Length of ps: {(y_scores)}")  # 调试输出
+        # print(f"Length of ts: {(y_trues)}, Length of ps: {(y_scores)}")  # 调试输出
         assert len(y_trues) == len(y_scores), "Mismatch in label and prediction lengths"
         for i in range(len(y_trues)):
             print(f"Batch {i}: y_trues shape {y_trues[i].shape}, y_scores shape {y_scores[i].shape}")
@@ -1183,7 +1187,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             
             y = model(qin.long(), cin.long(), rin.long())
             pred = y[0][-1]
-        elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt"]:
+        elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt", "at_dkt"]:
             if atkt_pad == True:
                 oricinlen = cin.shape[1]
                 padlen = maxlen-1-oricinlen
@@ -1602,7 +1606,7 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
             m = nn.Sigmoid()
             y = m(y)
             y = y[:,1:]
-        elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt"]:
+        elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt", "at_dkt"]:
             # print(f"atkt_pad: {atkt_pad}")
             if atkt_pad == True:
                 oricurclen = curc.shape[1]
@@ -1650,7 +1654,7 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
         elif model_name == "hawkes":
             y = model(ccc.long(), ccq.long(), cct.long(), ccr.long())
             pred = y[0][-1]
-        if model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt"] and atkt_pad == True:
+        if model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt", "at_dkt"] and atkt_pad == True:
             # print(f"use idx: {oricurclen-1}")
             pred = y[:, oricurclen-1].tolist()
             # assert ccr[:, t] == curcshft[:, t-1]

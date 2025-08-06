@@ -12,6 +12,7 @@ from .sakt import SAKT
 from .saint import SAINT
 from .kqn import KQN
 from .atkt import ATKT
+from .at_dkt import AT_DKT
 # from .mamba_atakt import MAMBA_ATAKT
 from .dkt_forget import DKTForget
 from .akt import AKT
@@ -93,6 +94,8 @@ def init_model(model_name, model_config, data_config, emb_type):
         model = KQN(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "atkt":
         model = ATKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], fix=False).to(device)
+    elif model_name == "at_dkt":
+        model = AT_DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], fix=False).to(device)
     elif model_name == "mamba_atakt":
         model = MAMBA_ATAKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], fix=False).to(device)
     elif model_name == "atktfix":

@@ -100,7 +100,7 @@ def student_auc_discrepancy(predictions, targets, uids, weights=None):
 
 def cal_loss(model, ys, r, rshft, sm, preloss=[]):
     model_name = model.model_name
-
+    # print(f"[DEBUG] ys.shape: {ys} )")
     if model_name in ["atdkt", "simplekt", "stablekt", "bakt_time", "sparsekt", "cskt", "hcgkt", "dbakt"]:
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
@@ -132,7 +132,7 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[]):
             loss1 = loss1 + model.cl_weight * loss2
         loss =loss1
 
-    elif model_name in ["rkt","dimkt","dkt", "dkt_forget", "dkvmn","deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "mamba_atakt", "mamba_atakt", "long_dkt"]:
+    elif model_name in ["rkt","dimkt","dkt", "dkt_forget", "dkvmn","deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "mamba_atakt", "mamba_atakt", "long_dkt", "at_dkt"]:
 
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
@@ -436,19 +436,22 @@ def model_forward(model, data, rel=None):
         y, reg_loss = model(cc.long(), cr.long(), cq.long())
         ys.append(y[:,1:])
         preloss.append(reg_loss)
-    elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt"]:
+    elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt", "at_dkt"]:
         y, features = model(c.long(), r.long())
         y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+        print(f"[DEBUG] y.shape: {y.shape} )")
         loss = cal_loss(model, [y], r, rshft, sm)
         # at
-        features_grad = grad(loss, features, retain_graph=True)
-        p_adv = torch.FloatTensor(model.epsilon * _l2_normalize_adv(features_grad[0].data))
-        p_adv = Variable(p_adv).to(device)
-        pred_res, _ = model(c.long(), r.long(), p_adv)
-        # second loss
-        pred_res = (pred_res * one_hot(cshft.long(), model.num_c)).sum(-1)
-        adv_loss = cal_loss(model, [pred_res], r, rshft, sm)
-        loss = loss + model.beta * adv_loss
+        if model.emb_type.startswith("at"):
+            features_grad = grad(loss, features, retain_graph=True)
+            p_adv = torch.FloatTensor(model.epsilon * _l2_normalize_adv(features_grad[0].data))
+            p_adv = Variable(p_adv).to(device)
+            pred_res, _ = model(c.long(), r.long(), p_adv)
+            # second loss
+            pred_res = (pred_res * one_hot(cshft.long(), model.num_c)).sum(-1)
+            adv_loss = cal_loss(model, [pred_res], r, rshft, sm)
+            loss = loss + model.beta * adv_loss
+
     elif model_name == "gkt":
         y = model(cc.long(), cr.long())
         ys.append(y)  
@@ -469,7 +472,7 @@ def model_forward(model, data, rel=None):
         y = model(q.long(),c.long(),sd.long(),qd.long(),r.long(),qshft.long(),cshft.long(),sdshft.long(),qdshft.long())
         ys.append(y) 
 
-    if model_name not in ["atkt", "atktfix","mamba_atakt"]+que_type_models or model_name in ["lpkt", "rkt"]:
+    if model_name not in ["atkt", "atktfix","mamba_atakt", "at_dkt"]+que_type_models or model_name in ["lpkt", "rkt"]:
         loss = cal_loss(model, ys, r, rshft, sm, preloss)
     if model_name in ["ukt"] and model.use_CL != 0:
         return loss,temp
