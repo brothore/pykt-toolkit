@@ -13,10 +13,7 @@ device = "cpu" if not torch.cuda.is_available() else "cuda"
 import os
 from datetime import datetime
 current_time = datetime.now().strftime('%m_%d')
-# 设置绘图风格
-sns.set(style="whitegrid")
-plt.rcParams['font.size'] = 12
-plt.rcParams['figure.figsize'] = (12, 6)
+
 def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
     # dres, q, r, qshft, rshft, m, sm, y
     results = []

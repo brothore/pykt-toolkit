@@ -437,21 +437,30 @@ def model_forward(model, data, rel=None):
         ys.append(y[:,1:])
         preloss.append(reg_loss)
     elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt", "at_dkt"]:
+        # 常规前向计算
         y, features = model(c.long(), r.long())
         y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
-        print(f"[DEBUG] y.shape: {y.shape} )")
         loss = cal_loss(model, [y], r, rshft, sm)
-        # at
-        if model.emb_type.startswith("at"):
-            features_grad = grad(loss, features, retain_graph=True)
-            p_adv = torch.FloatTensor(model.epsilon * _l2_normalize_adv(features_grad[0].data))
-            p_adv = Variable(p_adv).to(device)
-            pred_res, _ = model(c.long(), r.long(), p_adv)
-            # second loss
-            pred_res = (pred_res * one_hot(cshft.long(), model.num_c)).sum(-1)
-            adv_loss = cal_loss(model, [pred_res], r, rshft, sm)
-            loss = loss + model.beta * adv_loss
-
+        
+        # 对抗训练部分
+        if (model.emb_type.startswith("at") and model_name in ["at_dkt"]) or model_name not in ["at_dkt"]:
+            if not model.emb_type.endswith("pgd"):
+                # FGSM对抗训练
+                features_grad = grad(loss, features, retain_graph=True)
+                p_adv = torch.FloatTensor(model.epsilon * _l2_normalize_adv(features_grad[0].data))
+                p_adv = Variable(p_adv).to(device)
+                pred_res, _ = model(c.long(), r.long(), p_adv)
+                pred_res = (pred_res * one_hot(cshft.long(), model.num_c)).sum(-1)
+                adv_loss = cal_loss(model, [pred_res], r, rshft, sm)
+                loss = loss + model.beta * adv_loss
+            else:
+                # PGD对抗训练
+                perturbation = model(c.long(), r.long(), pgd_attack=True, 
+                                loss_fn=lambda pred: cal_loss(model, [pred], r, rshft, sm),cshft=cshft)
+                final_adv_output, _ = model(c.long(), r.long(), perturbation)
+                final_adv_output = (final_adv_output * one_hot(cshft.long(), model.num_c)).sum(-1)
+                final_adv_loss = cal_loss(model, [final_adv_output], r, rshft, sm)
+                loss = loss + model.beta * final_adv_loss
     elif model_name == "gkt":
         y = model(cc.long(), cr.long())
         ys.append(y)  

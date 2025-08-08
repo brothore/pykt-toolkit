@@ -51,10 +51,18 @@ class ATKT(nn.Module):
             attn_mask = ut_mask(lstm_output.shape[1])
             att_w = att_w.transpose(1,2).expand(lstm_output.shape[0], lstm_output.shape[1], lstm_output.shape[1]).clone()
             att_w = att_w.masked_fill_(attn_mask, float("-inf"))
+            # alphas = torch.nn.functional.softmax(att_w, dim=1)
             alphas = torch.nn.functional.softmax(att_w, dim=-1)
+            weighted_output = lstm_output.unsqueeze(2)  # [B, L, 1, D]
+            alphas = alphas.unsqueeze(-1)  # [B, L, L, 1]
+            # print(f"[DEBUG] alphas.shape: {alphas.shape}")
+            # print(f"[DEBUG] lstm_output.shape: {lstm_output.shape}")
             attn_ouput = torch.bmm(alphas, lstm_output)
+            # attn_ouput = (alphas * weighted_output).sum(dim=2)
         else: # 原来的官方实现
             alphas=nn.Softmax(dim=1)(att_w)
+            print(f"[DEBUG] alphas.shape: {alphas.shape}")
+            print(f"[DEBUG] lstm_output.shape: {lstm_output.shape}")
             # print(f"alphas: {alphas.shape}")    
             attn_ouput = alphas*lstm_output # 整个seq的attn之和为1，计算前面的的时候，所有的attn都<<1，不会有问题？做的少的时候，历史作用小，做得多的时候，历史作用变大？
             # print(f"attn_ouput: {attn_ouput.shape}")
