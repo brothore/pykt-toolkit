@@ -115,6 +115,9 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             elif model_name in ["simplekt","stablekt", "sparsekt", "cskt", "ukt", "hcgkt"]:
                 y = model(dcur)
                 y = y[:,1:]
+            elif model_name in ["abqr"]:
+                y = model(dcur)
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name in ["rekt"]:
                 y = model(dcur)
             elif model_name in ["dkt", "dkt+"]:
@@ -154,6 +157,9 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 y = y[:, 1:]
             elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt",   "Transformer_template", "balance_akt", "qwen"]:                                
                 y, reg_loss = model(cc.long(), cr.long(), cq.long())
+                y = y[:,1:]
+            elif model_name in ["TransformerKT"]:                                
+                y = model(cc.long(), cr.long(), cq.long())
                 y = y[:,1:]
             elif model_name in ["llm", "mpllm"]:
                 batch_q_data = cc.long()
@@ -229,7 +235,7 @@ def early_fusion(curhs, model, model_name):
         que_diff = model.diff_layer(curhs[1])#equ 13
         p = torch.sigmoid(3.0*stu_ability-que_diff)#equ 14
         p = p.squeeze(-1)
-    elif model_name in ["akt","extrakt", "folibikt","robustkt", "dtransformer","simplekt","stablekt","cskt", "fluckt", "bakt_time", "sparsekt", "lefokt_akt", "ukt", "hcgkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "dbakt", "balance_akt", "llm", "qwen", "mpllm"]:
+    elif model_name in ["akt","extrakt", "folibikt","robustkt", "dtransformer","simplekt","stablekt","cskt", "fluckt", "bakt_time", "sparsekt", "lefokt_akt", "ukt", "hcgkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "dbakt", "balance_akt", "llm", "qwen", "mpllm", "TransformerKT", "abqr"]:
         output = model.out(curhs[0]).squeeze(-1)
         m = nn.Sigmoid()
         p = m(output)
@@ -650,8 +656,14 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             elif model_name in ["simplekt","stablekt", "sparsekt", "cskt", "ukt", "hcgkt"]:
                 y, h = model(dcurori, qtest=True, train=False)
                 y = y[:,1:]
+            elif model_name in ["abqr"]:
+                y, h = model(dcurori, qtest=True, train=False)
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name in ["rekt"]:
                 y, h = model(dcurori, qtest=True, train=False)
+            elif model_name in ["TransformerKT"]:
+                y = model(cc.long(), cr.long(), cq.long(), True)
+                y = y[:,1:]
             elif model_name in ["akt","extrakt", "folibikt","fluckt","robustkt", "lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "qwen"]:
                 y, reg_loss, h = model(cc.long(), cr.long(), cq.long(), True)
                 y = y[:,1:]
@@ -1208,7 +1220,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             # 应该用预测的r更新memory value，但是这里一个知识点一个知识点预测，所以curr不起作用！
             y = model(cin.long(), rin.long())
             pred = y[0][-1]
-        elif model_name in ["akt","extrakt","folibikt","fluckt", "robustkt","lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "llm", "qwen", "mpllm"]:  
+        elif model_name in ["akt","extrakt","folibikt","fluckt", "robustkt","lefokt_akt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "llm", "qwen", "mpllm", "TransformerKT"]:  
             #### 输入有question！     
             if qout != None:
                 curq = torch.tensor([[qout.item()]]).to(device)
@@ -1244,7 +1256,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
            
            y = model(dcurinfos, dgaps)
            pred = y[0][-1]
-        elif model_name in ["simplekt", "rekt", "stablekt", "sparsekt", "cskt", "ukt", "hcgkt"]:
+        elif model_name in ["simplekt", "rekt", "stablekt", "sparsekt", "cskt", "ukt", "hcgkt", "abqr"]:
            if qout != None:
                curq = torch.tensor([[qout.item()]]).to(device)
                qinshft = torch.cat((qin[:,1:], curq), axis=1)
@@ -1595,7 +1607,7 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
         elif model_name == "saint":
             y = model(ccq.long(), ccc.long(), curr.long())
             y = y[:, 1:]
-        elif model_name in ["akt","extrakt","folibikt", "robustkt", "cakt","fluckt","lefokt_akt",  "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "llm", "qwen", "mpllm"]:                                
+        elif model_name in ["akt","extrakt","folibikt", "robustkt", "cakt","fluckt","lefokt_akt",  "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx",   "Transformer_template", "balance_akt", "llm", "qwen", "mpllm", "TransformerKT"]:                                
             y, reg_loss = model(ccc.long(), ccr.long(), ccq.long())
             y = y[:,1:]
         elif model_name in ["dtransformer"]:
@@ -1633,7 +1645,7 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
             # print(f"dgaps: {dgaps.keys()}")
             y = model(dcurinfos, dgaps)
             y = y[:,1:]
-        elif model_name in ["simplekt","stablekt", "sparsekt", "cskt", "ukt", "hcgkt"]:
+        elif model_name in ["simplekt","stablekt", "sparsekt", "cskt", "ukt", "hcgkt", "abqr"]:
             dcurinfos = {"qseqs": curq, "cseqs": curc, "rseqs": curr,
                        "shft_qseqs":curqshft,"shft_cseqs":curcshft,"shft_rseqs":currshft}
             # print(f"finald: {finald.keys()}")

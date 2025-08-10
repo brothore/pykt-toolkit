@@ -113,7 +113,7 @@ def main(params):
     with open("../configs/kt_config.json") as f:
         config = json.load(f)
         train_config = config["train_config"]
-        if model_name in ["dkvmn","deep_irt", "sakt", "saint","saint++", "akt", "robustkt", "folibikt", "atkt", "lpkt", "skvmn", "dimkt",  "Transformer_template", "mamba_atakt", "mamba_atakt", "balance_akt", "qwen", "at_dkt"]:
+        if model_name in ["dkvmn","deep_irt", "sakt", "saint","saint++", "akt", "robustkt", "folibikt", "atkt", "lpkt", "skvmn", "dimkt",  "Transformer_template", "mamba_atakt", "mamba_atakt", "balance_akt", "qwen", "at_dkt", "TransformerKT"]:
             train_config["batch_size"] = 64 ## because of OOM
         if model_name in ["simplekt","stablekt", "bakt_time", "sparsekt", "dbakt"]:
             train_config["batch_size"] = 64 ## because of OOM

@@ -101,7 +101,7 @@ def student_auc_discrepancy(predictions, targets, uids, weights=None):
 def cal_loss(model, ys, r, rshft, sm, preloss=[]):
     model_name = model.model_name
     # print(f"[DEBUG] ys.shape: {ys} )")
-    if model_name in ["atdkt", "simplekt", "stablekt", "bakt_time", "sparsekt", "cskt", "hcgkt", "dbakt"]:
+    if model_name in ["atdkt", "simplekt", "stablekt", "bakt_time", "sparsekt", "cskt", "hcgkt", "dbakt", "abqr"]:
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
         # print(f"loss1: {y.shape}")
@@ -132,7 +132,7 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[]):
             loss1 = loss1 + model.cl_weight * loss2
         loss =loss1
 
-    elif model_name in ["rkt","dimkt","dkt", "dkt_forget", "dkvmn","deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "mamba_atakt", "mamba_atakt", "long_dkt", "at_dkt"]:
+    elif model_name in ["rkt","dimkt","dkt", "dkt_forget", "dkvmn","deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "mamba_atakt", "mamba_atakt", "long_dkt", "at_dkt", "TransformerKT"]:
 
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
@@ -221,10 +221,10 @@ def model_forward(model, data, rel=None):
             ys = [y[:,1:], y2, y3]
     elif model_name in ["hcgkt"]:
         
-        step_size = step_size
-        step_m = step_m
-        grad_clip = grad_clip
-        mm = mm
+        step_size = model.step_size
+        step_m = model.step_m
+        grad_clip = model.grad_clip
+        mm = model.mm
 
         # the xxx.pt file of pre_load_gcn can be found in :
         # https://drive.google.com/drive/folders/1JWstsquI3TzbUlqB1EyCbjem4qPyRLCh?usp=drive_link
@@ -276,6 +276,44 @@ def model_forward(model, data, rel=None):
         nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
         opt.step()
         model.sfm_cl.gcl.update_target_network(mm)  
+        return loss
+    elif model_name in ["abqr"]:
+        opt = rel
+        step_size = model.step_size
+        step_m = model.step_m
+        grad_clip = model.grad_clip
+        mm = model.mm
+
+        # the xxx.pt file of pre_load_gcn can be found in :
+        # https://drive.google.com/drive/folders/1JWstsquI3TzbUlqB1EyCbjem4qPyRLCh?usp=drive_link
+        
+        perturb_shape = (model.matrix.shape[0], model.emb_size)
+        perturb = torch.FloatTensor(*perturb_shape).uniform_(-step_size, step_size).to(device)
+        perturb.requires_grad_()
+        y, y2, y3, contrast_loss = model(dcur, train=True, perb=perturb)
+        
+        
+        y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+        ys = [y]
+        
+        loss = cal_loss(model, ys, r, rshft, sm, preloss) + contrast_loss
+        loss /= step_m
+        opt.zero_grad()
+        for _ in range(step_m - 1):
+            loss.backward()
+            perturb_data = perturb.detach() + step_size * torch.sign(perturb.grad.detach())
+            perturb.data = perturb_data.data
+            perturb.grad[:] = 0
+            y, y2, y3, contrast_loss = model(dcur, train=True, perb=perturb)
+            y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+            ys = [y]
+            loss = cal_loss(model, ys, r, rshft, sm, preloss) + contrast_loss
+            loss /= step_m
+        
+        loss.backward()
+        nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+        opt.step()
+        model.gcl.update_target_network(mm)  
         return loss
     elif model_name in ["dtransformer"]:
         if model.emb_type == "qid_cl":
@@ -436,6 +474,10 @@ def model_forward(model, data, rel=None):
         y, reg_loss = model(cc.long(), cr.long(), cq.long())
         ys.append(y[:,1:])
         preloss.append(reg_loss)
+    elif model_name in ["TransformerKT"]:               
+        y = model(cc.long(), cr.long(), cq.long())
+        print(f"[DEBUG] y.shape: {y.shape} (type: {type(y.shape)})")
+        ys.append(y[:,1:])
     elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt", "at_dkt"]:
         # 常规前向计算
         y, features = model(c.long(), r.long())
@@ -481,7 +523,7 @@ def model_forward(model, data, rel=None):
         y = model(q.long(),c.long(),sd.long(),qd.long(),r.long(),qshft.long(),cshft.long(),sdshft.long(),qdshft.long())
         ys.append(y) 
 
-    if model_name not in ["atkt", "atktfix","mamba_atakt", "at_dkt"]+que_type_models or model_name in ["lpkt", "rkt"]:
+    if model_name not in ["atkt", "atktfix","mamba_atakt", "at_dkt","abqr"]+que_type_models or model_name in ["lpkt", "rkt"]:
         loss = cal_loss(model, ys, r, rshft, sm, preloss)
     if model_name in ["ukt"] and model.use_CL != 0:
         return loss,temp
@@ -536,15 +578,19 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
                 loss,temp = model_forward(model, data)
             elif model.model_name == "long_dkt":
                 loss = model_forward(model, data,student_state_manager)
+            elif model.model_name == "abqr":
+                loss = model_forward(model, data,opt)
             else:
                 loss = model_forward(model, data)
-            opt.zero_grad()
-            loss.backward()#compute gradients
-            if model.model_name == "rkt":
-                clip_grad_norm_(model.parameters(), model.grad_clip)
-            if model.model_name == "dtransformer":
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            opt.step()#update model’s parameters
+            if model.model_name not in ["hcgkt","abqr"]:
+
+                opt.zero_grad()
+                loss.backward()#compute gradients
+                if model.model_name == "rkt":
+                    clip_grad_norm_(model.parameters(), model.grad_clip)
+                if model.model_name == "dtransformer":
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                opt.step()#update model’s parameters
                 
             loss_mean.append(loss.detach().cpu().numpy())
             if model.model_name == "gkt" and train_step%10==0:

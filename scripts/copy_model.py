@@ -120,47 +120,40 @@ def update_init_file(file_path, base_model, new_model):
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
-    # 检查新模型的import是否已经存在
-    if f'from .{new_model} import {new_model.upper()}' in content:
-        print(f"⚠️  {new_model} 的导入已存在于 {file_path} 中，跳过添加")
-        return False
-    
     # 检查新模型的初始化是否已经存在
     if f'model_name == "{new_model}"' in content:
         print(f"⚠️  {new_model} 的初始化已存在于 {file_path} 中，跳过添加")
         return False
     
-    # 查找基底模型的import语句
-    import_pattern = rf'from\s+\.{base_model}\s+import\s+{base_model.upper()}'
-    import_match = re.search(import_pattern, content)
-    
-    if import_match:
-        # 在基底模型import后添加新模型的import - 文件名保持原有大小写
-        new_import = f'\nfrom .{new_model} import {new_model.upper()}'
-        insert_pos = import_match.end()
-        content = content[:insert_pos] + new_import + content[insert_pos:]
-    
     # 查找并复制模型初始化语句
-    init_pattern = rf'((?:if|elif)\s+model_name\s*==\s*["\']({base_model})["\']:\s*\n\s+model\s*=\s*{base_model.upper()}\((.*?)\)\.to\(device\))'
+    init_pattern = rf'((?:if|elif)\s+model_name\s*==\s*["\']({base_model})["\']:\s*\n\s+from\s+\.{base_model}\s+import\s+{base_model.upper()}\s*\n\s+model\s*=\s*{base_model.upper()}\((.*?)\)\.to\(device\))'
     
     init_match = re.search(init_pattern, content, re.DOTALL)
     
     if init_match:
         # 提取参数部分
         params = init_match.group(3)
-        # 在基底模型初始化后添加新模型的初始化 - 保持原有大小写
-        new_init = f'\n    elif model_name == "{new_model}":\n        model = {new_model.upper()}({params}).to(device)'
+        # 在基底模型初始化后添加新模型的初始化
+        new_init = f'\n    elif model_name == "{new_model}":\n        from .{new_model} import {new_model.upper()}\n        model = {new_model.upper()}({params}).to(device)'
         insert_pos = init_match.end()
         content = content[:insert_pos] + new_init + content[insert_pos:]
+    else:
+        # 尝试匹配没有import的旧格式（向后兼容）
+        old_pattern = rf'((?:if|elif)\s+model_name\s*==\s*["\']({base_model})["\']:\s*\n\s+model\s*=\s*{base_model.upper()}\((.*?)\)\.to\(device\))'
+        old_match = re.search(old_pattern, content, re.DOTALL)
+        if old_match:
+            params = old_match.group(3)
+            new_init = f'\n    elif model_name == "{new_model}":\n        from .{new_model} import {new_model.upper()}\n        model = {new_model.upper()}({params}).to(device)'
+            insert_pos = old_match.end()
+            content = content[:insert_pos] + new_init + content[insert_pos:]
     
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(content)
     return True
-
 def save_operation_record(base_model, new_model, operations):
     """保存操作记录到txt文件"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    record_file = f"./logs/model_operations_{timestamp}.txt"
+    record_file = f"./scripts/logs/model_operations_{timestamp}.txt"
     
     with open(record_file, 'w', encoding='utf-8') as f:
         f.write(f"模型操作记录\n")
@@ -253,7 +246,7 @@ def undo_operations(base_model, new_model):
         
         # 4. 保存撤销操作记录
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        undo_record_file = f"./logs/model_undo_operations_{timestamp}.txt"
+        undo_record_file = f"./scripts/logs/model_undo_operations_{timestamp}.txt"
         
         with open(undo_record_file, 'w', encoding='utf-8') as f:
             f.write(f"模型撤销操作记录\n")

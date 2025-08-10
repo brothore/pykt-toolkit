@@ -46,7 +46,10 @@ class HCGKT(nn.Module):
         self.separate_qa = separate_qa
         self.emb_type = emb_type
         embed_l = d_model
-
+        self.step_size = step_size
+        self.step_m = step_m
+        self.grad_clip = grad_clip
+        self.mm = mm
 
         matrix = None 
         dataset_name = None
