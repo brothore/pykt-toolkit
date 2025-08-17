@@ -238,7 +238,7 @@ def evaluate_single_student(params, student_id):
             data_config["num_it"] = config["data_config"]["num_it"]
     
     if model_name not in ["dimkt"]:
-        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=f"top_{student_id}_student_file")
+        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=f"top_{student_id}_student.csv",load_flags=[0,0,0,1])
     else:
         diff_level = trained_params["difficult_levels"]
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size, diff_level=diff_level)
@@ -272,7 +272,7 @@ def evaluate_single_student(params, student_id):
     }
 
     if "test_question_window_file" in data_config and not test_question_window_loader is None:
-        save_test_question_window_path = os.path.join(save_dir, f"{model.emb_type}_test_question_window_predictions_student_{student_id}.txt")
+        save_test_question_window_path = os.path.join(save_dir, f"summary_{model.emb_type}_test_question_window_predictions_student.txt")
         qw_testaucs, qw_testaccs = evaluate_question(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
         for key in qw_testaucs:
             dres["windowauc" + key] = qw_testaucs[key]

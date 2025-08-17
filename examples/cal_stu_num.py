@@ -42,7 +42,7 @@ def count_unique_uids_and_update_json(csv_file_path, json_file_path, dataset_nam
 # 使用示例
 if __name__ == "__main__":
     # 假设我们要处理assist2015数据集
-    dataset_name = "nips_task34"
+    dataset_name = "peiyou"
     
     # 获取JSON文件路径
     json_file_path = "../configs/data_config.json"  # 替换为实际路径

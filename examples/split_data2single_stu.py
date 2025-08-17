@@ -363,10 +363,7 @@ def update_data_config(dataset_name: str, num_students: int, generated_files: Li
                     # 例如：total_questions_low_interval.csv -> total_questions_low_interval_file
                     key_name = filename.replace('.csv', '_file')
                     config[dataset_name][key_name] = filename
-                elif 'top_' in filename and '_student.csv' in filename:
-                    # 处理学生文件，例如：top_1_student.csv -> top_1_student_file
-                    key_name = filename.replace('.csv', '_file')
-                    config[dataset_name][key_name] = filename
+
             
             print(f"已更新数据集 {dataset_name} 的学生个数为: {num_students}")
             print(f"已添加 {len(generated_files)} 个生成的文件到配置中")
@@ -398,10 +395,60 @@ def print_top_students_details(student_summary: pd.DataFrame, num_students: int 
         print(f"  总体正确率: {student['overall_accuracy']:.3f}")
         print(f"  知识点正确率范围: {student['min_accuracy']:.3f} - {student['max_accuracy']:.3f} (差值: {student['accuracy_range']:.3f})")
         print(f"  知识点正确率方差: {student['accuracy_variance']:.4f}")
-
+def count_unique_uids_and_update_json(csv_file_path, json_file_path, dataset_name, uid_column='uid'):
+    """
+    统计CSV文件中独立uid的数量，并更新json文件
+    
+    参数:
+        csv_file_path (str): CSV文件路径
+        json_file_path (str): JSON配置文件路径
+        dataset_name (str): 数据集名称(如"assist2015")
+        uid_column (str): CSV文件中uid的列名，默认为'uid'
+    """
+    try:
+        # 1. 读取CSV文件并统计独立uid数量
+        df = pd.read_csv(csv_file_path)
+        unique_uids = df[uid_column].nunique()
+        print(f"在文件 {csv_file_path} 中找到 {unique_uids} 个独立uid")
+        
+        # 2. 读取JSON文件
+        with open(json_file_path, 'r', encoding='utf-8') as f:
+            data_config = json.load(f)
+        
+        # 3. 检查数据集是否存在
+        if dataset_name not in data_config:
+            raise ValueError(f"数据集 {dataset_name} 不存在于配置文件中")
+            
+        # 4. 更新students_num_train字段
+        data_config[dataset_name]['students_num_train'] = int(unique_uids)
+        
+        # 5. 写回JSON文件
+        with open(json_file_path, 'w', encoding='utf-8') as f:
+            json.dump(data_config, f, indent=4, ensure_ascii=False)
+            
+        print(f"成功更新 {dataset_name} 的 students_num_train 为 {unique_uids}")
+        
+    except Exception as e:
+        print(f"处理过程中发生错误: {str(e)}")
+        raise
 def main(args):
     """主函数：处理数据并保存所有学生数据"""
     print("正在读取CSV文件...")
+    #处理训练集
+    config_path = "../configs/data_config.json"
+    # 从JSON中获取CSV文件路径
+    dataset_name = args.dataset
+    with open(config_path, 'r', encoding='utf-8') as f:
+        data_config = json.load(f)
+    # 构建完整的CSV文件路径
+    csv_relative_path = data_config[dataset_name]['train_valid_file']
+    train_csv_file_path = os.path.join(data_config[dataset_name]['dpath'], csv_relative_path)
+    
+    # 调用函数处理
+    count_unique_uids_and_update_json(train_csv_file_path, config_path, dataset_name)
+    
+
+
     # 使用args中的参数
     input_csv_path = args.input_file
     output_dir = args.output_directory
@@ -410,7 +457,7 @@ def main(args):
     
     # 自动设置学生个数为实际uid个数
     num_needs_stu = df['uid'].nunique()
-    print(f"共有 {num_needs_stu} 个不同的学生")
+    print(f"测试集共有 {num_needs_stu} 个不同的学生")
     
     # 创建输出目录
     if not os.path.exists(output_dir):
@@ -484,7 +531,7 @@ def main(args):
     all_generated_files.extend(interval_files)
     
     # 更新data_config.json文件，包括学生数量和生成的文件列表
-    update_data_config(args.dataset, num_needs_stu, all_generated_files)
+    update_data_config(args.dataset, num_needs_stu, all_generated_files,config_path=config_path)
     
     print(f"\n处理完成！共生成了 {len(all_generated_files)} 个文件:")
     for file in sorted(all_generated_files):
@@ -494,15 +541,21 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Process dataset parameters")
     
     # 先定义 dataset 参数
-    parser.add_argument("--dataset", type=str, default="nips_task34",
+    parser.add_argument("--dataset", type=str, default="peiyouAnips_task34Abridge2algebra2006",
                        help="Dataset name (default: %(default)s)")
     
     # 解析已知参数（只解析 dataset，不解析其他参数）
     args, _ = parser.parse_known_args()
-    
+    # 首先读取data_config.json文件
+    with open('../configs/data_config.json', 'r') as f:
+        data_config = json.load(f)
+    # 获取指定数据集的dpath
+    dataset_dpath = data_config[args.dataset]["dpath"]
     # 然后定义其他参数，使用 args.dataset 作为默认路径的一部分
-    default_input = f"/root/pykt-toolkit/data/{args.dataset}/test_question_window_sequences.csv"
-    default_output = f"/root/pykt-toolkit/data/{args.dataset}/"
+    # 修改默认输入输出路径
+    default_input = f"{dataset_dpath}/test_question_window_sequences.csv"
+    default_output = f"{dataset_dpath}/"
+
     
     parser.add_argument("--input_file", type=str, default=default_input,
                        help="Input file path (default: %(default)s)")

@@ -11,6 +11,9 @@ def init_model(model_name, model_config, data_config, emb_type):
     if model_name == "dkt":
         from .dkt import DKT
         model = DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "mult_dataset_dkt":
+        from .mult_dataset_dkt import MULT_DATASET_DKT
+        model = MULT_DATASET_DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "long_dkt":
         from .long_dkt import LONG_DKT
         model = LONG_DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
@@ -39,6 +42,9 @@ def init_model(model_name, model_config, data_config, emb_type):
         from .akt import AKT
 
         model = AKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "multi_dataset_akt":
+        from .multi_dataset_akt import MULTI_DATASET_AKT
+        model = MULTI_DATASET_AKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "TransformerKT":
         from .TransformerKT import TRANSFORMERKT
         model = TRANSFORMERKT(data_config["num_c"], data_config["num_q"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
@@ -113,7 +119,7 @@ def init_model(model_name, model_config, data_config, emb_type):
         if data_config["num_q"] == 0 or data_config["num_c"] == 0:
             print(f"model: {model_name} needs questions and concepts! but the dataset has no both")
             return None
-        model = HawkesKT(data_config["num_c"], data_config["num_q"], **model_config)
+        model = HawkesKT(data_config["num_c"], data_config["num_q"], **model_config,emb_type=emb_type)
         model = model.double()
         model.apply(model.init_weights)
         model = model.to(device)

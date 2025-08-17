@@ -150,10 +150,18 @@ def update_init_file(file_path, base_model, new_model):
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(content)
     return True
+def get_script_dir():
+    """获取脚本所在的目录的上一级"""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.dirname(script_dir)
 def save_operation_record(base_model, new_model, operations):
     """保存操作记录到txt文件"""
+    script_dir = get_script_dir()
+    logs_dir = os.path.join(script_dir, "scripts", "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    record_file = f"./scripts/logs/model_operations_{timestamp}.txt"
+    record_file = os.path.join(logs_dir, f"model_operations_{timestamp}.txt")
     
     with open(record_file, 'w', encoding='utf-8') as f:
         f.write(f"模型操作记录\n")
@@ -214,17 +222,18 @@ def undo_operations(base_model, new_model):
     print(f"开始撤销操作：删除模型 {new_model} 相关的所有修改...")
     
     operations = []
+    script_dir = get_script_dir()
     
     try:
         # 1. 删除复制的训练文件
-        dst_train = f"examples/wandb_{new_model}_train.py"
+        dst_train = os.path.join(script_dir, "examples", f"wandb_{new_model}_train.py")
         if os.path.exists(dst_train):
             os.remove(dst_train)
             operations.append(f"删除文件: {dst_train}")
             print(f"✓ 删除 {dst_train}")
         
         # 2. 删除复制的模型文件
-        dst_model = f"pykt/models/{new_model}.py"
+        dst_model = os.path.join(script_dir, "pykt", "models", f"{new_model}.py")
         if os.path.exists(dst_model):
             os.remove(dst_model)
             operations.append(f"删除文件: {dst_model}")
@@ -232,11 +241,11 @@ def undo_operations(base_model, new_model):
         
         # 3. 从各个配置文件中删除模型引用
         config_files = [
-            "examples/wandb_train.py",
-            "pykt/models/evaluate_model.py", 
-            "pykt/models/train_model.py",
-            "pykt/models/init_model.py",
-            "pykt/datasets/init_dataset.py"
+            os.path.join(script_dir, "examples", "wandb_train.py"),
+            os.path.join(script_dir, "pykt", "models", "evaluate_model.py"), 
+            os.path.join(script_dir, "pykt", "models", "train_model.py"),
+            os.path.join(script_dir, "pykt", "models", "init_model.py"),
+            os.path.join(script_dir, "pykt", "datasets", "init_dataset.py")
         ]
         
         for file_path in config_files:
@@ -245,8 +254,11 @@ def undo_operations(base_model, new_model):
                 print(f"✓ 从 {file_path} 中删除 {new_model} 引用")
         
         # 4. 保存撤销操作记录
+        logs_dir = os.path.join(script_dir, "scripts", "logs")
+        os.makedirs(logs_dir, exist_ok=True)
+        
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        undo_record_file = f"./scripts/logs/model_undo_operations_{timestamp}.txt"
+        undo_record_file = os.path.join(logs_dir, f"model_undo_operations_{timestamp}.txt")
         
         with open(undo_record_file, 'w', encoding='utf-8') as f:
             f.write(f"模型撤销操作记录\n")
@@ -284,11 +296,12 @@ def main():
     print(f"开始处理：基底模型 = {base_model}, 新模型 = {new_model}")
     
     operations = []  # 记录执行的操作
+    script_dir = get_script_dir()
     
     try:
         # 1. 复制并修改 wandb_[基底模型]_train.py
-        src_train = f"examples/wandb_{base_model}_train.py"
-        dst_train = f"examples/wandb_{new_model}_train.py"
+        src_train = os.path.join(script_dir, "examples", f"wandb_{base_model}_train.py")
+        dst_train = os.path.join(script_dir, "examples", f"wandb_{new_model}_train.py")
         
         if os.path.exists(src_train):
             if os.path.exists(dst_train):
@@ -314,7 +327,7 @@ def main():
             print(f"⚠️  源文件 {src_train} 不存在，跳过复制")
         
         # 2. 更新 examples/wandb_train.py
-        wandb_train = "examples/wandb_train.py"
+        wandb_train = os.path.join(script_dir, "examples", "wandb_train.py")
         if os.path.exists(wandb_train):
             if add_model_to_lists(wandb_train, base_model, new_model):
                 operations.append(f"更新 {wandb_train} 中的模型列表")
@@ -323,8 +336,8 @@ def main():
             print(f"⚠️  文件 {wandb_train} 不存在，跳过更新")
         
         # 3. 复制并修改模型文件
-        src_model = f"pykt/models/{base_model}.py"
-        dst_model = f"pykt/models/{new_model}.py"
+        src_model = os.path.join(script_dir, "pykt", "models", f"{base_model}.py")
+        dst_model = os.path.join(script_dir, "pykt", "models", f"{new_model}.py")
         
         if os.path.exists(src_model):
             if os.path.exists(dst_model):
@@ -341,7 +354,7 @@ def main():
             print(f"⚠️  源文件 {src_model} 不存在，跳过复制")
         
         # 4. 更新 evaluate_model.py
-        eval_model = "pykt/models/evaluate_model.py"
+        eval_model = os.path.join(script_dir, "pykt", "models", "evaluate_model.py")
         if os.path.exists(eval_model):
             if add_model_to_lists(eval_model, base_model, new_model):
                 operations.append(f"更新 {eval_model} 中的模型列表")
@@ -350,7 +363,7 @@ def main():
             print(f"⚠️  文件 {eval_model} 不存在，跳过更新")
         
         # 5. 更新 train_model.py
-        train_model = "pykt/models/train_model.py"
+        train_model = os.path.join(script_dir, "pykt", "models", "train_model.py")
         if os.path.exists(train_model):
             if add_model_to_lists(train_model, base_model, new_model):
                 operations.append(f"更新 {train_model} 中的模型列表")
@@ -359,7 +372,7 @@ def main():
             print(f"⚠️  文件 {train_model} 不存在，跳过更新")
         
         # 6. 更新 __init__.py
-        init_file = "pykt/models/init_model.py"
+        init_file = os.path.join(script_dir, "pykt", "models", "init_model.py")
         if os.path.exists(init_file):
             if update_init_file(init_file, base_model, new_model):
                 operations.append(f"更新 {init_file} 中的导入和初始化")
@@ -368,7 +381,7 @@ def main():
             print(f"⚠️  文件 {init_file} 不存在，跳过更新")
         
         # 7. 更新 pykt/datasets/init_dataset.py
-        init_dataset = "pykt/datasets/init_dataset.py"
+        init_dataset = os.path.join(script_dir, "pykt", "datasets", "init_dataset.py")
         if os.path.exists(init_dataset):
             if add_model_to_lists(init_dataset, base_model, new_model):
                 operations.append(f"更新 {init_dataset} 中的模型列表")
@@ -381,11 +394,10 @@ def main():
             record_file = save_operation_record(base_model, new_model, operations)
         
         print(f"\n✅ 所有操作完成！共执行了 {len(operations)} 项操作。")
-        print(f"💡 如需撤销，请运行: python {sys.argv[0]} {base_model} {new_model} --undo")
+        print(f"💡 如需撤销，请运行: python {os.path.basename(__file__)} {base_model} {new_model} --undo")
         
     except Exception as e:
         print(f"\n❌ 错误: {e}")
         sys.exit(1)
-
 if __name__ == "__main__":
     main()
