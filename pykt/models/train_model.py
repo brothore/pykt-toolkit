@@ -132,7 +132,7 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[]):
             loss1 = loss1 + model.cl_weight * loss2
         loss =loss1
 
-    elif model_name in ["rkt","dimkt","dkt", "dkt_forget", "dkvmn","deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "mamba_atakt", "mamba_atakt", "long_dkt", "at_dkt", "TransformerKT", "mult_dataset_dkt"]:
+    elif model_name in ["rkt","dimkt","dkt", "dkt_forget", "dkvmn","deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "mamba_atakt", "mamba_atakt", "long_dkt", "at_dkt", "TransformerKT", "mult_dataset_dkt", "hawkes_lstm", "hawkes_mamba"]:
 
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
@@ -194,7 +194,7 @@ def model_forward(model, data, rel=None):
     cq = torch.cat((q[:,0:1], qshft), dim=1)
     cc = torch.cat((c[:,0:1], cshft), dim=1)
     cr = torch.cat((r[:,0:1], rshft), dim=1)
-    if model_name in ["hawkes"]:
+    if model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba"]:
         ct = torch.cat((t[:,0:1], tshft), dim=1)
     elif model_name in ["rkt"]:
         y, attn = model(dcur, rel, train=True)
@@ -511,7 +511,7 @@ def model_forward(model, data, rel=None):
         # y = model(cq.long(), cr.long(), cat, cit.long())
         y = model(cq.long(), cr.long(), cit.long())
         ys.append(y[:, 1:])  
-    elif model_name == "hawkes":
+    elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba"]:
         # ct = torch.cat((dcur["tseqs"][:,0:1], dcur["shft_tseqs"]), dim=1)
         # csm = torch.cat((dcur["smasks"][:,0:1], dcur["smasks"]), dim=1)
         # y = model(cc[0:1,0:5].long(), cq[0:1,0:5].long(), ct[0:1,0:5].long(), cr[0:1,0:5].long(), csm[0:1,0:5].long())

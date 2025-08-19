@@ -185,7 +185,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 y = model(cq.long(), cr.long(), cit.long())
                 y = y[:,1:]
                 c,cshft = q,qshft#question level 
-            elif model_name == "hawkes":
+            elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba"]:
                 ct = torch.cat((dcur["tseqs"][:,0:1], dcur["shft_tseqs"]), dim=1)
                 # csm = torch.cat((dcur["smasks"][:,0:1], dcur["smasks"]), dim=1)
                 y = model(cc.long(), cq.long(), ct.long(), cr.long())#, csm.long())
@@ -281,7 +281,7 @@ def effective_fusion(df, model, model_name, fusion_type):
 
     curhs, curr = [[], []], []
     dcur = {"late_trues": [], "qidxs": [], "questions": [], "concepts": [], "row": [], "concept_preds": []}
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "akt","extrakt", "folibikt", "robustkt", "dtransformer", "simplekt","stablekt","cskt","fluckt", "ukt", "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt", "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt"]
+    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "akt","extrakt", "folibikt", "robustkt", "dtransformer", "simplekt","stablekt","cskt","fluckt", "ukt", "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt", "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba"]
     for ui in df:
         # 一题一题处理
         curdf = ui[1]
@@ -329,7 +329,7 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
     if cq.shape[1] == 0:
         cq = cc
 
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","robustkt", "extrakt", "folibikt","simplekt","stablekt","cskt", "fluckt", "ukt",  "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt"]
+    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","robustkt", "extrakt", "folibikt","simplekt","stablekt","cskt", "fluckt", "ukt",  "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba"]
     
     alldfs, drest = [], dict() # not predict infos!
     # print(f"real bz in group fusion: {rs.shape[0]}")
@@ -593,7 +593,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             num_layers=num_layers,
             mode="eval"  # 标记为评估模式，确保与训练模式分离
         )
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","extrakt","folibikt", "robustkt", "simplekt","cskt","fluckt", "stablekt", "ukt", "hcgkt", "bakt_time", "sparsekt", "lefokt_akt", "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt"]
+    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","extrakt","folibikt", "robustkt", "simplekt","cskt","fluckt", "stablekt", "ukt", "hcgkt", "bakt_time", "sparsekt", "lefokt_akt", "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba"]
     if save_path != "":
     # 检查文件是否存在且不为空
         file_exists = os.path.exists(save_path) and os.path.getsize(save_path) > 0
@@ -745,7 +745,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name == "gkt":
                 y = model(cc.long(), cr.long())
-            elif model_name == "hawkes":
+            elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba"]:
                 ct = torch.cat((dcurori["tseqs"][:,0:1], dcurori["shft_tseqs"]), dim=1)
                 y, h = model(cc.long(), cq.long(), ct.long(), cr.long(), True)
                 y = y[:, 1:]
@@ -1304,7 +1304,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             y = model(cin.long(), rin.long())
             # print(f"y.shape is {y.shape},cin shape is {cin.shape}")
             pred = y[0][-1]
-        elif model_name == "hawkes":
+        elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba"]:
             curc, curr = torch.tensor([[cout.item()]]).to(device), torch.tensor([[1]]).to(device)
             if tout != None:
                 curt = torch.tensor([[tout.item()]]).to(device)
@@ -1664,7 +1664,7 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
             y = model(ccc.long(), ccr.long())
             # print(f"y: {y}")
             # y = y[:, t-1:t]
-        elif model_name == "hawkes":
+        elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba"]:
             y = model(ccc.long(), ccq.long(), cct.long(), ccr.long())
             pred = y[0][-1]
         if model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt", "at_dkt"] and atkt_pad == True:

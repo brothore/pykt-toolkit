@@ -61,8 +61,8 @@ class ATKT(nn.Module):
             # attn_ouput = (alphas * weighted_output).sum(dim=2)
         else: # 原来的官方实现
             alphas=nn.Softmax(dim=1)(att_w)
-            print(f"[DEBUG] alphas.shape: {alphas.shape}")
-            print(f"[DEBUG] lstm_output.shape: {lstm_output.shape}")
+            # print(f"[DEBUG] alphas.shape: {alphas.shape}")
+            # print(f"[DEBUG] lstm_output.shape: {lstm_output.shape}")
             # print(f"alphas: {alphas.shape}")    
             attn_ouput = alphas*lstm_output # 整个seq的attn之和为1，计算前面的的时候，所有的attn都<<1，不会有问题？做的少的时候，历史作用小，做得多的时候，历史作用变大？
             # print(f"attn_ouput: {attn_ouput.shape}")
@@ -82,34 +82,79 @@ class ATKT(nn.Module):
 
     def forward(self, skill, answer, perturbation=None):
         emb_type = self.emb_type
-        r = answer
-        
-        skill_embedding=self.skill_emb(skill)
-        answer_embedding=self.answer_emb(answer)
-        
-        skill_answer=torch.cat((skill_embedding,answer_embedding), 2)
-        answer_skill=torch.cat((answer_embedding,skill_embedding), 2)
-        
-        answer=answer.unsqueeze(2).expand_as(skill_answer)
-        
-        skill_answer_embedding=torch.where(answer==1, skill_answer, answer_skill)
-        
-        # print(skill_answer_embedding)
-        
-        skill_answer_embedding1=skill_answer_embedding
-        if  perturbation is not None:
-            skill_answer_embedding += perturbation
+        if self.emb_type == "qid":
+            r = answer
             
-        out,_ = self.rnn(skill_answer_embedding)
-        # print(f"out: {out.shape}")
-        out=self.attention_module(out)
-        # print(f"after attn out: {out.shape}")
-        res = self.sig(self.fc(self.dropout_layer(out)))
+            skill_embedding=self.skill_emb(skill)
+            answer_embedding=self.answer_emb(answer)
+            
+            skill_answer=torch.cat((skill_embedding,answer_embedding), 2)
+            answer_skill=torch.cat((answer_embedding,skill_embedding), 2)
+            
+            answer=answer.unsqueeze(2).expand_as(skill_answer)
+            
+            skill_answer_embedding=torch.where(answer==1, skill_answer, answer_skill)
+            
+            # print(skill_answer_embedding)
+            
+            skill_answer_embedding1=skill_answer_embedding
+            if  perturbation is not None:
+                skill_answer_embedding += perturbation
+                
+            out,_ = self.rnn(skill_answer_embedding)
+            # print(f"out: {out.shape}")
+            out=self.attention_module(out)
+            # print(f"after attn out: {out.shape}")
+            res = self.sig(self.fc(self.dropout_layer(out)))
 
-        # res = res[:, :-1, :]
-        # pred_res = self._get_next_pred(res, skill)
-        
-        return res, skill_answer_embedding1
+            # res = res[:, :-1, :]
+            # pred_res = self._get_next_pred(res, skill)
+            
+            return res, skill_answer_embedding1
+        else:
+            r = answer
+    
+            skill_embedding = self.skill_emb(skill)
+            answer_embedding = self.answer_emb(answer)
+            
+            skill_answer = torch.cat((skill_embedding, answer_embedding), 2)
+            answer_skill = torch.cat((answer_embedding, skill_embedding), 2)
+            
+            answer = answer.unsqueeze(2).expand_as(skill_answer)
+            skill_answer_embedding = torch.where(answer==1, skill_answer, answer_skill)
+            
+            skill_answer_embedding1 = skill_answer_embedding
+            if perturbation is not None:
+                skill_answer_embedding += perturbation
+            
+            # 初始化LSTM的隐藏状态
+            batch_size = skill.size(0)
+            h = torch.zeros(1, batch_size, self.hidden_dim).to(device)
+            c = torch.zeros(1, batch_size, self.hidden_dim).to(device)
+            
+            # 存储每个时间步的输出
+            outputs = []
+            
+            # 逐个时间步处理
+            for t in range(skill_answer_embedding.size(1)):
+                # 获取当前时间步的输入
+                input_t = skill_answer_embedding[:, t:t+1, :]
+                
+                # LSTM前向传播
+                out_t, (h, c) = self.rnn(input_t, (h, c))
+                
+                # 注意力模块
+                attn_output = self.attention_module(out_t)
+                
+                # 全连接层和sigmoid
+                res_t = self.sig(self.fc(self.dropout_layer(attn_output)))
+                
+                outputs.append(res_t)
+            
+            # 将所有时间步的输出拼接起来
+            res = torch.cat(outputs, dim=1)
+            
+            return res, skill_answer_embedding1
 
 from torch.autograd import Variable
 
