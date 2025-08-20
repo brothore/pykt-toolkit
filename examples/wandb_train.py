@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 import torch
-torch.set_num_threads(4) 
+# torch.set_num_threads(4) 
 from torch.optim import SGD, Adam
 import copy
 
