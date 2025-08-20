@@ -138,7 +138,7 @@ def init_model(model_name, model_config, data_config, emb_type):
             print(f"model: {model_name} needs questions and concepts! but the dataset has no both")
             return None
         model = HawkesMamba(data_config["num_c"], data_config["num_q"], **model_config,emb_type=emb_type)
-        model = model.double()
+        model = model
         model.apply(model.init_weights)
         model = model.to(device)
     elif model_name == "iekt":
