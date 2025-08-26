@@ -7,7 +7,8 @@ import pandas as pd
 # from pykt.config import ERR_PATH, stu_pk
 from pykt.models import evaluate, evaluate_question, load_model
 from pykt.datasets import init_test_datasets,init_test_datasets_multi_stu
-import pykt.config as config_module
+import pykt.config as config_module 
+que_type_models = config_module.que_type_models
 import traceback  # 在文件顶部添加导入
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:2'
@@ -207,7 +208,18 @@ def evaluate_single_student(params, student_id):
         wandb.init(project="wandb_predict")
 
     save_dir, batch_size, fusion_type = params["save_dir"], params["bz"], params["fusion_type"].split(",")
-
+    results_path = os.path.join(save_dir, f"evaluation_results_{student_id}.json")
+    
+    # 检查是否已存在预测结果
+    if os.path.exists(results_path):
+        try:
+            with open(results_path, "r") as fin:
+                dres = json.load(fin)
+                print(f"学生 {student_id}: 找到现有预测结果，加载自 {results_path}")
+                return dres
+        except Exception as e:
+            print(f"学生 {student_id}: 加载现有预测结果时出错: {e}")
+            print(f"将重新运行预测...")
     # 确保保存目录存在
     os.makedirs(save_dir, exist_ok=True)
 
@@ -238,7 +250,7 @@ def evaluate_single_student(params, student_id):
             data_config["num_it"] = config["data_config"]["num_it"]
     
     if model_name not in ["dimkt"]:
-        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=f"top_{student_id}_student.csv",load_flags=[0,0,0,1])
+        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=f"top_{student_id}_student.csv",load_flags=[0,1,0,1])
     else:
         diff_level = trained_params["difficult_levels"]
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size, diff_level=diff_level)
@@ -271,14 +283,27 @@ def evaluate_single_student(params, student_id):
         "student_id": student_id,
     }
 
-    if "test_question_window_file" in data_config and not test_question_window_loader is None:
-        save_test_question_window_path = os.path.join(save_dir, f"summary_{model.emb_type}_test_question_window_predictions_student.txt")
-        qw_testaucs, qw_testaccs = evaluate_question(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
-        for key in qw_testaucs:
-            dres["windowauc" + key] = qw_testaucs[key]
-        for key in qw_testaccs:
-            dres["windowacc" + key] = qw_testaccs[key]
-
+    if model_name in que_type_models:
+        # 对于 que_type_models，使用 evaluate 获取 window_testauc 和 window_testacc
+        if test_window_loader is not None:
+            save_test_window_path = os.path.join(save_dir, f"{model.emb_type}_test_window_predictions_student_{student_id}.txt")
+            if model.model_name == "rkt":
+                window_testauc, window_testacc = evaluate(model, test_window_loader, model_name, rel, save_test_window_path)
+            else:
+                window_testauc, window_testacc = evaluate(model, test_window_loader, model_name, save_test_window_path)
+            dres["window_testauc"] = window_testauc
+            dres["window_testacc"] = window_testacc
+            print(f"学生 {student_id}: window_testauc: {window_testauc}, window_testacc: {window_testacc}")
+        # 不运行 evaluate_question
+    else:
+        # 原有 evaluate_question 逻辑（非 que_type_models 运行）
+        if "test_question_window_file" in data_config and not test_question_window_loader is None:
+            save_test_question_window_path = os.path.join(save_dir, f"summary_{model.emb_type}_test_question_window_predictions_student.txt")
+            qw_testaucs, qw_testaccs = evaluate_question(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
+            for key in qw_testaucs:
+                dres["windowauc" + key] = qw_testaucs[key]
+            for key in qw_testaccs:
+                dres["windowacc" + key] = qw_testaccs[key]
     raw_config = json.load(open(os.path.join(save_dir, "config.json")))
     dres.update(raw_config['params'])
     
@@ -290,11 +315,16 @@ def evaluate_single_student(params, student_id):
         wandb.log(dres)
 
     # 输出关键指标
-    if 'windowauclate_mean' in dres:
-        print(f"学生 {student_id}: windowauclate_mean: {dres['windowauclate_mean']}")
-    if 'windowacclate_mean' in dres:
-        print(f"学生 {student_id}: windowacclate_mean: {dres['windowacclate_mean']}")
-    
+    if model_name in que_type_models:
+        if 'window_testauc' in dres:
+            print(f"学生 {student_id}: window_testauc: {dres['window_testauc']}")
+        if 'window_testacc' in dres:
+            print(f"学生 {student_id}: window_testacc: {dres['window_testacc']}")
+    else:
+        if 'windowauclate_mean' in dres:
+            print(f"学生 {student_id}: windowauclate_mean: {dres['windowauclate_mean']}")
+        if 'windowacclate_mean' in dres:
+            print(f"学生 {student_id}: windowacclate_mean: {dres['windowacclate_mean']}")
     # 将评估结果保存到单独的JSON文件
     results_path = os.path.join(save_dir, f"evaluation_results_{student_id}.json")
     # try:
@@ -372,7 +402,40 @@ def main(params):
                     'min_questions_per_concept', 'questions_range', 'overall_accuracy',
                     'accuracy_range', 'accuracy_variance', 'max_accuracy', 'min_accuracy'
                 ]
+                if 'window_testauc' in df.columns:
+                    valid_window_testauc = df['window_testauc'][df['window_testauc'] != -1]
+                    if len(valid_window_testauc) > 0:
+                        # 控制台输出
+                        print(f"\nwindow_testauc 统计:")
+                        print(f"  最小值: {valid_window_testauc.min():.6f}")
+                        print(f"  最大值: {valid_window_testauc.max():.6f}")
+                        print(f"  平均值: {valid_window_testauc.mean():.6f}")
+                        print(f"  标准差: {valid_window_testauc.std():.6f}")
+                        
+                        # 文件输出
+                        stat_file.write(f"\nwindow_testauc 统计:\n")
+                        stat_file.write(f"  最小值: {valid_window_testauc.min():.6f}\n")
+                        stat_file.write(f"  最大值: {valid_window_testauc.max():.6f}\n")
+                        stat_file.write(f"  平均值: {valid_window_testauc.mean():.6f}\n")
+                        stat_file.write(f"  标准差: {valid_window_testauc.std():.6f}\n")
                 
+                # 处理 window_testacc 统计
+                if 'window_testacc' in df.columns:
+                    valid_window_testacc = df['window_testacc'][df['window_testacc'] != -1]
+                    if len(valid_window_testacc) > 0:
+                        # 控制台输出
+                        print(f"\nwindow_testacc 统计:")
+                        print(f"  最小值: {valid_window_testacc.min():.6f}")
+                        print(f"  最大值: {valid_window_testacc.max():.6f}")
+                        print(f"  平均值: {valid_window_testacc.mean():.6f}")
+                        print(f"  标准差: {valid_window_testacc.std():.6f}")
+                        
+                        # 文件输出
+                        stat_file.write(f"\nwindow_testacc 统计:\n")
+                        stat_file.write(f"  最小值: {valid_window_testacc.min():.6f}\n")
+                        stat_file.write(f"  最大值: {valid_window_testacc.max():.6f}\n")
+                        stat_file.write(f"  平均值: {valid_window_testacc.mean():.6f}\n")
+                        stat_file.write(f"  标准差: {valid_window_testacc.std():.6f}\n")
                 for col in stat_columns:
                     if col in df.columns:
                         valid_data = df[col][df[col] >= 0]  # 只取有效值
@@ -480,7 +543,7 @@ def main(params):
 
     print(f"Start predicting model: {model_name}, embtype: {emb_type}, save_dir: {save_dir}, dataset_name: {dataset_name}")
     print(f"model_config: {model_config}")
-    print(f"data_config: {data_config}")
+    # print(f"data_config: {data_config}")
 
     model = load_model(model_name, model_config, data_config, emb_type, save_dir)
 

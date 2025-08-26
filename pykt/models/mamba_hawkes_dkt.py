@@ -10,7 +10,7 @@ class HawkesKT(nn.Module):
     # def __init__(self, args, corpus):
     def __init__(self, n_skills, n_problems, emb_size, time_log, emb_type="qid"):
         super().__init__()
-        self.model_name = "hawkes"
+        self.model_name = "mamba_hawkes_dkt"
         self.emb_type = emb_type
         self.problem_num = n_problems
         self.skill_num = n_skills

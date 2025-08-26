@@ -20,7 +20,7 @@ emb_type_map = {"akt-iekt":"qc_merge",
   
 
 class QueEmb(nn.Module):
-    def __init__(self,num_q,num_c,emb_size,model_name,device='cpu',emb_type='qid',emb_path="", pretrain_dim=768):
+    def __init__(self, num_q, num_c, emb_size, model_name, device='cpu', emb_type='qid', emb_path="", pretrain_dim=768):
         """_summary_
 
         Args:
@@ -38,123 +38,118 @@ class QueEmb(nn.Module):
         self.num_q = num_q
         self.num_c = num_c
         self.emb_size = emb_size
-        #get emb type
         tmp_emb_type = f"{model_name}-{emb_type}"
-        emb_type = emb_type_map.get(tmp_emb_type,tmp_emb_type.replace(f"{model_name}-",""))
+        emb_type = emb_type_map.get(tmp_emb_type, tmp_emb_type.replace(f"{model_name}-", ""))
         print(f"emb_type is {emb_type}")
 
         self.emb_type = emb_type
         self.emb_path = emb_path
         self.pretrain_dim = pretrain_dim
 
-        if emb_type in ["qc_merge","qaid_qc"]:
-            self.concept_emb = nn.Parameter(torch.randn(self.num_c, self.emb_size).to(device), requires_grad=True)#concept embeding
-            self.que_emb = nn.Embedding(self.num_q, self.emb_size)#question embeding
-            self.que_c_linear = nn.Linear(2*self.emb_size,self.emb_size)
+        if emb_type in ["qc_merge", "qaid_qc"]:
+            self.concept_emb = nn.Parameter(torch.randn(self.num_c, self.emb_size).to(device), requires_grad=True)
+            self.que_emb = nn.Embedding(self.num_q, self.emb_size).to(device)  # 移动到 device
+            self.que_c_linear = nn.Linear(2 * self.emb_size, self.emb_size).to(device)
 
-        if emb_type =="qaid_c":
-            self.que_c_linear = nn.Linear(2*self.emb_size,self.emb_size)
+        if emb_type == "qaid_c":
+            self.que_c_linear = nn.Linear(2 * self.emb_size, self.emb_size).to(device)
         
-        if emb_type in ["qcaid","qcaid_h"]:
-            self.concept_emb = nn.Parameter(torch.randn(self.num_c*2, self.emb_size).to(device), requires_grad=True)#concept embeding
-            self.que_inter_emb = nn.Embedding(self.num_q * 2, self.emb_size)
-            self.que_c_linear = nn.Linear(2*self.emb_size,self.emb_size)
-
+        if emb_type in ["qcaid", "qcaid_h"]:
+            self.concept_emb = nn.Parameter(torch.randn(self.num_c * 2, self.emb_size).to(device), requires_grad=True)
+            self.que_inter_emb = nn.Embedding(self.num_q * 2, self.emb_size).to(device)
+            self.que_c_linear = nn.Linear(2 * self.emb_size, self.emb_size).to(device)
 
         if emb_type.startswith("qaid"):
-            self.interaction_emb = nn.Embedding(self.num_q * 2, self.emb_size)
+            self.interaction_emb = nn.Embedding(self.num_q * 2, self.emb_size).to(device)
 
         if emb_type.startswith("qid"):
-            self.que_emb = nn.Embedding(self.num_q, self.emb_size)
+            self.que_emb = nn.Embedding(self.num_q, self.emb_size).to(device)
 
-        if emb_type == "qcid":#question_emb concat avg(concepts emb)
-            self.que_emb = nn.Embedding(self.num_q, self.emb_size)
-            self.concept_emb = nn.Parameter(torch.randn(self.num_c, self.emb_size).to(device), requires_grad=True)#concept embeding
-            self.que_c_linear = nn.Linear(2*self.emb_size,self.emb_size)
-
+        if emb_type == "qcid":
+            self.que_emb = nn.Embedding(self.num_q, self.emb_size).to(device)
+            self.concept_emb = nn.Parameter(torch.randn(self.num_c, self.emb_size).to(device), requires_grad=True)
+            self.que_c_linear = nn.Linear(2 * self.emb_size, self.emb_size).to(device)
 
         if emb_type == "iekt":
-            self.que_emb = nn.Embedding(self.num_q, self.emb_size)#question embeding
-            # self.que_emb.weight.requires_grad = False
-            self.concept_emb = nn.Parameter(torch.randn(self.num_c, self.emb_size).to(device), requires_grad=True)#concept embeding
-            self.que_c_linear = nn.Linear(2*self.emb_size,self.emb_size)
+            self.que_emb = nn.Embedding(self.num_q, self.emb_size).to(device)
+            self.concept_emb = nn.Parameter(torch.randn(self.num_c, self.emb_size).to(device), requires_grad=True)
+            self.que_c_linear = nn.Linear(2 * self.emb_size, self.emb_size).to(device)
         
         self.output_emb_dim = emb_size
 
-    def get_avg_skill_emb(self,c):
+    def get_avg_skill_emb(self, c):
+        # 确保输入 c 在正确的设备上
+        c = c.to(self.device)
         # add zero for padding
         concept_emb_cat = torch.cat(
             [torch.zeros(1, self.emb_size).to(self.device), 
             self.concept_emb], dim=0)
         # shift c
-
-        related_concepts = (c+1).long()
-        #[batch_size, seq_len, emb_dim]
-        concept_emb_sum = concept_emb_cat[related_concepts, :].sum(
-            axis=-2)
-
-        #[batch_size, seq_len,1]
-        concept_num = torch.where(related_concepts != 0, 1, 0).sum(
-            axis=-1).unsqueeze(-1)
-        concept_num = torch.where(concept_num == 0, 1, concept_num)
+        related_concepts = (c + 1).long()  # 确保 long 类型
+        # [batch_size, seq_len, emb_dim]
+        concept_emb_sum = concept_emb_cat[related_concepts, :].sum(axis=-2)
+        # [batch_size, seq_len, 1]
+        concept_num = torch.where(related_concepts != 0, 1, 0).sum(axis=-1).unsqueeze(-1)
+        concept_num = torch.where(concept_num == 0, 1, concept_num)  # 避免除以零
         concept_avg = (concept_emb_sum / concept_num)
         return concept_avg
 
-    def forward(self,q,c,r=None):
+    def forward(self, q, c, r=None):
+        # 确保所有输入张量在同一设备上
+        q = q.to(self.device)
+        c = c.to(self.device)
+        if r is not None:
+            r = r.to(self.device)
+            
         emb_type = self.emb_type
         if "qc_merge" in emb_type:
-            concept_avg = self.get_avg_skill_emb(c)#[batch,max_len-1,emb_size]
-            que_emb = self.que_emb(q)#[batch,max_len-1,emb_size]
-            # print(f"que_emb shape is {que_emb.shape}")
-            que_c_emb = torch.cat([concept_avg,que_emb],dim=-1)#[batch,max_len-1,2*emb_size]
-            
+            concept_avg = self.get_avg_skill_emb(c)  # [batch,max_len-1,emb_size]
+            que_emb = self.que_emb(q)  # [batch,max_len-1,emb_size]
+            que_c_emb = torch.cat([concept_avg, que_emb], dim=-1)  # [batch,max_len-1,2*emb_size]
+        
         if emb_type == "qaid":
             x = q + self.num_q * r
-            xemb = self.interaction_emb(x)#[batch,max_len-1,emb_size]
-            # print("qid")
+            xemb = self.interaction_emb(x)  # [batch,max_len-1,emb_size]
         elif emb_type == "qid":
-            xemb = self.que_emb(q)#[batch,max_len-1,emb_size]
+            xemb = self.que_emb(q)  # [batch,max_len-1,emb_size]
         elif emb_type == "qaid+qc_merge":
             x = q + self.num_q * r
-            xemb = self.interaction_emb(x)#[batch,max_len-1,emb_size]
-            que_c_emb = self.que_c_linear(que_c_emb)#[batch,max_len-1,emb_size]
+            xemb = self.interaction_emb(x)  # [batch,max_len-1,emb_size]
+            que_c_emb = self.que_c_linear(que_c_emb)  # [batch,max_len-1,emb_size]
             xemb = xemb + que_c_emb
-            # print("qid+qc_merge")
-        elif emb_type=="qc_merge":
-            # print("qc_merge")
+        elif emb_type == "qc_merge":
             xemb = que_c_emb
-        elif emb_type =="qaid_qc":
+        elif emb_type == "qaid_qc":
             x = q + self.num_q * r
             emb_q = self.interaction_emb(x)
-            emb_c = self.get_avg_skill_emb(c)#[batch,max_len-1,emb_size]
-            xemb = torch.cat([emb_q,emb_c],dim=-1)
+            emb_c = self.get_avg_skill_emb(c)  # [batch,max_len-1,emb_size]
+            xemb = torch.cat([emb_q, emb_c], dim=-1)
             xemb = self.que_c_linear(xemb)
-        elif emb_type in ["qcaid","qcaid_h"]:
+        elif emb_type in ["qcaid", "qcaid_h"]:
             x_q = q + self.num_q * r
-            gate = torch.where(c==-1,0,1)
-            x_c = c + self.num_c * r.unsqueeze(-1).repeat(1,1,4)*gate
+            gate = torch.where(c == -1, 0, 1)
+            x_c = c + self.num_c * r.unsqueeze(-1).repeat(1, 1, 4) * gate
             emb_q = self.que_inter_emb(x_q)
             emb_c = self.get_avg_skill_emb(x_c)
-            xemb = torch.cat([emb_q,emb_c],dim=-1)
+            xemb = torch.cat([emb_q, emb_c], dim=-1)
             xemb = self.que_c_linear(xemb)
-            return xemb,emb_q,emb_c
-        elif emb_type in ["qcid","qaid_h"]:
-            emb_c = self.get_avg_skill_emb(c)#[batch,max_len-1,emb_size]
-            emb_q = self.que_emb(q)#[batch,max_len-1,emb_size]
-            que_c_emb = torch.cat([emb_q,emb_c],dim=-1)#[batch,max_len-1,2*emb_size]
-            xemb = self.que_c_linear(xemb)
-            return xemb,emb_q,emb_c
+            return xemb, emb_q, emb_c
+        elif emb_type in ["qcid", "qaid_h"]:
+            emb_c = self.get_avg_skill_emb(c)  # [batch,max_len-1,emb_size]
+            emb_q = self.que_emb(q)  # [batch,max_len-1,emb_size]
+            que_c_emb = torch.cat([emb_q, emb_c], dim=-1)  # [batch,max_len-1,2*emb_size]
+            xemb = self.que_c_linear(que_c_emb)  # 修正：使用 que_c_emb 而不是 xemb
+            return xemb, emb_q, emb_c
         elif emb_type == "iekt":
-            emb_c = self.get_avg_skill_emb(c)#[batch,max_len-1,emb_size]
-            emb_q = self.que_emb(q)#[batch,max_len-1,emb_size]
-            emb_qc = torch.cat([emb_q,emb_c],dim=-1)#[batch,max_len-1,2*emb_size]
+            emb_c = self.get_avg_skill_emb(c)  # [batch,max_len-1,emb_size]
+            emb_q = self.que_emb(q)  # [batch,max_len-1,emb_size]
+            emb_qc = torch.cat([emb_q, emb_c], dim=-1)  # [batch,max_len-1,2*emb_size]
             xemb = self.que_c_linear(emb_qc)
-            # print(f"emb_qc shape is {emb_qc.shape}")
-            # print(f"r shape is {r.shape}")
-            # print(f"(1-r).unsqueeze(-1).repeat(1,1, self.emb_size * 2) shape is {(1-r).unsqueeze(-1).repeat(1,1, self.emb_size * 2).shape}")
-            emb_qca = torch.cat([emb_qc.mul((1-r).unsqueeze(-1).repeat(1,1, self.emb_size * 2)),
-                                emb_qc.mul((r).unsqueeze(-1).repeat(1,1, self.emb_size * 2))], dim = -1)# s_t 扩展，分别对应正确的错误的情况
-            return xemb,emb_qca,emb_qc,emb_q,emb_c
+            emb_qca = torch.cat([
+                emb_qc.mul((1 - r).unsqueeze(-1).repeat(1, 1, self.emb_size * 2)),
+                emb_qc.mul(r.unsqueeze(-1).repeat(1, 1, self.emb_size * 2))
+            ], dim=-1)
+            return xemb, emb_qca, emb_qc, emb_q, emb_c
 
         return xemb
 
@@ -231,30 +226,34 @@ class QueBaseModel(nn.Module):
         net = torch.load(os.path.join(save_dir, self.emb_type+"_model.ckpt"))
         self.model.load_state_dict(net)
     
-    def batch_to_device(self,data,process=True):
+    def batch_to_device(self, data, process=True):
         if not process:
             return data
-        dcur = data
-        # q, c, r, t = dcur["qseqs"], dcur["cseqs"], dcur["rseqs"], dcur["tseqs"]
-        # qshft, cshft, rshft, tshft = dcur["shft_qseqs"], dcur["shft_cseqs"], dcur["shft_rseqs"], dcur["shft_tseqs"]
-        # m, sm = dcur["masks"], dcur["smasks"]
         data_new = {}
-        data_new['cq'] = torch.cat((dcur["qseqs"][:,0:1], dcur["shft_qseqs"]), dim=1)
-        data_new['cc'] = torch.cat((dcur["cseqs"][:,0:1],  dcur["shft_cseqs"]), dim=1)
-        data_new['cr'] = torch.cat((dcur["rseqs"][:,0:1], dcur["shft_rseqs"]), dim=1)
-        data_new['ct'] = torch.cat((dcur["tseqs"][:,0:1], dcur["shft_tseqs"]), dim=1)
-        data_new['q'] = dcur["qseqs"]
-        data_new['c'] = dcur["cseqs"]
-        data_new['r'] = dcur["rseqs"]
-        data_new['t'] = dcur["tseqs"]
-        data_new['qshft'] = dcur["shft_qseqs"]
-        data_new['cshft'] = dcur["shft_cseqs"]
-        data_new['rshft'] = dcur["shft_rseqs"]
-        data_new['tshft'] = dcur["shft_tseqs"]
-        data_new['m'] = dcur["masks"]
-        data_new['sm'] = dcur["smasks"]
+        for key in data:
+            if isinstance(data[key], torch.Tensor):
+                data_new[key] = data[key].to(self.device)
+                # 如果是整数类型的张量（如 qseqs, cseqs, rseqs），确保是 long 类型
+                if key in ['qseqs', 'cseqs', 'rseqs', 'shft_qseqs', 'shft_cseqs', 'shft_rseqs']:
+                    data_new[key] = data_new[key].long()
+            else:
+                data_new[key] = data[key]
+        
+        data_new['cq'] = torch.cat((data_new["qseqs"][:, 0:1], data_new["shft_qseqs"]), dim=1)
+        data_new['cc'] = torch.cat((data_new["cseqs"][:, 0:1], data_new["shft_cseqs"]), dim=1)
+        data_new['cr'] = torch.cat((data_new["rseqs"][:, 0:1], data_new["shft_rseqs"]), dim=1)
+        data_new['ct'] = torch.cat((data_new["tseqs"][:, 0:1], data_new["shft_tseqs"]), dim=1)
+        data_new['q'] = data_new["qseqs"]
+        data_new['c'] = data_new["cseqs"]
+        data_new['r'] = data_new["rseqs"]
+        data_new['t'] = data_new["tseqs"]
+        data_new['qshft'] = data_new["shft_qseqs"]
+        data_new['cshft'] = data_new["shft_cseqs"]
+        data_new['rshft'] = data_new["shft_rseqs"]
+        data_new['tshft'] = data_new["shft_tseqs"]
+        data_new['m'] = data_new["masks"]
+        data_new['sm'] = data_new["smasks"]
         return data_new
-
     def train(self,train_dataset, valid_dataset,batch_size=16,valid_batch_size=None,num_epochs=32, test_loader=None, test_window_loader=None,save_dir="tmp",save_model=False,patient=10,shuffle=True,process=True):
         self.save_dir = save_dir
         os.makedirs(self.save_dir,exist_ok=True)

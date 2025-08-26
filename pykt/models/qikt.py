@@ -33,22 +33,25 @@ class MLP(nn.Module):
 
 
 
-def get_outputs(self,emb_qc_shift,h,data,add_name="",model_type='question'):
+def get_outputs(self, emb_qc_shift, h, data, add_name="", model_type='question'):
     outputs = {}
   
     if model_type == 'question':
-        h_next = torch.cat([emb_qc_shift,h],axis=-1)
+        h_next = torch.cat([emb_qc_shift, h], axis=-1)
         y_question_next = torch.sigmoid(self.out_question_next(h_next))
         y_question_all = torch.sigmoid(self.out_question_all(h))
-        outputs["y_question_next"+add_name] = y_question_next.squeeze(-1)
-        outputs["y_question_all"+add_name] = (y_question_all * F.one_hot(data['qshft'].long(), self.num_q)).sum(-1)
+        # 确保 data['qshft'] 在 self.device 上并转换为 long 类型
+        qshft = data['qshft'].to(self.device).long()
+        outputs["y_question_next" + add_name] = y_question_next.squeeze(-1)
+        outputs["y_question_all" + add_name] = (y_question_all * F.one_hot(qshft, self.num_q)).sum(-1)
     else: 
-        h_next = torch.cat([emb_qc_shift,h],axis=-1)
+        h_next = torch.cat([emb_qc_shift, h], axis=-1)
         y_concept_next = torch.sigmoid(self.out_concept_next(h_next))
-        #all predict
         y_concept_all = torch.sigmoid(self.out_concept_all(h))
-        outputs["y_concept_next"+add_name] = self.get_avg_fusion_concepts(y_concept_next,data['cshft'])
-        outputs["y_concept_all"+add_name] = self.get_avg_fusion_concepts(y_concept_all,data['cshft'])
+        # 确保 data['cshft'] 在 self.device 上
+        cshft = data['cshft'].to(self.device).long()
+        outputs["y_concept_next" + add_name] = self.get_avg_fusion_concepts(y_concept_next, cshft)
+        outputs["y_concept_all" + add_name] = self.get_avg_fusion_concepts(y_concept_all, cshft)
 
     return outputs
 
@@ -100,26 +103,32 @@ class QIKTNet(nn.Module):
         y_concept = concept_sum.sum(-1)/torch.where(concept_mask.sum(-1)!=0,concept_mask.sum(-1),1)
         return y_concept
 
-    def forward(self, q, c ,r,data=None):
-    
-        _,emb_qca,emb_qc,emb_q,emb_c = self.que_emb(q,c,r)#[batch_size,emb_size*4],[batch_size,emb_size*2],[batch_size,emb_size*1],[batch_size,emb_size*1]
-        
+    def forward(self, q, c, r, data=None):
+        # 确保输入张量在 self.device 上
+        q = q.to(self.device).long()
+        c = c.to(self.device).long()
+        r = r.to(self.device).long()
+        if data is not None:
+            data = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in data.items()}
 
-        emb_qc_shift = emb_qc[:,1:,:]
-        emb_qca_current = emb_qca[:,:-1,:]
+        _, emb_qca, emb_qc, emb_q, emb_c = self.que_emb(q, c, r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
+        
+        emb_qc_shift = emb_qc[:, 1:, :]
+        emb_qca_current = emb_qca[:, :-1, :]
         # question model
         que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
-        que_outputs = get_outputs(self,emb_qc_shift,que_h,data,add_name="",model_type="question")
+        que_outputs = get_outputs(self, emb_qc_shift, que_h, data, add_name="", model_type="question")
         outputs = que_outputs
 
         # concept model
-        emb_ca = torch.cat([emb_c.mul((1-r).unsqueeze(-1).repeat(1,1, self.emb_size)),
-                                emb_c.mul((r).unsqueeze(-1).repeat(1,1, self.emb_size))], dim = -1)# s_t 扩展，分别对应正确的错误的情况
-                                
-        emb_ca_current = emb_ca[:,:-1,:]
-        # emb_c_shift = emb_c[:,1:,:]
+        emb_ca = torch.cat([
+            emb_c.mul((1 - r).unsqueeze(-1).repeat(1, 1, self.emb_size)),
+            emb_c.mul(r.unsqueeze(-1).repeat(1, 1, self.emb_size))
+        ], dim=-1)
+        
+        emb_ca_current = emb_ca[:, :-1, :]
         concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
-        concept_outputs = get_outputs(self,emb_qc_shift,concept_h,data,add_name="",model_type="concept")
+        concept_outputs = get_outputs(self, emb_qc_shift, concept_h, data, add_name="", model_type="concept")
         outputs['y_concept_all'] = concept_outputs['y_concept_all']
         outputs['y_concept_next'] = concept_outputs['y_concept_next']
         

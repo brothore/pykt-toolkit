@@ -11,6 +11,9 @@ def init_model(model_name, model_config, data_config, emb_type):
     if model_name == "dkt":
         from .dkt import DKT
         model = DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "mamba_dkt":
+        from .mamba_dkt import MAMBA_DKT
+        model = MAMBA_DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "mult_dataset_dkt":
         from .mult_dataset_dkt import MULT_DATASET_DKT
         model = MULT_DATASET_DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)

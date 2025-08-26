@@ -113,25 +113,24 @@ class IEKT(QueBaseModel):
         self.model = self.model.to(device)
         # self.step = 0
     
-    def train_one_step(self,data,process=True):
-        # self.step+=1
-        # debug_print(f"step is {self.step},data is {data}","train_one_step")
-        # debug_print(f"step is {self.step}","train_one_step")
+    def train_one_step(self, data, process=True):
         BCELoss = torch.nn.BCEWithLogitsLoss()
         
-        data_new,emb_action_list,p_action_list,states_list,pre_state_list,reward_list,predict_list,ground_truth_list = self.predict_one_step(data,return_details=True,process=process)
+        data_new, emb_action_list, p_action_list, states_list, pre_state_list, reward_list, predict_list, ground_truth_list = self.predict_one_step(data, return_details=True, process=process)
         data_len = data_new['cc'].shape[0]
         seq_len = data_new['cc'].shape[1]
 
-        #以下是强化学习部分内容
-        seq_num = torch.where(data['qseqs']!=0,1,0).sum(axis=-1)+1
-        emb_action_tensor = torch.stack(emb_action_list, dim = 1)
-        p_action_tensor = torch.stack(p_action_list, dim = 1)
-        state_tensor = torch.stack(states_list, dim = 1)
-        pre_state_tensor = torch.stack(pre_state_list, dim = 1)
-        reward_tensor = torch.stack(reward_list, dim = 1).float() / (seq_num.unsqueeze(-1).repeat(1, seq_len)).float()#equation15
-        logits_tensor = torch.stack(predict_list, dim = 1)
-        ground_truth_tensor = torch.stack(ground_truth_list, dim = 1)
+        # 使用data_new计算seq_num，确保在device上
+        seq_num = torch.where(data_new['cq'] != 0, 1, 0).sum(dim=-1) + 1
+        
+        emb_action_tensor = torch.stack(emb_action_list, dim=1)
+        p_action_tensor = torch.stack(p_action_list, dim=1)
+        state_tensor = torch.stack(states_list, dim=1)
+        pre_state_tensor = torch.stack(pre_state_list, dim=1)
+        reward_tensor = torch.stack(reward_list, dim=1).float() / (seq_num.unsqueeze(-1).repeat(1, seq_len)).float()  # equation15
+        logits_tensor = torch.stack(predict_list, dim=1)
+        ground_truth_tensor = torch.stack(ground_truth_list, dim=1)
+        
         loss = []
         tracat_logits = []
         tracat_ground_truth = []
@@ -140,11 +139,11 @@ class IEKT(QueBaseModel):
             this_seq_len = seq_num[i]
             this_reward_list = reward_tensor[i]
             this_cog_state = torch.cat([pre_state_tensor[i][0: this_seq_len],
-                                    torch.zeros(1, pre_state_tensor[i][0].size()[0]).to(self.device)
-                                    ], dim = 0)
+                                        torch.zeros(1, pre_state_tensor[i][0].size()[0]).to(self.device)
+                                        ], dim=0)
             this_sens_state = torch.cat([state_tensor[i][0: this_seq_len],
-                                    torch.zeros(1, state_tensor[i][0].size()[0]).to(self.device)
-                                    ], dim = 0)
+                                        torch.zeros(1, state_tensor[i][0].size()[0]).to(self.device)
+                                        ], dim=0)
 
             td_target_cog = this_reward_list[0: this_seq_len].unsqueeze(1)
             delta_cog = td_target_cog
@@ -157,31 +156,30 @@ class IEKT(QueBaseModel):
             advantage_lst_cog = []
             advantage = 0.0
             for delta_t in delta_cog[::-1]:
-                advantage = self.model.gamma * advantage + delta_t[0]#equation17
+                advantage = self.model.gamma * advantage + delta_t[0]  # equation17
                 advantage_lst_cog.append([advantage])
             advantage_lst_cog.reverse()
             advantage_cog = torch.tensor(advantage_lst_cog, dtype=torch.float).to(self.device)
             
             pi_cog = self.model.pi_cog_func(this_cog_state[:-1])
-            pi_a_cog = pi_cog.gather(1,p_action_tensor[i][0: this_seq_len].unsqueeze(1))
+            pi_a_cog = pi_cog.gather(1, p_action_tensor[i][0: this_seq_len].unsqueeze(1))
 
-            loss_cog = -torch.log(pi_a_cog) * advantage_cog#equation16
+            loss_cog = -torch.log(pi_a_cog) * advantage_cog  # equation16
             
             loss.append(torch.sum(loss_cog))
 
             advantage_lst_sens = []
             advantage = 0.0
             for delta_t in delta_sens[::-1]:
-                # advantage = args.gamma * args.beta * advantage + delta_t[0]
                 advantage = self.model.gamma * advantage + delta_t[0]
                 advantage_lst_sens.append([advantage])
             advantage_lst_sens.reverse()
             advantage_sens = torch.tensor(advantage_lst_sens, dtype=torch.float).to(self.device)
             
             pi_sens = self.model.pi_sens_func(this_sens_state[:-1])
-            pi_a_sens = pi_sens.gather(1,emb_action_tensor[i][0: this_seq_len].unsqueeze(1))
+            pi_a_sens = pi_sens.gather(1, emb_action_tensor[i][0: this_seq_len].unsqueeze(1))
 
-            loss_sens = - torch.log(pi_a_sens) * advantage_sens#equation18
+            loss_sens = -torch.log(pi_a_sens) * advantage_sens  # equation18
             loss.append(torch.sum(loss_sens))
             
 
@@ -191,13 +189,12 @@ class IEKT(QueBaseModel):
             tracat_logits.append(this_prob)
             tracat_ground_truth.append(this_groud_truth)
 
-        bce = BCELoss(torch.cat(tracat_logits, dim = 0), torch.cat(tracat_ground_truth, dim = 0))   
-        y = torch.cat(tracat_logits, dim = 0)
-        label_len = torch.cat(tracat_ground_truth, dim = 0).size()[0]
+        bce = BCELoss(torch.cat(tracat_logits, dim=0), torch.cat(tracat_ground_truth, dim=0).float())
+        y = torch.cat(tracat_logits, dim=0)
+        label_len = torch.cat(tracat_ground_truth, dim=0).size()[0]
         loss_l = sum(loss)
-        loss = self.model.lamb * (loss_l / label_len) +  bce#equation21
-        return y,loss
-
+        loss = self.model.lamb * (loss_l / label_len) + bce  # equation21
+        return y, loss
     def predict_one_step(self,data,return_details=False,process=True):
         sigmoid_func = torch.nn.Sigmoid()
         data_new = self.batch_to_device(data,process)

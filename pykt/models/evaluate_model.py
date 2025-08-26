@@ -13,7 +13,34 @@ device = "cpu" if not torch.cuda.is_available() else "cuda"
 import os
 from datetime import datetime
 current_time = datetime.now().strftime('%m_%d')
-
+def safe_roc_auc(y_true, y_score, dummy_score_strategy='mean'):
+    """
+    计算 AUC，处理单一类别情况通过添加虚拟数据点。
+    :param y_true: 真实标签 (numpy array)
+    :param y_score: 预测概率 (numpy array)
+    :param dummy_score_strategy: 虚拟点分数策略 ('mean', 'min', 'max')
+    :return: AUC 分数
+    """
+    y_true = np.array(y_true)
+    y_score = np.array(y_score)
+    unique_labels = np.unique(y_true)
+    
+    if len(unique_labels) < 2:
+        label = unique_labels[0]
+        dummy_label = 1 - label  # 相反类别
+        # 选择虚拟点的预测分数
+        if dummy_score_strategy == 'mean':
+            dummy_score = np.mean(y_score)
+        elif dummy_score_strategy == 'min':
+            dummy_score = np.min(y_score)
+        elif dummy_score_strategy == 'max':
+            dummy_score = np.max(y_score)
+        else:
+            raise ValueError("Invalid dummy_score_strategy")
+        # 添加虚拟数据点
+        y_true = np.append(y_true, dummy_label)
+        y_score = np.append(y_score, dummy_score)
+    return metrics.roc_auc_score(y_true=y_true, y_score=y_score)
 def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
     # dres, q, r, qshft, rshft, m, sm, y
     results = []
@@ -120,7 +147,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name in ["rekt"]:
                 y = model(dcur)
-            elif model_name in ["dkt", "dkt+", "mult_dataset_dkt"]:
+            elif model_name in ["dkt", "dkt+", "mult_dataset_dkt", "mamba_dkt"]:
                 
                 y = model(c.long(), r.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
@@ -185,7 +212,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 y = model(cq.long(), cr.long(), cit.long())
                 y = y[:,1:]
                 c,cshft = q,qshft#question level 
-            elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba"]:
+            elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]:
                 ct = torch.cat((dcur["tseqs"][:,0:1], dcur["shft_tseqs"]), dim=1)
                 # csm = torch.cat((dcur["smasks"][:,0:1], dcur["smasks"]), dim=1)
                 y = model(cc.long(), cq.long(), ct.long(), cr.long())#, csm.long())
@@ -281,7 +308,7 @@ def effective_fusion(df, model, model_name, fusion_type):
 
     curhs, curr = [[], []], []
     dcur = {"late_trues": [], "qidxs": [], "questions": [], "concepts": [], "row": [], "concept_preds": []}
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "akt","extrakt", "folibikt", "robustkt", "dtransformer", "simplekt","stablekt","cskt","fluckt", "ukt", "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt", "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba"]
+    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "akt","extrakt", "folibikt", "robustkt", "dtransformer", "simplekt","stablekt","cskt","fluckt", "ukt", "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt", "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]
     for ui in df:
         # 一题一题处理
         curdf = ui[1]
@@ -329,7 +356,7 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
     if cq.shape[1] == 0:
         cq = cc
 
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","robustkt", "extrakt", "folibikt","simplekt","stablekt","cskt", "fluckt", "ukt",  "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba"]
+    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","robustkt", "extrakt", "folibikt","simplekt","stablekt","cskt", "fluckt", "ukt",  "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]
     
     alldfs, drest = [], dict() # not predict infos!
     # print(f"real bz in group fusion: {rs.shape[0]}")
@@ -593,7 +620,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             num_layers=num_layers,
             mode="eval"  # 标记为评估模式，确保与训练模式分离
         )
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","extrakt","folibikt", "robustkt", "simplekt","cskt","fluckt", "stablekt", "ukt", "hcgkt", "bakt_time", "sparsekt", "lefokt_akt", "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba"]
+    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","extrakt","folibikt", "robustkt", "simplekt","cskt","fluckt", "stablekt", "ukt", "hcgkt", "bakt_time", "sparsekt", "lefokt_akt", "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]
     if save_path != "":
     # 检查文件是否存在且不为空
         file_exists = os.path.exists(save_path) and os.path.getsize(save_path) > 0
@@ -715,7 +742,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             elif model_name in ["atdkt"]:
                 y = model(dcurori)#c.long(), r.long(), q.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
-            elif model_name in ["dkt", "dkt+", "mult_dataset_dkt"]:
+            elif model_name in ["dkt", "dkt+", "mult_dataset_dkt", "mamba_dkt"]:
                 y = model(c.long(), r.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name == "long_dkt":
@@ -745,7 +772,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name == "gkt":
                 y = model(cc.long(), cr.long())
-            elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba"]:
+            elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]:
                 ct = torch.cat((dcurori["tseqs"][:,0:1], dcurori["shft_tseqs"]), dim=1)
                 y, h = model(cc.long(), cq.long(), ct.long(), cr.long(), True)
                 y = y[:, 1:]
@@ -820,7 +847,9 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         ts = np.concatenate(y_trues, axis=0)
         ps = np.concatenate(y_scores, axis=0)
         print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
-        auc = metrics.roc_auc_score(y_true=ts, y_score=ps)
+        auc = safe_roc_auc(y_true=ts, y_score=ps)
+
+        
         prelabels = [1 if p >= 0.5 else 0 for p in ps]
         acc = metrics.accuracy_score(ts, prelabels)
         aucs["concepts"] = auc
@@ -834,7 +863,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             ts = np.concatenate(dinfos['late_trues'], axis=0) # early_trues == late_trues
             ps = np.concatenate(dinfos[key], axis=0)
             # print(f"key: {key}, ts.shape: {ts.shape}, ps.shape: {ps.shape}")
-            auc = metrics.roc_auc_score(y_true=ts, y_score=ps)
+            auc = safe_roc_auc(y_true=ts, y_score=ps)
             prelabels = [1 if p >= 0.5 else 0 for p in ps]
             acc = metrics.accuracy_score(ts, prelabels)
             aucs[key] = auc
@@ -1147,7 +1176,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
         if model_name == "dimkt":
             sdout = None if csd.shape[0] == 0 else csd.long()[k]
             qdout = None if cqd.shape[0] == 0 else cqd.long()[k]
-        if model_name in ["dkt", "dkt+", "long_dkt", "mult_dataset_dkt"]:
+        if model_name in ["dkt", "dkt+", "long_dkt", "mult_dataset_dkt", "mamba_dkt"]:
             y = model(cin.long(), rin.long())
             # print(y)
             pred = y[0][-1][cout.item()]
@@ -1173,7 +1202,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             dcurinfos = {"qseqs": qin, "cseqs": cin, "rseqs": rin}
             y = model(dcurinfos)
             pred = y[0][-1][cout.item()]
-        elif model_name in ["dkt", "dkt+", "long_dkt", "mult_dataset_dkt"]:
+        elif model_name in ["dkt", "dkt+", "long_dkt", "mult_dataset_dkt", "mamba_dkt"]:
             y = model(cin.long(), rin.long())
             # print(y)
             pred = y[0][-1][cout.item()]
@@ -1304,7 +1333,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             y = model(cin.long(), rin.long())
             # print(f"y.shape is {y.shape},cin shape is {cin.shape}")
             pred = y[0][-1]
-        elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba"]:
+        elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]:
             curc, curr = torch.tensor([[cout.item()]]).to(device), torch.tensor([[1]]).to(device)
             if tout != None:
                 curt = torch.tensor([[tout.item()]]).to(device)
@@ -1593,7 +1622,7 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
             dcurinfos = {"qseqs": curq, "cseqs": curc, "rseqs": curr}
             y = model(dcurinfos)
             y = (y * one_hot(curcshft.long(), model.num_c)).sum(-1)
-        elif model_name in ["dkt", "dkt+", "long_dkt", "mult_dataset_dkt"]:
+        elif model_name in ["dkt", "dkt+", "long_dkt", "mult_dataset_dkt", "mamba_dkt"]:
             y = model(curc.long(), curr.long())
             y = (y * one_hot(curcshft.long(), model.num_c)).sum(-1)
         elif model_name in ["balance_dkt"]:
@@ -1664,7 +1693,7 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
             y = model(ccc.long(), ccr.long())
             # print(f"y: {y}")
             # y = y[:, t-1:t]
-        elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba"]:
+        elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]:
             y = model(ccc.long(), ccq.long(), cct.long(), ccr.long())
             pred = y[0][-1]
         if model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt", "at_dkt"] and atkt_pad == True:
