@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_dir", type=str, default="saved_model")
 
     # model config
-    parser.add_argument("--model_name", type=str, default="qikt")
+    parser.add_argument("--model_name", type=str, default="qikt_mamba")
     parser.add_argument("--emb_type", type=str, default="iekt")
     parser.add_argument("--dropout", type=float, default=0.4)
     parser.add_argument("--emb_size", type=int, default=300)
@@ -36,8 +36,6 @@ if __name__ == "__main__":
     parser.add_argument("--output_c_next_lambda", type=float, default=1)
     
     parser.add_argument("--output_mode", type=str, default="an")
-    parser.add_argument("--qikt_type", type=str, default="")
-
     args = parser.parse_args()
 
     params = vars(args)

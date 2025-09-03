@@ -86,14 +86,28 @@ def init_test_datasets_multi_stu(
 
     elif model_name in que_type_models:
         if model_name not in ["promptkt", "unikt"]:
-            if flag_test:
-                test_dataset = KTQueDataset(os.path.join(data_config["dpath"], data_config["test_file_quelevel"]),
-                                            input_type=data_config["input_type"], folds=[-1],
-                                            concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
-            if flag_test_window:
-                test_window_dataset = KTQueDataset(os.path.join(data_config["dpath"], data_config["test_window_file_quelevel"]),
-                                                   input_type=data_config["input_type"], folds=[-1],
-                                                   concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
+            if predict_file_type == "0":
+                # print(f"[DEBUG] ==0")
+                if flag_test:
+                    test_dataset = KTQueDataset(os.path.join(data_config["dpath"], data_config["test_file_quelevel"]),
+                                                input_type=data_config["input_type"], folds=[-1],
+                                                concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
+                if flag_test_window:
+                    test_window_dataset = KTQueDataset(os.path.join(data_config["dpath"], data_config["test_window_file_quelevel"]),
+                                                    input_type=data_config["input_type"], folds=[-1],
+                                                    concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
+            else:
+                # print(f"[DEBUG] !=0")
+                if flag_test:
+                    test_dataset = KTQueDataset(os.path.join(data_config["dpath"], data_config["test_window_file_quelevel"]),
+                                                input_type=data_config["input_type"], folds=[-1],
+                                                concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
+                if flag_test_window:
+                    test_window_dataset = KTQueDataset(os.path.join(data_config["dpath"], predict_file_type if predict_file_type.startswith("top") else data_config[predict_file_type]),
+                                                    input_type=data_config["input_type"], folds=[-1],
+                                                    concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
+               
+
         else:
             dataset = data_config["dpath"].split("/")[-1]
             if dataset == "":

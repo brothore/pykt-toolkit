@@ -512,7 +512,7 @@ def main(args):
             if stat_col in row:
                 student_data[stat_col] = row[stat_col]
         
-        filename = f"top_{i+1}_student.csv"
+        filename = f"top_{i+1}_student_quelevel.csv"
         filepath = os.path.join(output_dir, filename)
         
         student_data.to_csv(filepath, index=False)
@@ -526,22 +526,22 @@ def main(args):
     all_generated_files.append(summary_filename)
     print(f"\n学生统计摘要已保存到: {summary_output_path}")
     
-    # 新增功能：按不同指标分组保存学生数据
-    interval_files = save_students_by_intervals(df, student_summary, output_dir, question_stats, concept_stats)
-    all_generated_files.extend(interval_files)
+    # # 新增功能：按不同指标分组保存学生数据
+    # interval_files = save_students_by_intervals(df, student_summary, output_dir, question_stats, concept_stats)
+    # all_generated_files.extend(interval_files)
     
-    # 更新data_config.json文件，包括学生数量和生成的文件列表
-    update_data_config(args.dataset, num_needs_stu, all_generated_files,config_path=config_path)
+    # # 更新data_config.json文件，包括学生数量和生成的文件列表
+    # update_data_config(args.dataset, num_needs_stu, all_generated_files,config_path=config_path)
     
-    print(f"\n处理完成！共生成了 {len(all_generated_files)} 个文件:")
-    for file in sorted(all_generated_files):
-        print(f"  - {file}")
+    # print(f"\n处理完成！共生成了 {len(all_generated_files)} 个文件:")
+    # for file in sorted(all_generated_files):
+    #     print(f"  - {file}")
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Process dataset parameters")
     
     # 先定义 dataset 参数
-    parser.add_argument("--dataset", type=str, default="peiyouAnips_task34Abridge2algebra2006",
+    parser.add_argument("--dataset", type=str, default="nips_task34",
                        help="Dataset name (default: %(default)s)")
     
     # 解析已知参数（只解析 dataset，不解析其他参数）
@@ -553,7 +553,7 @@ def parse_args():
     dataset_dpath = data_config[args.dataset]["dpath"]
     # 然后定义其他参数，使用 args.dataset 作为默认路径的一部分
     # 修改默认输入输出路径
-    default_input = f"{dataset_dpath}/test_question_window_sequences.csv"
+    default_input = f"{dataset_dpath}/test_window_sequences_quelevel.csv"
     default_output = f"{dataset_dpath}/"
 
     

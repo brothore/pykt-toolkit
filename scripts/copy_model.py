@@ -245,7 +245,8 @@ def undo_operations(base_model, new_model):
             os.path.join(script_dir, "pykt", "models", "evaluate_model.py"), 
             os.path.join(script_dir, "pykt", "models", "train_model.py"),
             os.path.join(script_dir, "pykt", "models", "init_model.py"),
-            os.path.join(script_dir, "pykt", "datasets", "init_dataset.py")
+            os.path.join(script_dir, "pykt", "datasets", "init_dataset.py"),
+            os.path.join(script_dir, "config.py")
         ]
         
         for file_path in config_files:
@@ -388,8 +389,17 @@ def main():
                 print(f"✓ 更新 {init_dataset} 中的模型列表")
         else:
             print(f"⚠️  文件 {init_dataset} 不存在，跳过更新")
-        
-        # 8. 保存操作记录
+        # 8. 更新 config.py
+        config_file = os.path.join(script_dir, "pykt", "config", "config.py")
+        if os.path.exists(config_file):
+            if add_model_to_lists(config_file, base_model, new_model):
+                operations.append(f"更新 {config_file} 中的模型列表")
+                print(f"✓ 更新 {config_file} 中的模型列表")
+        else:
+            print(f"⚠️  文件 {config_file} 不存在，跳过更新")
+
+
+        # 9. 保存操作记录
         if operations:
             record_file = save_operation_record(base_model, new_model, operations)
         

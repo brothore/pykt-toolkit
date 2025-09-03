@@ -622,6 +622,6 @@
         "questions_range_low_interval_file": "questions_range_low_interval.csv",
         "questions_range_medium_interval_file": "questions_range_medium_interval.csv",
         "questions_range_high_interval_file": "questions_range_high_interval.csv",
-        "students_num_train": 16352
+        "students_num_train": 15181
     }
 }

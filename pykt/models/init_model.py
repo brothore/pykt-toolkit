@@ -156,6 +156,10 @@ def init_model(model_name, model_config, data_config, emb_type):
         from .qikt import QIKT
         model = QIKT(num_q=data_config['num_q'], num_c=data_config['num_c'],
                      max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
+    elif model_name == "qikt_mamba":
+        from .qikt_mamba import QIKT_MAMBA
+        model = QIKT_MAMBA(num_q=data_config['num_q'], num_c=data_config['num_c'],
+                     max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
     elif model_name == "atdkt":
         from .atdkt import ATDKT
         model = ATDKT(data_config["num_q"], data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)

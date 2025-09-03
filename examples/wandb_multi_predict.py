@@ -5,7 +5,7 @@ import copy
 import torch
 import pandas as pd
 # from pykt.config import ERR_PATH, stu_pk
-from pykt.models import evaluate, evaluate_question, load_model
+from pykt.models import evaluate, evaluate_question, load_model,evaluate_return_results
 from pykt.datasets import init_test_datasets,init_test_datasets_multi_stu
 import pykt.config as config_module 
 que_type_models = config_module.que_type_models
@@ -211,15 +211,28 @@ def evaluate_single_student(params, student_id):
     results_path = os.path.join(save_dir, f"evaluation_results_{student_id}.json")
     
     # 检查是否已存在预测结果
+    results_path = os.path.join(save_dir, "evaluate_results_all_stu.jsonl")
     if os.path.exists(results_path):
         try:
-            with open(results_path, "r") as fin:
-                dres = json.load(fin)
-                print(f"学生 {student_id}: 找到现有预测结果，加载自 {results_path}")
-                return dres
+            with open(results_path, "r", encoding='utf-8') as fin:
+                for line in fin:
+                    try:
+                        # 每行是一个 JSON 对象
+                        record = json.loads(line.strip())
+                        # 检查 student_id 是否匹配
+                        if record.get("student_id") == student_id:
+                            print(f"学生 {student_id}: 找到现有预测结果，加载自 {results_path}")
+                            return record
+                    except json.JSONDecodeError as je:
+                        print(f"学生 {student_id}: 解析 JSONL 行时出错: {je}")
+                        continue
+            # 如果没有找到匹配的 student_id
+            print(f"学生 {student_id}: 在 {results_path} 中未找到现有预测结果，将运行预测...")
         except Exception as e:
-            print(f"学生 {student_id}: 加载现有预测结果时出错: {e}")
+            print(f"学生 {student_id}: 加载 JSONL 文件时出错: {e}")
             print(f"将重新运行预测...")
+    else:
+        print(f"学生 {student_id}: JSONL 文件 {results_path} 不存在，将运行预测...")
     # 确保保存目录存在
     os.makedirs(save_dir, exist_ok=True)
 
@@ -248,7 +261,7 @@ def evaluate_single_student(params, student_id):
         elif model_name == "lpkt":
             data_config["num_at"] = config["data_config"]["num_at"]
             data_config["num_it"] = config["data_config"]["num_it"]
-    
+    predict_files = f"top_{student_id}_student.csv" if model_name not in que_type_models else f"top_{student_id}_student.csv"
     if model_name not in ["dimkt"]:
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=f"top_{student_id}_student.csv",load_flags=[0,1,0,1])
     else:
@@ -264,7 +277,13 @@ def evaluate_single_student(params, student_id):
     stats_file_path = os.path.join(data_config["dpath"], f"top_{student_id}_student.csv")
     student_stats = extract_student_stats(stats_file_path)
     print(f"学生 {student_id}: 已加载统计信息")
-    
+    file_path = os.path.join(data_config["dpath"], f"top_{student_id}_student.csv")
+    df = pd.read_csv(file_path)
+    if student_stats:
+        for key, value in student_stats.items():
+            # 将每个统计值作为新的一列，并广播到每一行
+            df[key] = value
+
     if model.model_name == "rkt":
         dpath = data_config["dpath"]
         dataset_name = dpath.split("/")[-1]
@@ -288,9 +307,12 @@ def evaluate_single_student(params, student_id):
         if test_window_loader is not None:
             save_test_window_path = os.path.join(save_dir, f"{model.emb_type}_test_window_predictions_student_{student_id}.txt")
             if model.model_name == "rkt":
-                window_testauc, window_testacc = evaluate(model, test_window_loader, model_name, rel, save_test_window_path)
+                window_testauc, window_testacc,y_trues,y_labels = evaluate_return_results(model, test_window_loader, model_name, rel, save_test_window_path)
             else:
-                window_testauc, window_testacc = evaluate(model, test_window_loader, model_name, save_test_window_path)
+                window_testauc, window_testacc,y_trues,y_labels = evaluate_return_results(model, test_window_loader, model_name, save_test_window_path)
+            df["y_trues"] = y_trues
+            df["y_labels"] = y_labels
+            
             dres["window_testauc"] = window_testauc
             dres["window_testacc"] = window_testacc
             print(f"学生 {student_id}: window_testauc: {window_testauc}, window_testacc: {window_testacc}")
@@ -326,15 +348,22 @@ def evaluate_single_student(params, student_id):
         if 'windowacclate_mean' in dres:
             print(f"学生 {student_id}: windowacclate_mean: {dres['windowacclate_mean']}")
     # 将评估结果保存到单独的JSON文件
-    results_path = os.path.join(save_dir, f"evaluation_results_{student_id}.json")
-    # try:
-    with open(results_path, "w") as fout:
-        json.dump(dres, fout, indent=4, ensure_ascii=False)
-    print(f"学生 {student_id}: 评估结果已保存到 {results_path}")
-    # except Exception as e:
+    # results_path = os.path.join(save_dir, f"evaluation_results_{student_id}.json")
+    # # try:
+    # with open(results_path, "w") as fout:
+    #     json.dump(dres, fout, indent=4, ensure_ascii=False)
+    # print(f"学生 {student_id}: 评估结果已保存到 {results_path}")
+    # # except Exception as e:
     #     print(f"学生 {student_id}: 保存评估结果时出错: {e}")
-
-    return dres
+    results_path = os.path.join(save_dir, "evaluate_results_all_stu.jsonl")
+    try:
+        with open(results_path, "a", encoding='utf-8') as fout:
+            json.dump(dres, fout, ensure_ascii=False)
+            fout.write("\n")  # 每行一个 JSON 对象
+        print(f"学生 {student_id}: 评估结果已追加保存到 {results_path}")
+    except Exception as e:
+        print(f"学生 {student_id}: 保存评估结果到 JSONL 时出错: {e}")
+    return dres,df
 
 def main(params):
     dataset_name = parse_dataset_name(params["save_dir"])
@@ -367,17 +396,35 @@ def main(params):
     
     # 存储所有学生的评估结果
     all_results = []
-    
+    all_student_dfs = []
     print(f"开始批量评估，共 {total_students} 个学生，从学生 {start_student} 开始")
     
     for student_id in range(start_student, total_students + 1):
         # 评估单个学生
-        result = evaluate_single_student(params, student_id)
+        result,student_df = evaluate_single_student(params, student_id)
         all_results.append(result)
+        all_student_dfs.append(student_df)
         print(f"完成学生 {student_id} 的评估 ({student_id - start_student + 1}/{total_students - start_student + 1})")
-    
+    final_df = pd.concat(all_student_dfs, ignore_index=True)
+    save_path = os.path.join(save_dir, "all_students_evaluation_results.csv")
+
+    # 将合并后的 DataFrame 保存为 CSV 文件
+    final_df.to_csv(save_path, index=False)
     # 将所有结果转换为DataFrame并保存为CSV
     if all_results:
+        # jsonl_path = os.path.join(save_dir, "evaluate_results_all_stu.jsonl")
+        # try:
+        #     with open(jsonl_path, "w", encoding='utf-8') as fout:
+        #         for result in all_results:
+        #             json.dump(result, fout, ensure_ascii=False)
+        #             fout.write("\n")  # 每行一个 JSON 对象
+        #     print(f"\n所有评估结果已保存到 JSONL 文件: {jsonl_path}")
+        # except Exception as e:
+        #     print(f"保存 JSONL 结果时出错: {e}")
+        #     import traceback
+        #     traceback.print_exc()
+
+
         df = pd.DataFrame(all_results)
         
         # 生成CSV文件路径
@@ -569,15 +616,19 @@ def main(params):
     #     testauc, testacc = evaluate(model, test_loader, model_name, save_test_path,save_result_path)
     # print(f"testauc: {testauc}, testacc: {testacc}")
 
+    dres = {}
     testauc,testacc,window_testauc, window_testacc = -1, -1,-1,-1
     save_test_window_path = os.path.join(save_dir, f"{model.emb_type}_test_window_predictions.txt")
-    # if model.model_name == "rkt":
-    #     window_testauc, window_testacc = evaluate(model, test_window_loader, model_name, rel)
-    # else:
-    #     window_testauc, window_testacc = evaluate(model, test_window_loader, model_name)
-    # print(f"testauc: {testauc}, testacc: {testacc}, window_testauc: {window_testauc}, window_testacc: {window_testacc}")
+    if model.model_name == "rkt":
+        window_testauc, window_testacc = evaluate(model, test_window_loader, model_name, rel)
+    else:
+        window_testauc, window_testacc = evaluate(model, test_window_loader, model_name)
 
-    dres = {}
+    dres["windows_auc"] = window_testauc
+    dres["windows_acc"] = window_testacc
+    
+    print(f"testauc: {testauc}, testacc: {testacc}, window_testauc: {window_testauc}, window_testacc: {window_testacc}")
+
 
     q_testaucs, q_testaccs = -1, -1
     qw_testaucs, qw_testaccs = -1, -1
@@ -604,8 +655,8 @@ def main(params):
 
     if params['use_wandb'] == 1:
         wandb.log(dres)
-    print(f"windowauclate_mean: {dres['windowauclate_mean']}")
-    print(f"windowacclate_mean: {dres['windowacclate_mean']}")
+    # print(f"windowauclate_mean: {dres['windowauclate_mean']}")
+    # print(f"windowacclate_mean: {dres['windowacclate_mean']}")
     
     # 将评估结果保存到 save_dir 目录下的 evaluation_results.json 文件
     
@@ -671,7 +722,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--bz", type=int, default=256)
-    parser.add_argument("--save_dir", type=str, default="saved_model")
+    parser.add_argument("--save_dir", type=str, default="/data/pykt_datasets/saved_model")
     parser.add_argument("--fusion_type", type=str, default="late_fusion")
     parser.add_argument("--use_wandb", type=int, default=0)
 

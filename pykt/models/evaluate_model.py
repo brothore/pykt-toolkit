@@ -74,7 +74,6 @@ def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
         dres[len(dres)] = [qs, rs, ds, ts, ps, prelabels, auc, acc]
         results.append(str([qs, rs, ds, ts, ps, prelabels, auc, acc]))
     return "\n".join(results)
-
 def evaluate(model, test_loader, model_name, rel=None, save_path=""):
     eval_student_state_manager = None
     if model_name == "long_dkt":
@@ -236,20 +235,199 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 y = torch.masked_select(y, sm).detach().cpu()
             # print(f"pred_results:{y}")  
             t = torch.masked_select(rshft, sm).detach().cpu()
-
             y_trues.append(t.numpy())
             y_scores.append(y.numpy())
             test_mini_index+=1
         ts = np.concatenate(y_trues, axis=0)
         ps = np.concatenate(y_scores, axis=0)
         print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
-        auc = metrics.roc_auc_score(y_true=ts, y_score=ps)
+        auc = safe_roc_auc(y_true=ts, y_score=ps)
 
         prelabels = [1 if p >= 0.5 else 0 for p in ps]
         acc = metrics.accuracy_score(ts, prelabels)
     # if save_path != "":
     #     pd.to_pickle(dres, save_path+".pkl")
     return auc, acc
+def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=""):
+    eval_student_state_manager = None
+    if model_name == "long_dkt":
+        from pykt.models.long_dkt import StudentHiddenStateManager
+        hidden_size = getattr(model, 'emb_size', 256)
+        num_layers = getattr(model, 'num_layers', 1)
+        
+        
+        eval_student_state_manager = StudentHiddenStateManager(
+            data_config_path="../configs/data_config.json",
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            mode="eval"  # 标记为评估模式，确保与训练模式分离
+        )
+    if save_path != "":
+        fout = open(save_path, "w", encoding="utf8")
+    with torch.no_grad():
+        y_trues = []
+        y_scores = []
+        returned_y_trues = []
+        returned_y_scores = []
+        dres = dict()
+        test_mini_index = 0
+        for data in test_loader:
+            # if model_name in ["dkt_forget", "lpkt"]:
+            #     q, c, r, qshft, cshft, rshft, m, sm, d, dshft = data
+            if model_name in ["dkt_forget", "bakt_time", "dbakt"]:
+                dcur, dgaps = data
+            else:
+                dcur = data
+            if model_name in ["dimkt"]:
+                q, c, r, sd,qd = dcur["qseqs"], dcur["cseqs"], dcur["rseqs"], dcur["sdseqs"],dcur["qdseqs"]
+                qshft, cshft, rshft, sdshft,qdshft = dcur["shft_qseqs"], dcur["shft_cseqs"], dcur["shft_rseqs"], dcur["shft_sdseqs"],dcur["shft_qdseqs"]
+                sd, qd, sdshft, qdshft = sd.to(device), qd.to(device), sdshft.to(device), qdshft.to(device)
+            else:
+                q, c, r = dcur["qseqs"], dcur["cseqs"], dcur["rseqs"] 
+                qshft, cshft, rshft= dcur["shft_qseqs"], dcur["shft_cseqs"], dcur["shft_rseqs"]
+            m, sm = dcur["masks"], dcur["smasks"]
+            q, c, r, qshft, cshft, rshft, m, sm = q.to(device), c.to(device), r.to(device), qshft.to(device), cshft.to(device), rshft.to(device), m.to(device), sm.to(device)
+            if model.model_name in que_type_models and model_name not in ["lpkt", "rkt", "promptkt", "unikt"]:
+                model.model.eval()
+            elif model_name not in ["llm", "mpllm"]:
+                model.eval()
+
+            # print(f"before y: {y.shape}")
+            cq = torch.cat((q[:,0:1], qshft), dim=1)
+            cc = torch.cat((c[:,0:1], cshft), dim=1)
+            cr = torch.cat((r[:,0:1], rshft), dim=1)
+            if model_name in ["atdkt"]:
+                '''
+                y = model(dcur) 
+                import pickle
+                with open(f"{test_mini_index}_result.pkl",'wb') as f:
+                    data = {"y":y,"cshft":cshft,"num_c":model.num_c,"rshft":rshft,"qshft":qshft,"sm":sm}
+                    pickle.dump(data,f)
+                '''
+                y = model(dcur)
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+            elif model_name in ["rkt"]:
+                y, attn = model(dcur, rel)
+                y = y[:,1:]
+                if q.numel() > 0:
+                    c,cshft = q,qshft   #question level 
+            elif model_name in ["bakt_time", "dbakt"]:
+                y = model(dcur, dgaps)
+                y = y[:,1:]
+            elif model_name in ["simplekt","stablekt", "sparsekt", "cskt", "ukt", "hcgkt"]:
+                y = model(dcur)
+                y = y[:,1:]
+            elif model_name in ["abqr"]:
+                y = model(dcur)
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+            elif model_name in ["rekt"]:
+                y = model(dcur)
+            elif model_name in ["dkt", "dkt+", "mult_dataset_dkt", "mamba_dkt"]:
+                
+                y = model(c.long(), r.long())
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+            elif model_name == "long_dkt":
+                uids = dcur["uid"].to(device)
+                if eval_student_state_manager is not None:
+                    # 获取当前批次学生的隐藏状态
+                    initial_states = eval_student_state_manager.get_student_states(uids)
+                    
+                    # 调用模型时传入初始隐藏状态
+                    y, final_states = model(c.long(), r.long(), initial_states)
+                    
+                    # 更新学生的隐藏状态
+                    eval_student_state_manager.update_student_states(uids, final_states[0], final_states[1])
+                else:
+                    # 如果没有状态管理器，使用原来的方式
+                    y = model(c.long(), r.long())
+                
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+            elif model_name in ["balance_dkt"]:
+        
+                y = model(c.long(), r.long())
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+            elif model_name in ["dkt_forget"]:
+                y = model(c.long(), r.long(), dgaps)
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+            elif model_name in ["dkvmn","deep_irt", "skvmn","deep_irt"]:
+                y = model(cc.long(), cr.long())
+                y = y[:,1:]
+            elif model_name in ["kqn", "sakt"]:
+                y = model(c.long(), r.long(), cshft.long())
+            elif model_name == "saint":
+                y = model(cq.long(), cc.long(), r.long())
+                y = y[:, 1:]
+            elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt",   "Transformer_template", "balance_akt", "qwen", "multi_dataset_akt"]:                                
+                y, reg_loss = model(cc.long(), cr.long(), cq.long())
+                y = y[:,1:]
+            elif model_name in ["TransformerKT"]:                                
+                y = model(cc.long(), cr.long(), cq.long())
+                y = y[:,1:]
+            elif model_name in ["llm", "mpllm"]:
+                batch_q_data = cc.long()
+                batch_pid_data = cq.long()
+                batch_target_data = cr.long()
+                predictions = asyncio.run(model.forward(batch_q_data, batch_pid_data, batch_target_data))
+                y = torch.from_numpy(predictions).float().to(device)
+                y = y  
+                print(f"[DEBUG] 正在进行前向传播")
+            elif model_name in ["dtransformer"]:
+                output, *_ = model.predict(cc.long(), cr.long(), cq.long())
+                sg = nn.Sigmoid()
+                y = sg(output)
+                y = y[:,1:]
+            elif model_name in ["atkt", "atktfix", "mamba_atakt", "mamba_atakt", "at_dkt"]:
+                y, _ = model(c.long(), r.long())
+                y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
+            elif model_name == "gkt":
+                y = model(cc.long(), cr.long())
+            elif model_name == "lpkt":
+                # cat = torch.cat((d["at_seqs"][:,0:1], dshft["at_seqs"]), dim=1).to(device)
+                cit = torch.cat((dcur["itseqs"][:,0:1], dcur["shft_itseqs"]), dim=1)
+                y = model(cq.long(), cr.long(), cit.long())
+                y = y[:,1:]
+                c,cshft = q,qshft#question level 
+            elif model_name in ["hawkes", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]:
+                ct = torch.cat((dcur["tseqs"][:,0:1], dcur["shft_tseqs"]), dim=1)
+                # csm = torch.cat((dcur["smasks"][:,0:1], dcur["smasks"]), dim=1)
+                y = model(cc.long(), cq.long(), ct.long(), cr.long())#, csm.long())
+                y = y[:, 1:]
+            elif model_name in que_type_models and model_name not in ["lpkt", "promptkt"]:
+                y = model.predict_one_step(data)
+                c,cshft = q,qshft#question level 
+            elif model_name in ["promptkt"]:
+                y = model(dcur)
+                y = y[:, 1:]
+                if q.size(1) != 0:
+                    c, cshft = q, qshft  # question level
+            elif model_name == "dimkt":
+                y = model(q.long(),c.long(),sd.long(),qd.long(),r.long(),qshft.long(),cshft.long(),sdshft.long(),qdshft.long())
+            # print(f"after y: {y.shape}")
+            # save predict result
+            if save_path != "":
+                result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y)
+                fout.write(result+"\n")
+            if model_name not in ["llm", "mpllm"]:
+                y = torch.masked_select(y, sm).detach().cpu()
+            # print(f"pred_results:{y}")  
+            t = torch.masked_select(rshft, sm).detach().cpu()
+            returned_y_trues.append(t.tolist())
+            returned_y_scores.append(y.tolist())
+            y_trues.append(t.numpy())
+            y_scores.append(y.numpy())
+            test_mini_index+=1
+        ts = np.concatenate(y_trues, axis=0)
+        ps = np.concatenate(y_scores, axis=0)
+        print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
+        auc = safe_roc_auc(y_true=ts, y_score=ps)
+
+        prelabels = [1 if p >= 0.5 else 0 for p in ps]
+        acc = metrics.accuracy_score(ts, prelabels)
+        print(f"[DEBUG] c: {c} (type: {type(c)})")
+        print(f"[DEBUG] q: {q} (type: {type(q)})")
+    # if save_path != "":
+    #     pd.to_pickle(dres, save_path+".pkl")
+    return auc, acc , returned_y_trues, returned_y_scores
 
 def early_fusion(curhs, model, model_name):
     if model_name in ["dkvmn","skvmn"]:
