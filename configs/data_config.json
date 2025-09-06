@@ -407,6 +407,7 @@
     },
     "peiyou": {
         "dpath": "/data/pykt_datasets/data/XES3G5M/kc_level",
+        "dpath_question": "/data/pykt_datasets/data/XES3G5M/question_level",
         "num_q": 7652,
         "num_c": 865,
         "input_type": [

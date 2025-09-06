@@ -250,6 +250,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
     return auc, acc
 def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=""):
     eval_student_state_manager = None
+    all_batches_results = []
     if model_name == "long_dkt":
         from pykt.models.long_dkt import StudentHiddenStateManager
         hidden_size = getattr(model, 'emb_size', 256)
@@ -404,8 +405,9 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
                 y = model(q.long(),c.long(),sd.long(),qd.long(),r.long(),qshft.long(),cshft.long(),sdshft.long(),qdshft.long())
             # print(f"after y: {y.shape}")
             # save predict result
+            result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y)
+            all_batches_results.extend(result)
             if save_path != "":
-                result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y)
                 fout.write(result+"\n")
             if model_name not in ["llm", "mpllm"]:
                 y = torch.masked_select(y, sm).detach().cpu()
@@ -416,6 +418,7 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
             y_trues.append(t.numpy())
             y_scores.append(y.numpy())
             test_mini_index+=1
+        results_df = pd.DataFrame(all_batches_results)
         ts = np.concatenate(y_trues, axis=0)
         ps = np.concatenate(y_scores, axis=0)
         print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
@@ -423,11 +426,11 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
 
         prelabels = [1 if p >= 0.5 else 0 for p in ps]
         acc = metrics.accuracy_score(ts, prelabels)
-        print(f"[DEBUG] c: {c} (type: {type(c)})")
-        print(f"[DEBUG] q: {q} (type: {type(q)})")
+        # print(f"[DEBUG] c: {c} (type: {type(c)})")
+        # print(f"[DEBUG] q: {q} (type: {type(q)})")
     # if save_path != "":
     #     pd.to_pickle(dres, save_path+".pkl")
-    return auc, acc , returned_y_trues, returned_y_scores
+    return auc, acc ,results_df
 
 def early_fusion(curhs, model, model_name):
     if model_name in ["dkvmn","skvmn"]:

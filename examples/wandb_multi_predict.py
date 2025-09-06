@@ -195,7 +195,7 @@ def predict_interval_data(model, data_config, model_name, fusion_type, save_dir)
     return interval_results
 
     
-def evaluate_single_student(params, student_id):
+def evaluate_single_student(params, student_id,save_reult):
     """评估单个学生的函数"""
     print(f"\n开始评估学生 {student_id}")
     
@@ -222,7 +222,7 @@ def evaluate_single_student(params, student_id):
                         # 检查 student_id 是否匹配
                         if record.get("student_id") == student_id:
                             print(f"学生 {student_id}: 找到现有预测结果，加载自 {results_path}")
-                            return record
+                            return record,None
                     except json.JSONDecodeError as je:
                         print(f"学生 {student_id}: 解析 JSONL 行时出错: {je}")
                         continue
@@ -261,9 +261,9 @@ def evaluate_single_student(params, student_id):
         elif model_name == "lpkt":
             data_config["num_at"] = config["data_config"]["num_at"]
             data_config["num_it"] = config["data_config"]["num_it"]
-    predict_files = f"top_{student_id}_student.csv" if model_name not in que_type_models else f"top_{student_id}_student.csv"
+    predict_files = f"top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"top_{student_id}_student.csv"
     if model_name not in ["dimkt"]:
-        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=f"top_{student_id}_student.csv",load_flags=[0,1,0,1])
+        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[0,1,0,1])
     else:
         diff_level = trained_params["difficult_levels"]
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size, diff_level=diff_level)
@@ -274,15 +274,10 @@ def evaluate_single_student(params, student_id):
 
     save_test_path = os.path.join(save_dir, f"{model.emb_type}_test_predictions_student_{student_id}.txt")
     # 在评估前提取学生统计信息
-    stats_file_path = os.path.join(data_config["dpath"], f"top_{student_id}_student.csv")
+    stats_file_path = os.path.join(data_config["dpath"], predict_files)
     student_stats = extract_student_stats(stats_file_path)
     print(f"学生 {student_id}: 已加载统计信息")
-    file_path = os.path.join(data_config["dpath"], f"top_{student_id}_student.csv")
-    df = pd.read_csv(file_path)
-    if student_stats:
-        for key, value in student_stats.items():
-            # 将每个统计值作为新的一列，并广播到每一行
-            df[key] = value
+
 
     if model.model_name == "rkt":
         dpath = data_config["dpath"]
@@ -301,17 +296,16 @@ def evaluate_single_student(params, student_id):
     dres = {
         "student_id": student_id,
     }
-
+    stu_df =None
     if model_name in que_type_models:
         # 对于 que_type_models，使用 evaluate 获取 window_testauc 和 window_testacc
         if test_window_loader is not None:
             save_test_window_path = os.path.join(save_dir, f"{model.emb_type}_test_window_predictions_student_{student_id}.txt")
             if model.model_name == "rkt":
-                window_testauc, window_testacc,y_trues,y_labels = evaluate_return_results(model, test_window_loader, model_name, rel, save_test_window_path)
+                window_testauc, window_testacc,stu_df = evaluate_return_results(model, test_window_loader, model_name, rel, save_test_window_path)
             else:
-                window_testauc, window_testacc,y_trues,y_labels = evaluate_return_results(model, test_window_loader, model_name, save_test_window_path)
-            df["y_trues"] = y_trues
-            df["y_labels"] = y_labels
+                window_testauc, window_testacc,stu_df = evaluate_return_results(model, test_window_loader, model_name, save_test_window_path)
+
             
             dres["window_testauc"] = window_testauc
             dres["window_testacc"] = window_testacc
@@ -328,7 +322,10 @@ def evaluate_single_student(params, student_id):
                 dres["windowacc" + key] = qw_testaccs[key]
     raw_config = json.load(open(os.path.join(save_dir, "config.json")))
     dres.update(raw_config['params'])
-    
+    if student_stats and stu_df is not None:
+        for key, value in student_stats.items():
+            # 将每个统计值作为新的一列，并广播到每一行
+            stu_df[key] = value
     # 添加学生统计信息到评估结果
     dres.update(student_stats)
     print(f"学生 {student_id}: 已添加统计信息到评估结果")
@@ -363,7 +360,10 @@ def evaluate_single_student(params, student_id):
         print(f"学生 {student_id}: 评估结果已追加保存到 {results_path}")
     except Exception as e:
         print(f"学生 {student_id}: 保存评估结果到 JSONL 时出错: {e}")
-    return dres,df
+    if save_reult:
+        return dres,stu_df
+    else:
+        return dres,None
 
 def main(params):
     dataset_name = parse_dataset_name(params["save_dir"])
@@ -401,11 +401,20 @@ def main(params):
     
     for student_id in range(start_student, total_students + 1):
         # 评估单个学生
-        result,student_df = evaluate_single_student(params, student_id)
+        result,student_df = evaluate_single_student(params, student_id,save_reult=params.get('save_reult',0))
         all_results.append(result)
         all_student_dfs.append(student_df)
+        print(f"[DEBUG] student_df: {student_df} (type: {type(student_df)})")
         print(f"完成学生 {student_id} 的评估 ({student_id - start_student + 1}/{total_students - start_student + 1})")
-    final_df = pd.concat(all_student_dfs, ignore_index=True)
+    def all_none(lst):
+        return all(item is None for item in lst)
+
+    if all_student_dfs and not all_none(all_student_dfs):
+        # 列表非空且并非全为 None，先过滤再拼接
+        valid_dfs = [df for df in all_student_dfs if df is not None]
+        final_df = pd.concat(valid_dfs, ignore_index=True)
+    else:
+        final_df = pd.DataFrame() # 处理空列表或全 None 列表的情况
     save_path = os.path.join(save_dir, "all_students_evaluation_results.csv")
 
     # 将合并后的 DataFrame 保存为 CSV 文件
@@ -727,6 +736,7 @@ if __name__ == "__main__":
     parser.add_argument("--use_wandb", type=int, default=0)
 
     parser.add_argument("--start_student", type=int, default=1, help="开始评估的学生ID")
+    parser.add_argument("--save_reult", type=int, default=1, help="开始评估的学生ID")
     # 添加新参数：统计信息文件目录
     # parser.add_argument("--stats_dir", type=str, default="", required=True, help="学生统计信息文件目录")
 

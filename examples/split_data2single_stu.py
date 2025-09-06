@@ -4,7 +4,7 @@ from typing import Dict, Tuple, List
 import os
 import argparse
 import json
-
+if_quelevel = "_quelevel"
 def calculate_global_stats(df: pd.DataFrame) -> Tuple[Dict, Dict]:
     """计算全局question和concept统计信息"""
     question_stats = {}
@@ -512,7 +512,7 @@ def main(args):
             if stat_col in row:
                 student_data[stat_col] = row[stat_col]
         
-        filename = f"top_{i+1}_student_quelevel.csv"
+        filename = f"top_{i+1}_student{if_quelevel}.csv"
         filepath = os.path.join(output_dir, filename)
         
         student_data.to_csv(filepath, index=False)
@@ -541,7 +541,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Process dataset parameters")
     
     # 先定义 dataset 参数
-    parser.add_argument("--dataset", type=str, default="nips_task34",
+    parser.add_argument("--dataset", type=str, default="assist2009",
                        help="Dataset name (default: %(default)s)")
     
     # 解析已知参数（只解析 dataset，不解析其他参数）
@@ -550,10 +550,10 @@ def parse_args():
     with open('../configs/data_config.json', 'r') as f:
         data_config = json.load(f)
     # 获取指定数据集的dpath
-    dataset_dpath = data_config[args.dataset]["dpath"]
+    dataset_dpath = data_config[args.dataset]["dpath"] if args.dataset not in ["peiyou"] else (data_config[args.dataset]["dpath_question"] if if_quelevel else data_config[args.dataset]["dpath"])
     # 然后定义其他参数，使用 args.dataset 作为默认路径的一部分
     # 修改默认输入输出路径
-    default_input = f"{dataset_dpath}/test_window_sequences_quelevel.csv"
+    default_input = f"{dataset_dpath}/test_window_sequences{if_quelevel}.csv"
     default_output = f"{dataset_dpath}/"
 
     
