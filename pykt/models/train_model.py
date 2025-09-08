@@ -533,6 +533,13 @@ def model_forward(model, data, rel=None):
 def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, test_loader=None, test_window_loader=None, save_model=False, data_config=None, fold=None):
     max_auc, best_epoch = 0, -1
     train_step = 0
+    model_path = os.path.join(ckpt_path, model.emb_type + "_model.ckpt")
+    if os.path.exists(model_path):
+        print(f"检测到预训练模型文件，正在从 {model_path} 加载...")
+        model.load_state_dict(torch.load(model_path))
+        print("模型加载成功！")
+    else:
+        print("未找到预训练模型文件，将从头开始训练。")
     # 为long_dkt创建学生隐藏状态管理器
     student_state_manager = None
     if model.model_name == "long_dkt":

@@ -50,7 +50,7 @@ def init_test_datasets_multi_stu(
                 if predict_file_type == "0":
                     test_question_window_dataset = DktForgetDataset(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
                 else:
-                    test_question_window_dataset = DktForgetDataset(os.path.join(data_config["dpath"], predict_file_type if predict_file_type.startswith("top") else data_config[predict_file_type]), data_config["input_type"], {-1}, True)
+                    test_question_window_dataset = DktForgetDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1}, True)
 
     elif model_name in ["lpkt"]:
         at2idx, it2idx = generate_time2idx(data_config)
@@ -82,7 +82,7 @@ def init_test_datasets_multi_stu(
                 if predict_file_type == "0":
                     test_question_window_dataset = MultiKTDataset(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
                 else:
-                    test_question_window_dataset = MultiKTDataset(os.path.join(data_config["dpath"], predict_file_type if predict_file_type.startswith("top") else data_config[predict_file_type]), data_config["input_type"], {-1}, True)
+                    test_question_window_dataset = MultiKTDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1}, True)
 
     elif model_name in que_type_models:
         if model_name not in ["promptkt", "unikt"]:
@@ -103,7 +103,7 @@ def init_test_datasets_multi_stu(
                                                 input_type=data_config["input_type"], folds=[-1],
                                                 concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
                 if flag_test_window:
-                    test_window_dataset = KTQueDataset(os.path.join(data_config["dpath"], predict_file_type if predict_file_type.startswith("top") else data_config[predict_file_type]),
+                    test_window_dataset = KTQueDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]),
                                                     input_type=data_config["input_type"], folds=[-1],
                                                     concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
                
@@ -157,7 +157,7 @@ def init_test_datasets_multi_stu(
                 if predict_file_type == "0":
                     test_question_window_dataset = KTDataset_uid(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
                 else:
-                    test_question_window_dataset = KTDataset_uid(os.path.join(data_config["dpath"], predict_file_type if predict_file_type.startswith("top") else data_config[predict_file_type]), data_config["input_type"], {-1}, True)
+                    test_question_window_dataset = KTDataset_uid(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1}, True)
 
     elif model_name in ["atdkt"]:
         if flag_test:
@@ -185,7 +185,8 @@ def init_test_datasets_multi_stu(
         if flag_test:
             test_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
         if flag_test_window:
-            test_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
+            test_window_dataset = None
+            # test_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
         if "test_question_file" in data_config:
             if flag_test_question:
                 test_question_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_question_file"]), data_config["input_type"], {-1}, True)
@@ -193,7 +194,7 @@ def init_test_datasets_multi_stu(
                 if predict_file_type == "0":
                     test_question_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
                 else:
-                    test_question_window_dataset = KTDataset(os.path.join(data_config["dpath"], predict_file_type if predict_file_type.startswith("top") else data_config[predict_file_type]), data_config["input_type"], {-1}, True)
+                    test_question_window_dataset = KTDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1}, True)
 
     # 构建 DataLoader
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False) if test_dataset else None

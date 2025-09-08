@@ -261,7 +261,10 @@ def evaluate_single_student(params, student_id,save_reult):
         elif model_name == "lpkt":
             data_config["num_at"] = config["data_config"]["num_at"]
             data_config["num_it"] = config["data_config"]["num_it"]
-    predict_files = f"top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"top_{student_id}_student.csv"
+    if dataset_name not in ["peiyou"]:
+        predict_files = f"top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"top_{student_id}_student.csv"
+    else:
+        predict_files = f"question_level/top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"kc_level/top_{student_id}_student.csv"
     if model_name not in ["dimkt"]:
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[0,1,0,1])
     else:
@@ -404,7 +407,7 @@ def main(params):
         result,student_df = evaluate_single_student(params, student_id,save_reult=params.get('save_reult',0))
         all_results.append(result)
         all_student_dfs.append(student_df)
-        print(f"[DEBUG] student_df: {student_df} (type: {type(student_df)})")
+        # print(f"[DEBUG] student_df: {student_df} (type: {type(student_df)})")
         print(f"完成学生 {student_id} 的评估 ({student_id - start_student + 1}/{total_students - start_student + 1})")
     def all_none(lst):
         return all(item is None for item in lst)
