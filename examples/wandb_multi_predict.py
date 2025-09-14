@@ -212,7 +212,7 @@ def evaluate_single_student(params, student_id,save_reult):
     
     # 检查是否已存在预测结果
     results_path = os.path.join(save_dir, "evaluate_results_all_stu.jsonl")
-    if os.path.exists(results_path):
+    if os.path.exists(results_path) and params["use_saved_result"] == 1:
         try:
             with open(results_path, "r", encoding='utf-8') as fin:
                 for line in fin:
@@ -232,7 +232,7 @@ def evaluate_single_student(params, student_id,save_reult):
             print(f"学生 {student_id}: 加载 JSONL 文件时出错: {e}")
             print(f"将重新运行预测...")
     else:
-        print(f"学生 {student_id}: JSONL 文件 {results_path} 不存在，将运行预测...")
+        print(f"不使用学生 {student_id}: JSONL 文件 {results_path} ，将运行预测...")
     # 确保保存目录存在
     os.makedirs(save_dir, exist_ok=True)
 
@@ -266,7 +266,8 @@ def evaluate_single_student(params, student_id,save_reult):
     else:
         predict_files = f"question_level/top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"kc_level/top_{student_id}_student.csv"
     if model_name not in ["dimkt"]:
-        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[0,1,0,1])
+        # test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[0,1,0,0] if model_name in que_type_models else [0,0,0,1])
+        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[0,1,0,1]  )
     else:
         diff_level = trained_params["difficult_levels"]
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size, diff_level=diff_level)
@@ -300,35 +301,40 @@ def evaluate_single_student(params, student_id,save_reult):
         "student_id": student_id,
     }
     stu_df =None
-    if model_name in que_type_models:
-        # 对于 que_type_models，使用 evaluate 获取 window_testauc 和 window_testacc
-        if test_window_loader is not None:
-            save_test_window_path = os.path.join(save_dir, f"{model.emb_type}_test_window_predictions_student_{student_id}.txt")
-            if model.model_name == "rkt":
-                window_testauc, window_testacc,stu_df = evaluate_return_results(model, test_window_loader, model_name, rel, save_test_window_path)
-            else:
-                window_testauc, window_testacc,stu_df = evaluate_return_results(model, test_window_loader, model_name, save_test_window_path)
 
-            
-            dres["window_testauc"] = window_testauc
-            dres["window_testacc"] = window_testacc
-            print(f"学生 {student_id}: window_testauc: {window_testauc}, window_testacc: {window_testacc}")
-        # 不运行 evaluate_question
+    # 使用 evaluate 获取 window_testauc 和 window_testacc
+    if test_window_loader is not None:
+        # print(f"[DEBUG] test_window_loader: {test_window_loader is not None} (type: {type(test_window_loader)})")
+        save_test_window_path = os.path.join(save_dir, f"{model.emb_type}_test_window_predictions_student_{student_id}.txt")
+        print(f"save_test_window_path:{save_test_window_path}")
+        if model.model_name == "rkt":
+            window_testauc, window_testacc,stu_df = evaluate_return_results(model=model, test_loader=test_window_loader, model_name=model_name,rel =  rel, save_path=save_test_window_path)
+        else:
+            window_testauc, window_testacc,stu_df = evaluate_return_results(model=model, test_loader=test_window_loader, model_name=model_name, save_path=save_test_window_path)
+        if stu_df is not None:
+            stu_df['stu_id'] = student_id  # 添加学生 ID 列，广播到每一行
+        
+        dres["window_testauc"] = window_testauc
+        dres["window_testacc"] = window_testacc
+        print(f"学生 {student_id}: window_testauc: {window_testauc}, window_testacc: {window_testacc}")
     else:
-        # 原有 evaluate_question 逻辑（非 que_type_models 运行）
-        if "test_question_window_file" in data_config and not test_question_window_loader is None:
-            save_test_question_window_path = os.path.join(save_dir, f"summary_{model.emb_type}_test_question_window_predictions_student.txt")
-            qw_testaucs, qw_testaccs = evaluate_question(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
-            for key in qw_testaucs:
-                dres["windowauc" + key] = qw_testaucs[key]
-            for key in qw_testaccs:
-                dres["windowacc" + key] = qw_testaccs[key]
+        # print(f"[DEBUG] test_window_loader: {test_window_loader is not None} (type: {type(test_window_loader)})")
+        pass
+
+    # 原有 evaluate_question 逻辑（非 que_type_models 运行）
+    if "test_question_window_file" in data_config and not test_question_window_loader is None and params["save_reult"] == "":
+        save_test_question_window_path = os.path.join(save_dir, f"summary_{model.emb_type}_test_question_window_predictions_student.txt")  if save_dir else ""
+        qw_testaucs, qw_testaccs = evaluate_question(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
+        for key in qw_testaucs:
+            dres["windowauc" + key] = qw_testaucs[key]
+        for key in qw_testaccs:
+            dres["windowacc" + key] = qw_testaccs[key]
     raw_config = json.load(open(os.path.join(save_dir, "config.json")))
     dres.update(raw_config['params'])
-    if student_stats and stu_df is not None:
-        for key, value in student_stats.items():
-            # 将每个统计值作为新的一列，并广播到每一行
-            stu_df[key] = value
+    # if student_stats and stu_df is not None:
+    #     for key, value in student_stats.items():
+    #         # 将每个统计值作为新的一列，并广播到每一行
+    #         stu_df[key] = value
     # 添加学生统计信息到评估结果
     dres.update(student_stats)
     print(f"学生 {student_id}: 已添加统计信息到评估结果")
@@ -557,189 +563,195 @@ def main(params):
             traceback.print_exc()
     else:
         print("警告：没有收集到任何评估结果")
-    if params['use_wandb'] == 1:
-        import wandb
-        with open("../configs/wandb.json") as fin:
-            wandb_config = json.load(fin)
-        os.environ['WANDB_API_KEY'] = wandb_config["api_key"]
-        wandb.init(project="wandb_predict")
 
-    save_dir, batch_size, fusion_type = params["save_dir"], params["bz"], params["fusion_type"].split(",")
+    if params["only_stu"] == 0:    
+        if params['use_wandb'] == 1:
+            import wandb
+            with open("../configs/wandb.json") as fin:
+                wandb_config = json.load(fin)
+            os.environ['WANDB_API_KEY'] = wandb_config["api_key"]
+            wandb.init(project="wandb_predict")
 
-    # 确保保存目录存在
-    os.makedirs(save_dir, exist_ok=True)
+        save_dir, batch_size, fusion_type = params["save_dir"], params["bz"], params["fusion_type"].split(",")
 
-    with open(os.path.join(save_dir, "config.json")) as fin:
-        config = json.load(fin)
-        model_config = copy.deepcopy(config["model_config"])
-        for remove_item in ['use_wandb', 'learning_rate', 'add_uuid', 'l2']:
-            if remove_item in model_config:
-                del model_config[remove_item]
-        trained_params = config["params"]
-        fold = trained_params["fold"]
-        model_name, dataset_name, emb_type = trained_params["model_name"], trained_params["dataset_name"], trained_params["emb_type"]
-        if model_name in ["saint", "sakt", "atdkt"]:
-            train_config = config["train_config"]
-            seq_len = train_config["seq_len"]
-            model_config["seq_len"] = seq_len
+        # 确保保存目录存在
+        os.makedirs(save_dir, exist_ok=True)
 
-    with open("../configs/data_config.json") as fin:
-        curconfig = copy.deepcopy(json.load(fin))
-        data_config = curconfig[dataset_name]
-        data_config["dataset_name"] = dataset_name
-        if model_name in ["dkt_forget", "bakt_time"]:
-            data_config["num_rgap"] = config["data_config"]["num_rgap"]
-            data_config["num_sgap"] = config["data_config"]["num_sgap"]
-            data_config["num_pcount"] = config["data_config"]["num_pcount"]
-        elif model_name == "lpkt":
-            data_config["num_at"] = config["data_config"]["num_at"]
-            data_config["num_it"] = config["data_config"]["num_it"]
-    if model_name not in ["dimkt"]:
-        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
-    else:
-        diff_level = trained_params["difficult_levels"]
-        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
+        with open(os.path.join(save_dir, "config.json")) as fin:
+            config = json.load(fin)
+            model_config = copy.deepcopy(config["model_config"])
+            for remove_item in ['use_wandb', 'learning_rate', 'add_uuid', 'l2']:
+                if remove_item in model_config:
+                    del model_config[remove_item]
+            trained_params = config["params"]
+            fold = trained_params["fold"]
+            model_name, dataset_name, emb_type = trained_params["model_name"], trained_params["dataset_name"], trained_params["emb_type"]
+            if model_name in ["saint", "sakt", "atdkt"]:
+                train_config = config["train_config"]
+                seq_len = train_config["seq_len"]
+                model_config["seq_len"] = seq_len
 
-    print(f"Start predicting model: {model_name}, embtype: {emb_type}, save_dir: {save_dir}, dataset_name: {dataset_name}")
-    print(f"model_config: {model_config}")
-    # print(f"data_config: {data_config}")
-
-    model = load_model(model_name, model_config, data_config, emb_type, save_dir)
-
-    save_test_path = os.path.join(save_dir, f"{model.emb_type}_test_predictions.txt")
-
-    if model.model_name == "rkt":
-        dpath = data_config["dpath"]
-        dataset_name = dpath.split("/")[-1]
-        tmp_folds = set(data_config["folds"]) - {fold}
-        folds_str = "_" + "_".join([str(_) for _ in tmp_folds])
-        rel = None
-        if dataset_name in ["algebra2005", "bridge2algebra2006"]:
-            fname = "phi_dict" + folds_str + ".pkl"
-            rel = pd.read_pickle(os.path.join(dpath, fname))
+        with open("../configs/data_config.json") as fin:
+            curconfig = copy.deepcopy(json.load(fin))
+            data_config = curconfig[dataset_name]
+            data_config["dataset_name"] = dataset_name
+            if model_name in ["dkt_forget", "bakt_time"]:
+                data_config["num_rgap"] = config["data_config"]["num_rgap"]
+                data_config["num_sgap"] = config["data_config"]["num_sgap"]
+                data_config["num_pcount"] = config["data_config"]["num_pcount"]
+            elif model_name == "lpkt":
+                data_config["num_at"] = config["data_config"]["num_at"]
+                data_config["num_it"] = config["data_config"]["num_it"]
+        if model_name not in ["dimkt"]:
+            test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
         else:
-            fname = "phi_array" + folds_str + ".pkl"
-            rel = pd.read_pickle(os.path.join(dpath, fname))
+            diff_level = trained_params["difficult_levels"]
+            test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
 
-    save_result_path = ""
-    # if model.model_name == "rkt":
-    #     testauc, testacc = evaluate(model, test_loader, model_name, rel, save_test_path,save_result_path)
-    # else:
-    #     testauc, testacc = evaluate(model, test_loader, model_name, save_test_path,save_result_path)
-    # print(f"testauc: {testauc}, testacc: {testacc}")
+        print(f"Start predicting model: {model_name}, embtype: {emb_type}, save_dir: {save_dir}, dataset_name: {dataset_name}")
+        print(f"model_config: {model_config}")
+        # print(f"data_config: {data_config}")
 
-    dres = {}
-    testauc,testacc,window_testauc, window_testacc = -1, -1,-1,-1
-    save_test_window_path = os.path.join(save_dir, f"{model.emb_type}_test_window_predictions.txt")
-    if model.model_name == "rkt":
-        window_testauc, window_testacc = evaluate(model, test_window_loader, model_name, rel)
-    else:
-        window_testauc, window_testacc = evaluate(model, test_window_loader, model_name)
+        model = load_model(model_name, model_config, data_config, emb_type, save_dir)
 
-    dres["windows_auc"] = window_testauc
-    dres["windows_acc"] = window_testacc
-    
-    print(f"testauc: {testauc}, testacc: {testacc}, window_testauc: {window_testauc}, window_testacc: {window_testacc}")
+        save_test_path = os.path.join(save_dir, f"{model.emb_type}_test_predictions.txt")
+
+        if model.model_name == "rkt":
+            dpath = data_config["dpath"]
+            dataset_name = dpath.split("/")[-1]
+            tmp_folds = set(data_config["folds"]) - {fold}
+            folds_str = "_" + "_".join([str(_) for _ in tmp_folds])
+            rel = None
+            if dataset_name in ["algebra2005", "bridge2algebra2006"]:
+                fname = "phi_dict" + folds_str + ".pkl"
+                rel = pd.read_pickle(os.path.join(dpath, fname))
+            else:
+                fname = "phi_array" + folds_str + ".pkl"
+                rel = pd.read_pickle(os.path.join(dpath, fname))
+
+        save_result_path = ""
+        # if model.model_name == "rkt":
+        #     testauc, testacc = evaluate(model, test_loader, model_name, rel, save_test_path,save_result_path)
+        # else:
+        #     testauc, testacc = evaluate(model, test_loader, model_name, save_test_path,save_result_path)
+        # print(f"testauc: {testauc}, testacc: {testacc}")
+
+        dres = {}
+        testauc,testacc,window_testauc, window_testacc = -1, -1,-1,-1
+        save_test_window_path = os.path.join(save_dir, f"{model.emb_type}_test_window_predictions.txt")
+        if model.model_name == "rkt":
+            window_testauc, window_testacc = evaluate(model, test_window_loader, model_name, rel)
+        else:
+            window_testauc, window_testacc = evaluate(model, test_window_loader, model_name)
+
+        dres["windows_auc"] = window_testauc
+        dres["windows_acc"] = window_testacc
+        
+        print(f"testauc: {testauc}, testacc: {testacc}, window_testauc: {window_testauc}, window_testacc: {window_testacc}")
 
 
-    q_testaucs, q_testaccs = -1, -1
-    qw_testaucs, qw_testaccs = -1, -1
-    # if "test_question_file" in data_config and not test_question_loader is None:
-    #     save_test_question_path = os.path.join(save_dir, f"{model.emb_type}_test_question_predictions.txt")
-    #     q_testaucs, q_testaccs = evaluate_question(model, test_question_loader, model_name, fusion_type, save_test_question_path)
-    #     for key in q_testaucs:
-    #         dres["oriauc" + key] = q_testaucs[key]
-    #     for key in q_testaccs:
-    #         dres["oriacc" + key] = q_testaccs[key]
+        q_testaucs, q_testaccs = -1, -1
+        qw_testaucs, qw_testaccs = -1, -1
+        # if "test_question_file" in data_config and not test_question_loader is None:
+        #     save_test_question_path = os.path.join(save_dir, f"{model.emb_type}_test_question_predictions.txt")
+        #     q_testaucs, q_testaccs = evaluate_question(model, test_question_loader, model_name, fusion_type, save_test_question_path)
+        #     for key in q_testaucs:
+        #         dres["oriauc" + key] = q_testaucs[key]
+        #     for key in q_testaccs:
+        #         dres["oriacc" + key] = q_testaccs[key]
 
-    if "test_question_window_file" in data_config and not test_question_window_loader is None:
-        save_test_question_window_path = os.path.join(save_dir, f"{model.emb_type}_test_question_window_predictions.txt")
+        if "test_question_window_file" in data_config and not test_question_window_loader is None:
+            save_test_question_window_path = os.path.join(save_dir, f"{model.emb_type}_test_question_window_predictions.txt")
 
-        qw_testaucs, qw_testaccs = evaluate_question(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
-        for key in qw_testaucs:
-            dres["windowauc" + key] = qw_testaucs[key]
-        for key in qw_testaccs:
-            dres["windowacc" + key] = qw_testaccs[key]
+            qw_testaucs, qw_testaccs = evaluate_question(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
+            for key in qw_testaucs:
+                dres["windowauc" + key] = qw_testaucs[key]
+            for key in qw_testaccs:
+                dres["windowacc" + key] = qw_testaccs[key]
 
-    print(dres)
-    raw_config = json.load(open(os.path.join(save_dir, "config.json")))
-    dres.update(raw_config['params'])
+        print(dres)
+        raw_config = json.load(open(os.path.join(save_dir, "config.json")))
+        dres.update(raw_config['params'])
 
-    if params['use_wandb'] == 1:
-        wandb.log(dres)
-    # print(f"windowauclate_mean: {dres['windowauclate_mean']}")
-    # print(f"windowacclate_mean: {dres['windowacclate_mean']}")
-    
-    # 将评估结果保存到 save_dir 目录下的 evaluation_results.json 文件
-    
-    results_path = os.path.join(save_dir, "evaluation_results.json")
-    try:
-        with open(results_path, "w") as fout:
-            json.dump(dres, fout, indent=4, ensure_ascii=False)
-        print(f"评估结果已保存到 {results_path}")
-    except Exception as e:
-        print(f"保存评估结果时出错: {e}")
-    
-    
-    
-    # === 新增代码：在所有学生评估前预测区间数据 ===
-    # print("\n=== 开始预测区间数据文件 ===")
-    
-    # # 加载模型配置（与evaluate_single_student中相同）
-    # with open(os.path.join(save_dir, "config.json")) as fin:
-    #     config = json.load(fin)
-    #     model_config = copy.deepcopy(config["model_config"])
-    #     for remove_item in ['use_wandb', 'learning_rate', 'add_uuid', 'l2']:
-    #         if remove_item in model_config:
-    #             del model_config[remove_item]
-    #     trained_params = config["params"]
-    #     fold = trained_params["fold"]
-    #     model_name, dataset_name, emb_type = trained_params["model_name"], trained_params["dataset_name"], trained_params["emb_type"]
-    #     if model_name in ["saint", "sakt", "atdkt"]:
-    #         train_config = config["train_config"]
-    #         seq_len = train_config["seq_len"]
-    #         model_config["seq_len"] = seq_len
+        if params['use_wandb'] == 1:
+            wandb.log(dres)
+        # print(f"windowauclate_mean: {dres['windowauclate_mean']}")
+        # print(f"windowacclate_mean: {dres['windowacclate_mean']}")
+        
+        # 将评估结果保存到 save_dir 目录下的 evaluation_results.json 文件
+        
+        results_path = os.path.join(save_dir, "evaluation_results.json")
+        try:
+            with open(results_path, "w") as fout:
+                json.dump(dres, fout, indent=4, ensure_ascii=False)
+            print(f"评估结果已保存到 {results_path}")
+        except Exception as e:
+            print(f"保存评估结果时出错: {e}")
+        
+        
+        
+        # === 新增代码：在所有学生评估前预测区间数据 ===
+        # print("\n=== 开始预测区间数据文件 ===")
+        
+        # # 加载模型配置（与evaluate_single_student中相同）
+        # with open(os.path.join(save_dir, "config.json")) as fin:
+        #     config = json.load(fin)
+        #     model_config = copy.deepcopy(config["model_config"])
+        #     for remove_item in ['use_wandb', 'learning_rate', 'add_uuid', 'l2']:
+        #         if remove_item in model_config:
+        #             del model_config[remove_item]
+        #     trained_params = config["params"]
+        #     fold = trained_params["fold"]
+        #     model_name, dataset_name, emb_type = trained_params["model_name"], trained_params["dataset_name"], trained_params["emb_type"]
+        #     if model_name in ["saint", "sakt", "atdkt"]:
+        #         train_config = config["train_config"]
+        #         seq_len = train_config["seq_len"]
+        #         model_config["seq_len"] = seq_len
 
-    # with open("../configs/data_config.json") as fin:
-    #     curconfig = copy.deepcopy(json.load(fin))
-    #     data_config = curconfig[dataset_name]
-    #     data_config["dataset_name"] = dataset_name
-    #     if model_name in ["dkt_forget", "bakt_time","dbakt"]:
-    #         data_config["num_rgap"] = config["data_config"]["num_rgap"]
-    #         data_config["num_sgap"] = config["data_config"]["num_sgap"]
-    #         data_config["num_pcount"] = config["data_config"]["num_pcount"]
-    #     elif model_name == "lpkt":
-    #         data_config["num_at"] = config["data_config"]["num_at"]
-    #         data_config["num_it"] = config["data_config"]["num_it"]
-    
-    
-    # # # 加载数据配置
-    # # with open("../configs/data_config.json") as fin:
-    # #     data_config = json.load(fin)[dataset_name]
-    
-    # # 加载模型
-    # model = load_model(model_name, model_config, data_config, emb_type, save_dir)
-    
-    # # 预测区间数据
-    # interval_results = predict_interval_data(model, data_config, model_name, params["fusion_type"], save_dir)
-    
-    # # 保存区间预测结果到单独文件
-    # interval_results_path = os.path.join(save_dir, "interval_data_predictions.json")
-    # with open(interval_results_path, "w") as f:
-    #     json.dump(interval_results, f, indent=4)
-    # print(f"\n区间数据预测结果已保存到: {interval_results_path}")
-    # print("=== 区间数据文件预测完成 ===\n")
+        # with open("../configs/data_config.json") as fin:
+        #     curconfig = copy.deepcopy(json.load(fin))
+        #     data_config = curconfig[dataset_name]
+        #     data_config["dataset_name"] = dataset_name
+        #     if model_name in ["dkt_forget", "bakt_time","dbakt"]:
+        #         data_config["num_rgap"] = config["data_config"]["num_rgap"]
+        #         data_config["num_sgap"] = config["data_config"]["num_sgap"]
+        #         data_config["num_pcount"] = config["data_config"]["num_pcount"]
+        #     elif model_name == "lpkt":
+        #         data_config["num_at"] = config["data_config"]["num_at"]
+        #         data_config["num_it"] = config["data_config"]["num_it"]
+        
+        
+        # # # 加载数据配置
+        # # with open("../configs/data_config.json") as fin:
+        # #     data_config = json.load(fin)[dataset_name]
+        
+        # # 加载模型
+        # model = load_model(model_name, model_config, data_config, emb_type, save_dir)
+        
+        # # 预测区间数据
+        # interval_results = predict_interval_data(model, data_config, model_name, params["fusion_type"], save_dir)
+        
+        # # 保存区间预测结果到单独文件
+        # interval_results_path = os.path.join(save_dir, "interval_data_predictions.json")
+        # with open(interval_results_path, "w") as f:
+        #     json.dump(interval_results, f, indent=4)
+        # print(f"\n区间数据预测结果已保存到: {interval_results_path}")
+        # print("=== 区间数据文件预测完成 ===\n")
 
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("--bz", type=int, default=256)
+    parser.add_argument("--bz", type=int, default=512)
     parser.add_argument("--save_dir", type=str, default="/data/pykt_datasets/saved_model")
     parser.add_argument("--fusion_type", type=str, default="late_fusion")
     parser.add_argument("--use_wandb", type=int, default=0)
 
     parser.add_argument("--start_student", type=int, default=1, help="开始评估的学生ID")
-    parser.add_argument("--save_reult", type=int, default=1, help="开始评估的学生ID")
+    parser.add_argument("--save_reult", type=int, default=1, help="保存结果的路径")
+    parser.add_argument("--use_saved_result", type=int, default=0, help="是否使用已有结果")
+    parser.add_argument("--only_stu", type=int, default=1, help="只对学生进行评估")
+
+
     # 添加新参数：统计信息文件目录
     # parser.add_argument("--stats_dir", type=str, default="", required=True, help="学生统计信息文件目录")
 

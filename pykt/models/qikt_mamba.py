@@ -114,7 +114,7 @@ class QIKTNet(nn.Module):
         if data is not None:
             data = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in data.items()}
 
-        _, emb_qca, emb_qc, emb_q, emb_c = self.que_emb(q, c, r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
+        _, emb_qca, emb_qc, _, emb_c = self.que_emb(q, c, r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
         
         emb_qc_shift = emb_qc[:, 1:, :]
         emb_qca_current = emb_qca[:, :-1, :]

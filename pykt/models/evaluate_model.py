@@ -41,39 +41,110 @@ def safe_roc_auc(y_true, y_score, dummy_score_strategy='mean'):
         y_true = np.append(y_true, dummy_label)
         y_score = np.append(y_score, dummy_score)
     return metrics.roc_auc_score(y_true=y_true, y_score=y_score)
-def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
-    # dres, q, r, qshft, rshft, m, sm, y
-    results = []
-    for i in range(0, t.shape[0]):
-        cps = torch.masked_select(p[i], sm[i]).detach().cpu()
-        cts = torch.masked_select(t[i], sm[i]).detach().cpu()
+# def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
+#     # dres, q, r, qshft, rshft, m, sm, y
+#     results = []
+#     for i in range(0, t.shape[0]):
+#         cps = torch.masked_select(p[i], sm[i]).detach().cpu()
+#         cts = torch.masked_select(t[i], sm[i]).detach().cpu()
     
+#         cqs = torch.masked_select(q[i], m[i]).detach().cpu()
+#         crs = torch.masked_select(r[i], m[i]).detach().cpu()
+
+#         cds = torch.masked_select(d[i], sm[i]).detach().cpu()
+
+#         qs, rs, ts, ps, ds = [], [], [], [], []
+#         for cq, cr in zip(cqs.int(), crs.int()):
+#             qs.append(cq.item())
+#             rs.append(cr.item())
+#         for ct, cp, cd in zip(cts.int(), cps, cds.int()):
+#             ts.append(ct.item())
+#             ps.append(cp.item())
+#             ds.append(cd.item())
+#         try:
+#             auc = metrics.roc_auc_score(
+#                 y_true=np.array(ts), y_score=np.array(ps)
+#             )
+            
+#         except Exception as e:
+#             # print(e)
+#             auc = -1
+#         prelabels = [1 if p >= 0.5 else 0 for p in ps]
+#         acc = metrics.accuracy_score(ts, prelabels)
+#         dres[len(dres)] = [qs, rs, ds, ts, ps, prelabels, auc, acc]
+#         results.append(str([qs, rs, ds, ts, ps, prelabels, auc, acc]))
+#     return "\n".join(results)
+
+
+
+def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
+    # dres, q, r, qshft, rshft, m, sm, y  # Note: parameters renamed to match call, but q is c, d is cshft, t is rshft
+
+    results = []  # Now this will be list of dicts instead of str
+
+    for i in range(0, t.shape[0]):
+
+        cps = torch.masked_select(p[i], sm[i]).detach().cpu()
+
+        cts = torch.masked_select(t[i], sm[i]).detach().cpu()
+
         cqs = torch.masked_select(q[i], m[i]).detach().cpu()
+
         crs = torch.masked_select(r[i], m[i]).detach().cpu()
 
         cds = torch.masked_select(d[i], sm[i]).detach().cpu()
 
         qs, rs, ts, ps, ds = [], [], [], [], []
+
         for cq, cr in zip(cqs.int(), crs.int()):
+
             qs.append(cq.item())
+
             rs.append(cr.item())
+
         for ct, cp, cd in zip(cts.int(), cps, cds.int()):
+
             ts.append(ct.item())
+
             ps.append(cp.item())
+
             ds.append(cd.item())
+
         try:
+
             auc = metrics.roc_auc_score(
+
                 y_true=np.array(ts), y_score=np.array(ps)
+
             )
-            
+
         except Exception as e:
+
             # print(e)
+
             auc = -1
+
         prelabels = [1 if p >= 0.5 else 0 for p in ps]
+
         acc = metrics.accuracy_score(ts, prelabels)
+
         dres[len(dres)] = [qs, rs, ds, ts, ps, prelabels, auc, acc]
-        results.append(str([qs, rs, ds, ts, ps, prelabels, auc, acc]))
-    return "\n".join(results)
+
+        # Append dict instead of str
+        results.append({
+            'qs': qs,
+            'rs': rs,
+            'ds': ds,
+            'ts': ts,
+            'ps': ps,
+            'prelabels': prelabels,
+            'auc': auc,
+            'acc': acc
+        })
+
+    return results
+
+
 def evaluate(model, test_loader, model_name, rel=None, save_path=""):
     eval_student_state_manager = None
     if model_name == "long_dkt":
@@ -263,8 +334,8 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
             num_layers=num_layers,
             mode="eval"  # 标记为评估模式，确保与训练模式分离
         )
-    if save_path != "":
-        fout = open(save_path, "w", encoding="utf8")
+    # if save_path != "":
+    #     fout = open(save_path, "w", encoding="utf8")
     with torch.no_grad():
         y_trues = []
         y_scores = []
@@ -407,8 +478,9 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
             # save predict result
             result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y)
             all_batches_results.extend(result)
-            if save_path != "":
-                fout.write(result+"\n")
+            # if save_path != "":
+            #     fout.write(result+"\n")
+                # print(f"wrote result!!{save_path}")
             if model_name not in ["llm", "mpllm"]:
                 y = torch.masked_select(y, sm).detach().cpu()
             # print(f"pred_results:{y}")  

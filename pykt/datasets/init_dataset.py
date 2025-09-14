@@ -185,7 +185,16 @@ def init_test_datasets_multi_stu(
         if flag_test:
             test_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
         if flag_test_window:
-            test_window_dataset = None
+            if predict_file_type == "0":
+                # print("dkt loaded 0")
+                test_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
+
+            else:
+                # print("dkt loaded stu")
+
+                test_window_dataset = KTDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1})
+                
+            # test_window_dataset = None
             # test_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
         if "test_question_file" in data_config:
             if flag_test_question:
@@ -211,45 +220,89 @@ def init_test_datasets_multi_stu(
             test_question_window_loader = DataLoader(test_question_window_dataset, batch_size=batch_size, shuffle=False)
 
     return test_loader, test_window_loader, test_question_loader, test_question_window_loader
-def init_test_datasets(data_config, model_name, batch_size, diff_level=None, args=None, re_mapping=False):
+def init_test_datasets(data_config, model_name, batch_size, diff_level=None, args=None, re_mapping=False, load_flags=[1, 1, 1, 1]):
+    """
+    Initializes test datasets and data loaders based on model type and data configuration.
+    
+    Args:
+        data_config (dict): Configuration dictionary for the dataset.
+        model_name (str): The name of the model.
+        batch_size (int): The batch size for the data loaders.
+        diff_level (any, optional): Difficulty level parameter for some models. Defaults to None.
+        args (any, optional): Additional arguments. Defaults to None.
+        re_mapping (bool, optional): Re-mapping flag. Defaults to False.
+        load_flags (list[int], optional): A list of four flags to control which data loaders to return.
+                                          [test_loader, test_window_loader, test_question_loader, test_question_window_loader].
+                                          1 means load, 0 means not load. Defaults to [1, 1, 1, 1].
+
+    Returns:
+        tuple: A tuple containing the initialized data loaders (or None if not loaded).
+               (test_loader, test_window_loader, test_question_loader, test_question_window_loader)
+    """
     dataset_name = data_config["dataset_name"]
     print(f"model_name is {model_name}, dataset_name is {dataset_name}")
+    
+    # Initialize all datasets and loaders to None
+    test_dataset, test_window_dataset = None, None
+    test_question_dataset, test_question_window_dataset = None, None
+    test_loader, test_window_loader = None, None
     test_question_loader, test_question_window_loader = None, None
+
+    # Determine which datasets to load based on load_flags
+    load_test_dataset = load_flags[0]
+    load_test_window_dataset = load_flags[1]
+    load_test_question_dataset = load_flags[2]
+    load_test_question_window_dataset = load_flags[3]
+
     if model_name in ["dkt_forget", "bakt_time","dbakt"]:
-        test_dataset = DktForgetDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
-        test_window_dataset = DktForgetDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]),
-                                        data_config["input_type"], {-1})
-        if "test_question_file" in data_config:
+        if load_test_dataset:
+            test_dataset = DktForgetDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
+        if load_test_window_dataset:
+            test_window_dataset = DktForgetDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]),
+                                                 data_config["input_type"], {-1})
+        if "test_question_file" in data_config and load_test_question_dataset:
             test_question_dataset = DktForgetDataset(os.path.join(data_config["dpath"], data_config["test_question_file"]), data_config["input_type"], {-1}, True)
+        if "test_question_window_file" in data_config and load_test_question_window_dataset:
             test_question_window_dataset = DktForgetDataset(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
     elif model_name in ["lpkt"]:
         print(f"model_name in lpkt")
         at2idx, it2idx = generate_time2idx(data_config)
-        test_dataset = LPKTDataset(os.path.join(data_config["dpath"], data_config["test_file_quelevel"]), at2idx, it2idx, data_config["input_type"], {-1})
-        test_window_dataset = LPKTDataset(os.path.join(data_config["dpath"], data_config["test_window_file_quelevel"]), at2idx, it2idx, data_config["input_type"], {-1})
+        if load_test_dataset:
+            test_dataset = LPKTDataset(os.path.join(data_config["dpath"], data_config["test_file_quelevel"]), at2idx, it2idx, data_config["input_type"], {-1})
+        if load_test_window_dataset:
+            test_window_dataset = LPKTDataset(os.path.join(data_config["dpath"], data_config["test_window_file_quelevel"]), at2idx, it2idx, data_config["input_type"], {-1})
+        # Note: LPKT does not use question-level datasets according to your code.
         test_question_dataset = None
         test_question_window_dataset= None
     elif model_name in ["multi_dataset_akt","multi_dataset_dkt"]:
-        test_dataset = MultiKTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
-        test_window_dataset = MultiKTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
-        if "test_question_file" in data_config:
+        if load_test_dataset:
+            test_dataset = MultiKTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
+        if load_test_window_dataset:
+            test_window_dataset = MultiKTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
+        if "test_question_file" in data_config and load_test_question_dataset:
             test_question_dataset = MultiKTDataset(os.path.join(data_config["dpath"], data_config["test_question_file"]), data_config["input_type"], {-1}, True)
+        if "test_question_window_file" in data_config and load_test_question_window_dataset:
             test_question_window_dataset = MultiKTDataset(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
 
     elif model_name in ["rkt"] and dataset_name in ["statics2011", "assist2015", "poj"]:
-        test_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
-        test_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
-        if "test_question_file" in data_config:
+        if load_test_dataset:
+            test_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
+        if load_test_window_dataset:
+            test_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
+        if "test_question_file" in data_config and load_test_question_dataset:
             test_question_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_question_file"]), data_config["input_type"], {-1}, True)
+        if "test_question_window_file" in data_config and load_test_question_window_dataset:
             test_question_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
     elif model_name in que_type_models:
         if model_name not in ["promptkt", "unikt"]:
-            test_dataset = KTQueDataset(os.path.join(data_config["dpath"], data_config["test_file_quelevel"]),
-                            input_type=data_config["input_type"], folds=[-1], 
-                            concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
-            test_window_dataset = KTQueDataset(os.path.join(data_config["dpath"], data_config["test_window_file_quelevel"]),
-                            input_type=data_config["input_type"], folds=[-1], 
-                            concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
+            if load_test_dataset:
+                test_dataset = KTQueDataset(os.path.join(data_config["dpath"], data_config["test_file_quelevel"]),
+                                  input_type=data_config["input_type"], folds=[-1], 
+                                  concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
+            if load_test_window_dataset:
+                test_window_dataset = KTQueDataset(os.path.join(data_config["dpath"], data_config["test_window_file_quelevel"]),
+                                  input_type=data_config["input_type"], folds=[-1], 
+                                  concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
         else:
             dataset = data_config["dpath"].split("/")[-1]
             if dataset == "":
@@ -264,17 +317,18 @@ def init_test_datasets(data_config, model_name, batch_size, diff_level=None, arg
                 "ednet5w",
                 "ednet_all"
             ]:
-                test_dataset = KTQueDataset_promptKT(
-                    os.path.join(
-                        data_config["dpath"],
-                        data_config["test_file_quelevel"],
-                    ),
-                    input_type=data_config["input_type"],
-                    folds=[-1],
-                    concept_num=data_config["num_c"],
-                    max_concepts=data_config["max_concepts"],
-                    dataset_name=args.dataset_name,
-                )
+                if load_test_dataset:
+                    test_dataset = KTQueDataset_promptKT(
+                        os.path.join(
+                            data_config["dpath"],
+                            data_config["test_file_quelevel"],
+                        ),
+                        input_type=data_config["input_type"],
+                        folds=[-1],
+                        concept_num=data_config["num_c"],
+                        max_concepts=data_config["max_concepts"],
+                        dataset_name=args.dataset_name,
+                    )
                 test_path = os.path.join(
                     data_config["dpath"],
                     data_config["test_window_file_quelevel"],
@@ -282,55 +336,70 @@ def init_test_datasets(data_config, model_name, batch_size, diff_level=None, arg
                 if not os.path.exists(test_path):
                     print("not exist")
                     sys.exit(1)
-                test_window_dataset = KTQueDataset_promptKT(
-                    test_path,
-                    input_type=data_config["input_type"],
-                    folds=[-1],
-                    concept_num=data_config["num_c"],
-                    max_concepts=data_config["max_concepts"],
-                    dataset_name=args.dataset_name,
-                )        
+                if load_test_window_dataset:
+                    test_window_dataset = KTQueDataset_promptKT(
+                        test_path,
+                        input_type=data_config["input_type"],
+                        folds=[-1],
+                        concept_num=data_config["num_c"],
+                        max_concepts=data_config["max_concepts"],
+                        dataset_name=args.dataset_name,
+                    )
+        # Note: These models do not use question-level datasets according to your code.
         test_question_dataset = None
         test_question_window_dataset= None
     elif model_name in ["atdkt"]:
-        test_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
-        test_window_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
-        if "test_question_file" in data_config:
+        if load_test_dataset:
+            test_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
+        if load_test_window_dataset:
+            test_window_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
+        if "test_question_file" in data_config and load_test_question_dataset:
             test_question_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_question_file"]), data_config["input_type"], {-1}, True)
+        if "test_question_window_file" in data_config and load_test_question_window_dataset:
             test_question_window_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
     elif model_name in needs_uid_models:
-        test_dataset = KTDataset_uid(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
-        test_window_dataset = KTDataset_uid(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
-        if "test_question_file" in data_config:
+        if load_test_dataset:
+            test_dataset = KTDataset_uid(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
+        if load_test_window_dataset:
+            test_window_dataset = KTDataset_uid(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
+        if "test_question_file" in data_config and load_test_question_dataset:
             test_question_dataset = KTDataset_uid(os.path.join(data_config["dpath"], data_config["test_question_file"]), data_config["input_type"], {-1}, True)
-
+        if "test_question_window_file" in data_config and load_test_question_window_dataset:
             test_question_window_dataset = KTDataset_uid(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
-
     elif model_name in ["dimkt"]:
-        test_dataset = DIMKTDataset(data_config["dpath"],os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1}, diff_level=diff_level)
-        test_window_dataset = DIMKTDataset(data_config["dpath"],os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1}, diff_level=diff_level)
-        if "test_question_file" in data_config:
+        if load_test_dataset:
+            test_dataset = DIMKTDataset(data_config["dpath"],os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1}, diff_level=diff_level)
+        if load_test_window_dataset:
+            test_window_dataset = DIMKTDataset(data_config["dpath"],os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1}, diff_level=diff_level)
+        if "test_question_file" in data_config and load_test_question_dataset:
             test_question_dataset = DIMKTDataset(data_config["dpath"],os.path.join(data_config["dpath"], data_config["test_question_file"]), data_config["input_type"], {-1}, True, diff_level=diff_level)
+        if "test_question_window_file" in data_config and load_test_question_window_dataset:
             test_question_window_dataset = DIMKTDataset(data_config["dpath"],os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True, diff_level=diff_level)
     else:
-        test_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
-        test_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
-        if "test_question_file" in data_config:
+        if load_test_dataset:
+            test_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
+        if load_test_window_dataset:
+            test_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
+        if "test_question_file" in data_config and load_test_question_dataset:
             test_question_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_question_file"]), data_config["input_type"], {-1}, True)
+        if "test_question_window_file" in data_config and load_test_question_window_dataset:
             test_question_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
 
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-    test_window_loader = DataLoader(test_window_dataset, batch_size=batch_size, shuffle=False)
+    # Create DataLoaders only if the corresponding dataset exists
+    if test_dataset:
+        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    if test_window_dataset:
+        test_window_loader = DataLoader(test_window_dataset, batch_size=batch_size, shuffle=False)
+    
     if "test_question_file" in data_config:
         print(f"has test_question_file!")
-        test_question_loader,test_question_window_loader = None,None
-        if not test_question_dataset is None:
+        if test_question_dataset:
             test_question_loader = DataLoader(test_question_dataset, batch_size=batch_size, shuffle=False)
-        if not test_question_window_dataset is None:
+        if test_question_window_dataset:
             test_question_window_loader = DataLoader(test_question_window_dataset, batch_size=batch_size, shuffle=False)
 
     return test_loader, test_window_loader, test_question_loader, test_question_window_loader
-
+    
 def update_gap(max_rgap, max_sgap, max_pcount, cur):
     max_rgap = cur.max_rgap if cur.max_rgap > max_rgap else max_rgap
     max_sgap = cur.max_sgap if cur.max_sgap > max_sgap else max_sgap

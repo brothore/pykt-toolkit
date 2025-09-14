@@ -4,7 +4,7 @@ from typing import Dict, Tuple, List
 import os
 import argparse
 import json
-if_quelevel = "_quelevel"
+
 def calculate_global_stats(df: pd.DataFrame) -> Tuple[Dict, Dict]:
     """计算全局question和concept统计信息"""
     question_stats = {}
@@ -395,7 +395,7 @@ def print_top_students_details(student_summary: pd.DataFrame, num_students: int 
         print(f"  总体正确率: {student['overall_accuracy']:.3f}")
         print(f"  知识点正确率范围: {student['min_accuracy']:.3f} - {student['max_accuracy']:.3f} (差值: {student['accuracy_range']:.3f})")
         print(f"  知识点正确率方差: {student['accuracy_variance']:.4f}")
-def count_unique_uids_and_update_json(csv_file_path, json_file_path, dataset_name, uid_column='uid'):
+def count_unique_uids_and_update_json_train(csv_file_path, json_file_path, dataset_name, uid_column='uid'):
     """
     统计CSV文件中独立uid的数量，并更新json文件
     
@@ -431,7 +431,45 @@ def count_unique_uids_and_update_json(csv_file_path, json_file_path, dataset_nam
     except Exception as e:
         print(f"处理过程中发生错误: {str(e)}")
         raise
+
+def count_unique_uids_and_update_json_eval(csv_file_path, json_file_path, dataset_name, uid_column='uid'):
+    """
+    统计CSV文件中独立uid的数量，并更新json文件
+    
+    参数:
+        csv_file_path (str): CSV文件路径
+        json_file_path (str): JSON配置文件路径
+        dataset_name (str): 数据集名称(如"assist2015")
+        uid_column (str): CSV文件中uid的列名，默认为'uid'
+    """
+    try:
+        # 1. 读取CSV文件并统计独立uid数量
+        df = pd.read_csv(csv_file_path)
+        unique_uids = df[uid_column].nunique()
+        print(f"在文件 {csv_file_path} 中找到 {unique_uids} 个独立uid")
+        
+        # 2. 读取JSON文件
+        with open(json_file_path, 'r', encoding='utf-8') as f:
+            data_config = json.load(f)
+        
+        # 3. 检查数据集是否存在
+        if dataset_name not in data_config:
+            raise ValueError(f"数据集 {dataset_name} 不存在于配置文件中")
+            
+        # 4. 更新students_num_train字段
+        data_config[dataset_name]['students_num_eval'] = int(unique_uids)
+        
+        # 5. 写回JSON文件
+        with open(json_file_path, 'w', encoding='utf-8') as f:
+            json.dump(data_config, f, indent=4, ensure_ascii=False)
+            
+        print(f"成功更新 {dataset_name} 的 students_num_eval 为 {unique_uids}")
+        
+    except Exception as e:
+        print(f"处理过程中发生错误: {str(e)}")
+        raise
 def main(args):
+    if_quelevel = "_quelevel" if args.if_quelevel else "" 
     """主函数：处理数据并保存所有学生数据"""
     print("正在读取CSV文件...")
     #处理训练集
@@ -445,7 +483,7 @@ def main(args):
     train_csv_file_path = os.path.join(data_config[dataset_name]['dpath'], csv_relative_path)
     
     # 调用函数处理
-    count_unique_uids_and_update_json(train_csv_file_path, config_path, dataset_name)
+    count_unique_uids_and_update_json_train(train_csv_file_path, config_path, dataset_name)
     
 
 
@@ -458,7 +496,7 @@ def main(args):
     # 自动设置学生个数为实际uid个数
     num_needs_stu = df['uid'].nunique()
     print(f"测试集共有 {num_needs_stu} 个不同的学生")
-    
+    count_unique_uids_and_update_json_eval(input_csv_path, config_path, dataset_name)
     # 创建输出目录
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -512,7 +550,7 @@ def main(args):
             if stat_col in row:
                 student_data[stat_col] = row[stat_col]
         
-        filename = f"top_{i+1}_student{if_quelevel}.csv"
+        filename = f"top_{i+1}_student{args.if_quelevel}.csv" if args.if_quelevel else f"top_{i+1}_student.csv"
         filepath = os.path.join(output_dir, filename)
         
         student_data.to_csv(filepath, index=False)
@@ -543,17 +581,19 @@ def parse_args():
     # 先定义 dataset 参数
     parser.add_argument("--dataset", type=str, default="assist2009",
                        help="Dataset name (default: %(default)s)")
-    
+    parser.add_argument("--if_quelevel", type=int, default=0,
+                       help="question level")
     # 解析已知参数（只解析 dataset，不解析其他参数）
     args, _ = parser.parse_known_args()
     # 首先读取data_config.json文件
     with open('../configs/data_config.json', 'r') as f:
         data_config = json.load(f)
     # 获取指定数据集的dpath
+    if_quelevel = "_quelevel" if args.if_quelevel else "" 
     dataset_dpath = data_config[args.dataset]["dpath"] if args.dataset not in ["peiyou"] else (data_config[args.dataset]["dpath_question"] if if_quelevel else data_config[args.dataset]["dpath"])
     # 然后定义其他参数，使用 args.dataset 作为默认路径的一部分
     # 修改默认输入输出路径
-    default_input = f"{dataset_dpath}/test_window_sequences{if_quelevel}.csv"
+    default_input = f"{dataset_dpath}/test_window_sequences{if_quelevel}.csv" if if_quelevel else f"{dataset_dpath}/test_window_sequences.csv"
     default_output = f"{dataset_dpath}/"
 
     

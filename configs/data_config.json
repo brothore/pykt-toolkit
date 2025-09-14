@@ -58,7 +58,9 @@
         "train_valid_file_quelevel": "train_valid_sequences_quelevel.csv",
         "test_file_quelevel": "test_sequences_quelevel.csv",
         "test_window_file_quelevel": "test_window_sequences_quelevel.csv",
-        "test_original_file_quelevel": "test_quelevel.csv"
+        "test_original_file_quelevel": "test_quelevel.csv",
+        "students_num_train": 460,
+        "students_num_eval": 114
     },
     "assist2009": {
         "dpath": "/data/pykt_datasets/data/assist2009",
@@ -428,8 +430,8 @@
         "train_valid_original_file": "train_valid.csv",
         "test_original_file": "kc_level/test.csv",
         "test_file": "kc_level/test_question_window_sequences.csv",
-        "test_window_file": "kc_level/test_window_sequences.csv",
-        "test_question_file": "kc_level/test_question_sequences.csv",
+        "test_window_file": "kc_level/test_question_window_sequences.csv",
+        "test_question_file": "kc_level/test_question_window_sequences.csv",
         "test_question_window_file": "kc_level/test_question_window_sequences.csv",
         "train_valid_original_file_quelevel": "question_level/train_valid_quelevel.csv",
         "train_valid_file_quelevel": "question_level/train_valid_sequences_quelevel.csv",
