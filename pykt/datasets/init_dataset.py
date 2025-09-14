@@ -99,7 +99,7 @@ def init_test_datasets_multi_stu(
             else:
                 # print(f"[DEBUG] !=0")
                 if flag_test:
-                    test_dataset = KTQueDataset(os.path.join(data_config["dpath"], data_config["test_window_file_quelevel"]),
+                    test_dataset = KTQueDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]),
                                                 input_type=data_config["input_type"], folds=[-1],
                                                 concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
                 if flag_test_window:
@@ -183,16 +183,20 @@ def init_test_datasets_multi_stu(
 
     else:
         if flag_test:
-            test_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
+            if predict_file_type == "0":
+                test_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
+            else:
+                test_dataset = KTDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1})
+
         if flag_test_window:
             if predict_file_type == "0":
                 # print("dkt loaded 0")
-                test_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
+                test_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1},qtest = False)
 
             else:
                 # print("dkt loaded stu")
 
-                test_window_dataset = KTDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1})
+                test_window_dataset = KTDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1},qtest = False)
                 
             # test_window_dataset = None
             # test_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})

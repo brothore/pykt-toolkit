@@ -197,6 +197,7 @@ def predict_interval_data(model, data_config, model_name, fusion_type, save_dir)
     
 def evaluate_single_student(params, student_id,save_reult):
     """评估单个学生的函数"""
+    target_file_type = params["target_file_type"]
     print(f"\n开始评估学生 {student_id}")
     
     
@@ -209,8 +210,7 @@ def evaluate_single_student(params, student_id,save_reult):
 
     save_dir, batch_size, fusion_type = params["save_dir"], params["bz"], params["fusion_type"].split(",")
     results_path = os.path.join(save_dir, f"evaluation_results_{student_id}.json")
-    
-    # 检查是否已存在预测结果
+    #  检查是否已存在预测结果
     results_path = os.path.join(save_dir, "evaluate_results_all_stu.jsonl")
     if os.path.exists(results_path) and params["use_saved_result"] == 1:
         try:
@@ -262,12 +262,12 @@ def evaluate_single_student(params, student_id,save_reult):
             data_config["num_at"] = config["data_config"]["num_at"]
             data_config["num_it"] = config["data_config"]["num_it"]
     if dataset_name not in ["peiyou"]:
-        predict_files = f"top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"top_{student_id}_student.csv"
+        predict_files = f"{target_file_type}_top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"{target_file_type}_top_{student_id}_student.csv"
     else:
-        predict_files = f"question_level/top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"kc_level/top_{student_id}_student.csv"
+        predict_files = f"question_level/{target_file_type}_top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"kc_level/{target_file_type}_top_{student_id}_student.csv"
     if model_name not in ["dimkt"]:
         # test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[0,1,0,0] if model_name in que_type_models else [0,0,0,1])
-        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[0,1,0,1]  )
+        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[1,0,0,1] if params["save_reult"] == "" else [1,0,0,0])
     else:
         diff_level = trained_params["difficult_levels"]
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size, diff_level=diff_level)
@@ -317,6 +317,22 @@ def evaluate_single_student(params, student_id,save_reult):
         dres["window_testauc"] = window_testauc
         dres["window_testacc"] = window_testacc
         print(f"学生 {student_id}: window_testauc: {window_testauc}, window_testacc: {window_testacc}")
+
+    elif test_loader is not None:
+        # print(f"[DEBUG] test_window_loader: {test_window_loader is not None} (type: {type(test_window_loader)})")
+        save_test_window_path = os.path.join(save_dir, f"{model.emb_type}_test_window_predictions_student_{student_id}.txt")
+        print(f"save_test_window_path:{save_test_window_path}")
+        if model.model_name == "rkt":
+            testauc, testacc,stu_df = evaluate_return_results(model=model, test_loader=test_loader, model_name=model_name,rel =  rel, save_path=save_test_window_path)
+        else:
+            testauc, testacc,stu_df = evaluate_return_results(model=model, test_loader=test_loader, model_name=model_name, save_path=save_test_window_path)
+        if stu_df is not None:
+            stu_df['stu_id'] = student_id  # 添加学生 ID 列，广播到每一行
+        
+        dres["testauc"] = testauc
+        dres["testauc"] = testacc
+        print(f"学生 {student_id}: testauc: {testauc}, testacc: {testacc}")
+
     else:
         # print(f"[DEBUG] test_window_loader: {test_window_loader is not None} (type: {type(test_window_loader)})")
         pass
@@ -343,16 +359,16 @@ def evaluate_single_student(params, student_id,save_reult):
         wandb.log(dres)
 
     # 输出关键指标
-    if model_name in que_type_models:
-        if 'window_testauc' in dres:
-            print(f"学生 {student_id}: window_testauc: {dres['window_testauc']}")
-        if 'window_testacc' in dres:
-            print(f"学生 {student_id}: window_testacc: {dres['window_testacc']}")
-    else:
-        if 'windowauclate_mean' in dres:
-            print(f"学生 {student_id}: windowauclate_mean: {dres['windowauclate_mean']}")
-        if 'windowacclate_mean' in dres:
-            print(f"学生 {student_id}: windowacclate_mean: {dres['windowacclate_mean']}")
+    # if model_name in que_type_models:
+    #     if 'window_testauc' in dres:
+    #         print(f"学生 {student_id}: window_testauc: {dres['window_testauc']}")
+    #     if 'window_testacc' in dres:
+    #         print(f"学生 {student_id}: window_testacc: {dres['window_testacc']}")
+    # else:
+    #     if 'windowauclate_mean' in dres:
+    #         print(f"学生 {student_id}: windowauclate_mean: {dres['windowauclate_mean']}")
+    #     if 'windowacclate_mean' in dres:
+    #         print(f"学生 {student_id}: windowacclate_mean: {dres['windowacclate_mean']}")
     # 将评估结果保存到单独的JSON文件
     # results_path = os.path.join(save_dir, f"evaluation_results_{student_id}.json")
     # # try:
@@ -487,6 +503,40 @@ def main(params):
                 # 处理 window_testacc 统计
                 if 'window_testacc' in df.columns:
                     valid_window_testacc = df['window_testacc'][df['window_testacc'] != -1]
+                    if len(valid_window_testacc) > 0:
+                        # 控制台输出
+                        print(f"\nwindow_testacc 统计:")
+                        print(f"  最小值: {valid_window_testacc.min():.6f}")
+                        print(f"  最大值: {valid_window_testacc.max():.6f}")
+                        print(f"  平均值: {valid_window_testacc.mean():.6f}")
+                        print(f"  标准差: {valid_window_testacc.std():.6f}")
+                        
+                        # 文件输出
+                        stat_file.write(f"\nwindow_testacc 统计:\n")
+                        stat_file.write(f"  最小值: {valid_window_testacc.min():.6f}\n")
+                        stat_file.write(f"  最大值: {valid_window_testacc.max():.6f}\n")
+                        stat_file.write(f"  平均值: {valid_window_testacc.mean():.6f}\n")
+                        stat_file.write(f"  标准差: {valid_window_testacc.std():.6f}\n")
+                if 'testauc' in df.columns:
+                    valid_window_testauc = df['testauc'][df['testauc'] != -1]
+                    if len(valid_window_testauc) > 0:
+                        # 控制台输出
+                        print(f"\nwindow_testauc 统计:")
+                        print(f"  最小值: {valid_window_testauc.min():.6f}")
+                        print(f"  最大值: {valid_window_testauc.max():.6f}")
+                        print(f"  平均值: {valid_window_testauc.mean():.6f}")
+                        print(f"  标准差: {valid_window_testauc.std():.6f}")
+                        
+                        # 文件输出
+                        stat_file.write(f"\nwindow_testauc 统计:\n")
+                        stat_file.write(f"  最小值: {valid_window_testauc.min():.6f}\n")
+                        stat_file.write(f"  最大值: {valid_window_testauc.max():.6f}\n")
+                        stat_file.write(f"  平均值: {valid_window_testauc.mean():.6f}\n")
+                        stat_file.write(f"  标准差: {valid_window_testauc.std():.6f}\n")
+                
+                # 处理 window_testacc 统计
+                if 'testacc' in df.columns:
+                    valid_window_testacc = df['testacc'][df['testacc'] != -1]
                     if len(valid_window_testacc) > 0:
                         # 控制台输出
                         print(f"\nwindow_testacc 统计:")
@@ -750,7 +800,8 @@ if __name__ == "__main__":
     parser.add_argument("--save_reult", type=int, default=1, help="保存结果的路径")
     parser.add_argument("--use_saved_result", type=int, default=0, help="是否使用已有结果")
     parser.add_argument("--only_stu", type=int, default=1, help="只对学生进行评估")
-
+    parser.add_argument("--target_file_type", type=str, default="test_sequences",
+                        help="切割哪个文件,test_question_window_sequences,test_window_sequences")
 
     # 添加新参数：统计信息文件目录
     # parser.add_argument("--stats_dir", type=str, default="", required=True, help="学生统计信息文件目录")

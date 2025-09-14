@@ -550,7 +550,7 @@ def main(args):
             if stat_col in row:
                 student_data[stat_col] = row[stat_col]
         
-        filename = f"top_{i+1}_student{args.if_quelevel}.csv" if args.if_quelevel else f"top_{i+1}_student.csv"
+        filename = f"{args.target_file_type}_top_{i+1}_student{args.if_quelevel}.csv" if args.if_quelevel else f"{args.target_file_type}_top_{i+1}_student.csv"
         filepath = os.path.join(output_dir, filename)
         
         student_data.to_csv(filepath, index=False)
@@ -583,6 +583,9 @@ def parse_args():
                        help="Dataset name (default: %(default)s)")
     parser.add_argument("--if_quelevel", type=int, default=0,
                        help="question level")
+    parser.add_argument("--target_file_type", type=str, default="test_sequences",
+                        help="切割哪个文件,test_question_window_sequences,test_window_sequences")
+                        
     # 解析已知参数（只解析 dataset，不解析其他参数）
     args, _ = parser.parse_known_args()
     # 首先读取data_config.json文件
@@ -593,7 +596,7 @@ def parse_args():
     dataset_dpath = data_config[args.dataset]["dpath"] if args.dataset not in ["peiyou"] else (data_config[args.dataset]["dpath_question"] if if_quelevel else data_config[args.dataset]["dpath"])
     # 然后定义其他参数，使用 args.dataset 作为默认路径的一部分
     # 修改默认输入输出路径
-    default_input = f"{dataset_dpath}/test_window_sequences{if_quelevel}.csv" if if_quelevel else f"{dataset_dpath}/test_window_sequences.csv"
+    default_input = f"{dataset_dpath}/{args.target_file_type}{if_quelevel}.csv" if if_quelevel else f"{dataset_dpath}/{args.target_file_type}.csv"
     default_output = f"{dataset_dpath}/"
 
     
@@ -601,7 +604,7 @@ def parse_args():
                        help="Input file path (default: %(default)s)")
     parser.add_argument("--output_directory", type=str, default=default_output,
                        help="Output directory path (default: %(default)s)")
-
+    
     # 最后完整解析所有参数
     return parser.parse_args()
 

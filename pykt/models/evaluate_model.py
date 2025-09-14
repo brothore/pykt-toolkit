@@ -12,6 +12,7 @@ import asyncio
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 import os
 from datetime import datetime
+import ast
 current_time = datetime.now().strftime('%m_%d')
 def safe_roc_auc(y_true, y_score, dummy_score_strategy='mean'):
     """
@@ -41,108 +42,140 @@ def safe_roc_auc(y_true, y_score, dummy_score_strategy='mean'):
         y_true = np.append(y_true, dummy_label)
         y_score = np.append(y_score, dummy_score)
     return metrics.roc_auc_score(y_true=y_true, y_score=y_score)
-# def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
-#     # dres, q, r, qshft, rshft, m, sm, y
-#     results = []
-#     for i in range(0, t.shape[0]):
-#         cps = torch.masked_select(p[i], sm[i]).detach().cpu()
-#         cts = torch.masked_select(t[i], sm[i]).detach().cpu()
+
+def process_results_to_df(result_string):
+    """
+    接收 save_cur_predict_result 返回的字符串，并将其处理为 Pandas DataFrame。
+
+    参数：
+    result_string (str): 由 save_cur_predict_result 函数返回的字符串，每行是一个序列的结果列表。
+
+    返回：
+    pd.DataFrame: 包含所有序列结果的 Pandas DataFrame。
+    """
+    if not result_string:
+        return pd.DataFrame()
+
+    # 将字符串按行分割，每一行代表一个序列的结果
+    result_lines = result_string.strip().split('\n')
     
-#         cqs = torch.masked_select(q[i], m[i]).detach().cpu()
-#         crs = torch.masked_select(r[i], m[i]).detach().cpu()
+    # 解析每一行的字符串，将其转换为 Python 列表
+    parsed_results = [ast.literal_eval(line) for line in result_lines]
 
-#         cds = torch.masked_select(d[i], sm[i]).detach().cpu()
-
-#         qs, rs, ts, ps, ds = [], [], [], [], []
-#         for cq, cr in zip(cqs.int(), crs.int()):
-#             qs.append(cq.item())
-#             rs.append(cr.item())
-#         for ct, cp, cd in zip(cts.int(), cps, cds.int()):
-#             ts.append(ct.item())
-#             ps.append(cp.item())
-#             ds.append(cd.item())
-#         try:
-#             auc = metrics.roc_auc_score(
-#                 y_true=np.array(ts), y_score=np.array(ps)
-#             )
-            
-#         except Exception as e:
-#             # print(e)
-#             auc = -1
-#         prelabels = [1 if p >= 0.5 else 0 for p in ps]
-#         acc = metrics.accuracy_score(ts, prelabels)
-#         dres[len(dres)] = [qs, rs, ds, ts, ps, prelabels, auc, acc]
-#         results.append(str([qs, rs, ds, ts, ps, prelabels, auc, acc]))
-#     return "\n".join(results)
-
-
-
+    # 定义 DataFrame 的列名
+    columns = ['qs', 'rs', 'ds', 'ts', 'ps', 'prelabels', 'auc', 'acc']
+    
+    # 使用解析后的列表创建一个 DataFrame
+    df = pd.DataFrame(parsed_results, columns=columns)
+    
+    return df
 def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
-    # dres, q, r, qshft, rshft, m, sm, y  # Note: parameters renamed to match call, but q is c, d is cshft, t is rshft
-
-    results = []  # Now this will be list of dicts instead of str
-
+    results = []
+    conf_matrices = [] # 新增的列表，用于存储混淆矩阵
     for i in range(0, t.shape[0]):
-
         cps = torch.masked_select(p[i], sm[i]).detach().cpu()
-
         cts = torch.masked_select(t[i], sm[i]).detach().cpu()
-
+    
         cqs = torch.masked_select(q[i], m[i]).detach().cpu()
-
         crs = torch.masked_select(r[i], m[i]).detach().cpu()
 
         cds = torch.masked_select(d[i], sm[i]).detach().cpu()
 
         qs, rs, ts, ps, ds = [], [], [], [], []
-
         for cq, cr in zip(cqs.int(), crs.int()):
-
             qs.append(cq.item())
-
             rs.append(cr.item())
-
         for ct, cp, cd in zip(cts.int(), cps, cds.int()):
-
             ts.append(ct.item())
-
             ps.append(cp.item())
-
             ds.append(cd.item())
-
         try:
-
             auc = metrics.roc_auc_score(
-
                 y_true=np.array(ts), y_score=np.array(ps)
-
             )
-
         except Exception as e:
-
             # print(e)
-
             auc = -1
-
         prelabels = [1 if p >= 0.5 else 0 for p in ps]
-
         acc = metrics.accuracy_score(ts, prelabels)
-
+        
+        # 计算混淆矩阵
+        cm = metrics.confusion_matrix(y_true=ts, y_pred=prelabels)
+        conf_matrices.append(cm.tolist()) # 将混淆矩阵转换为列表并添加到列表中
+        
         dres[len(dres)] = [qs, rs, ds, ts, ps, prelabels, auc, acc]
+        results.append(str([qs, rs, ds, ts, ps, prelabels, auc, acc]))
+        
+    return "\n".join(results), conf_matrices
 
-        # Append dict instead of str
-        results.append({
-            'qs': qs,
-            'rs': rs,
-            'ds': ds,
-            'ts': ts,
-            'ps': ps,
-            'prelabels': prelabels,
-            'auc': auc,
-            'acc': acc
-        })
 
-    return results
+
+# def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
+#     # dres, q, r, qshft, rshft, m, sm, y  # Note: parameters renamed to match call, but q is c, d is cshft, t is rshft
+
+#     results = []  # Now this will be list of dicts instead of str
+
+#     for i in range(0, t.shape[0]):
+
+#         cps = torch.masked_select(p[i], sm[i]).detach().cpu()
+
+#         cts = torch.masked_select(t[i], sm[i]).detach().cpu()
+
+#         cqs = torch.masked_select(q[i], m[i]).detach().cpu()
+
+#         crs = torch.masked_select(r[i], m[i]).detach().cpu()
+
+#         cds = torch.masked_select(d[i], sm[i]).detach().cpu()
+
+#         qs, rs, ts, ps, ds = [], [], [], [], []
+
+#         for cq, cr in zip(cqs.int(), crs.int()):
+
+#             qs.append(cq.item())
+
+#             rs.append(cr.item())
+
+#         for ct, cp, cd in zip(cts.int(), cps, cds.int()):
+
+#             ts.append(ct.item())
+
+#             ps.append(cp.item())
+
+#             ds.append(cd.item())
+
+#         try:
+
+#             auc = metrics.roc_auc_score(
+
+#                 y_true=np.array(ts), y_score=np.array(ps)
+
+#             )
+
+#         except Exception as e:
+
+#             # print(e)
+
+#             auc = -1
+
+#         prelabels = [1 if p >= 0.5 else 0 for p in ps]
+
+#         acc = metrics.accuracy_score(ts, prelabels)
+
+#         dres[len(dres)] = [qs, rs, ds, ts, ps, prelabels, auc, acc]
+
+#         # Append dict instead of str
+#         results.append({
+#             'qs': qs,
+#             'rs': rs,
+#             'ds': ds,
+#             'ts': ts,
+#             'ps': ps,
+#             'prelabels': prelabels,
+#             'auc': auc,
+#             'acc': acc
+#         })
+
+#     return results
 
 
 def evaluate(model, test_loader, model_name, rel=None, save_path=""):
@@ -319,6 +352,22 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
     # if save_path != "":
     #     pd.to_pickle(dres, save_path+".pkl")
     return auc, acc
+
+def save_question_res(dres, fout, early=False):
+    # print(f"dres: {dres.keys()}")
+    # qidxs, late_trues, late_mean, late_vote, late_all, early_trues, early_preds
+    for i in range(0, len(dres["qidxs"])):
+        row, qidx, qs, cs, lt, lm, lv, la = dres["row"][i], dres["qidxs"][i], dres["questions"][i], dres["concepts"][i], \
+            dres["late_trues"][i], dres["late_mean"][i], dres["late_vote"][i], dres["late_all"][i]
+        conceptps = dres["concept_preds"][i]
+        curres = [row, qidx, qs, cs, conceptps, lt, lm, lv, la]
+        if early:
+            et, ep = dres["early_trues"][i], dres["early_preds"][i]
+            curres = curres + [et, ep]
+        curstr = "\t".join([str(round(s, 4)) if type(s) == type(0.1) or type(s) == np.float32 else str(s) for s in curres])
+        fout.write(curstr + "\n")
+
+
 def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=""):
     eval_student_state_manager = None
     all_batches_results = []
@@ -476,8 +525,8 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
                 y = model(q.long(),c.long(),sd.long(),qd.long(),r.long(),qshft.long(),cshft.long(),sdshft.long(),qdshft.long())
             # print(f"after y: {y.shape}")
             # save predict result
-            result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y)
-            all_batches_results.extend(result)
+            result = process_results_to_df(save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y))
+            all_batches_results.append(result)
             # if save_path != "":
             #     fout.write(result+"\n")
                 # print(f"wrote result!!{save_path}")
@@ -490,7 +539,7 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
             y_trues.append(t.numpy())
             y_scores.append(y.numpy())
             test_mini_index+=1
-        results_df = pd.DataFrame(all_batches_results)
+        results_df = pd.concat(all_batches_results, ignore_index=True)
         ts = np.concatenate(y_trues, axis=0)
         ps = np.concatenate(y_scores, axis=0)
         print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
@@ -694,19 +743,7 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
     save_question_res(dfinal, fout, early)
     return dfinal , drest
 
-def save_question_res(dres, fout, early=False):
-    # print(f"dres: {dres.keys()}")
-    # qidxs, late_trues, late_mean, late_vote, late_all, early_trues, early_preds
-    for i in range(0, len(dres["qidxs"])):
-        row, qidx, qs, cs, lt, lm, lv, la = dres["row"][i], dres["qidxs"][i], dres["questions"][i], dres["concepts"][i], \
-            dres["late_trues"][i], dres["late_mean"][i], dres["late_vote"][i], dres["late_all"][i]
-        conceptps = dres["concept_preds"][i]
-        curres = [row, qidx, qs, cs, conceptps, lt, lm, lv, la]
-        if early:
-            et, ep = dres["early_trues"][i], dres["early_preds"][i]
-            curres = curres + [et, ep]
-        curstr = "\t".join([str(round(s, 4)) if type(s) == type(0.1) or type(s) == np.float32 else str(s) for s in curres])
-        fout.write(curstr + "\n")
+
 from concurrent.futures import ThreadPoolExecutor
 import threading
 
