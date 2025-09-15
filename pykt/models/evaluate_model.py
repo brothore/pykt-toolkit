@@ -69,9 +69,9 @@ def process_results_to_df(result_string):
     df = pd.DataFrame(parsed_results, columns=columns)
     
     return df
-def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
+def    save_cur_predict_result(dres, q, r, d, t, m, sm, p):
+    # dres, q, r, qshft, rshft, m, sm, y
     results = []
-    conf_matrices = [] # 新增的列表，用于存储混淆矩阵
     for i in range(0, t.shape[0]):
         cps = torch.masked_select(p[i], sm[i]).detach().cpu()
         cts = torch.masked_select(t[i], sm[i]).detach().cpu()
@@ -93,20 +93,15 @@ def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
             auc = metrics.roc_auc_score(
                 y_true=np.array(ts), y_score=np.array(ps)
             )
+            
         except Exception as e:
             # print(e)
             auc = -1
         prelabels = [1 if p >= 0.5 else 0 for p in ps]
         acc = metrics.accuracy_score(ts, prelabels)
-        
-        # 计算混淆矩阵
-        cm = metrics.confusion_matrix(y_true=ts, y_pred=prelabels)
-        conf_matrices.append(cm.tolist()) # 将混淆矩阵转换为列表并添加到列表中
-        
         dres[len(dres)] = [qs, rs, ds, ts, ps, prelabels, auc, acc]
         results.append(str([qs, rs, ds, ts, ps, prelabels, auc, acc]))
-        
-    return "\n".join(results), conf_matrices
+    return "\n".join(results)
 
 
 

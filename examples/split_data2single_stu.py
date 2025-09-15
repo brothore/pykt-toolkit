@@ -550,7 +550,7 @@ def main(args):
             if stat_col in row:
                 student_data[stat_col] = row[stat_col]
         
-        filename = f"{args.target_file_type}_top_{i+1}_student{args.if_quelevel}.csv" if args.if_quelevel else f"{args.target_file_type}_top_{i+1}_student.csv"
+        filename = f"{args.target_file_type}_top_{i+1}_student{if_quelevel}.csv" if args.if_quelevel else f"{args.target_file_type}_top_{i+1}_student.csv"
         filepath = os.path.join(output_dir, filename)
         
         student_data.to_csv(filepath, index=False)
@@ -583,7 +583,7 @@ def parse_args():
                        help="Dataset name (default: %(default)s)")
     parser.add_argument("--if_quelevel", type=int, default=0,
                        help="question level")
-    parser.add_argument("--target_file_type", type=str, default="test_sequences",
+    parser.add_argument("--target_file_type", type=str, default="test_window_sequences",
                         help="切割哪个文件,test_question_window_sequences,test_window_sequences")
                         
     # 解析已知参数（只解析 dataset，不解析其他参数）

@@ -7,7 +7,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
 from sklearn import metrics
-
+import math
 emb_type_list = ["qc_merge","qid","qaid","qcid_merge"]
 emb_type_map = {"akt-iekt":"qc_merge",
                 "iekt-qid":"qc_merge",
@@ -45,7 +45,7 @@ class QueEmb(nn.Module):
         self.emb_type = emb_type
         self.emb_path = emb_path
         self.pretrain_dim = pretrain_dim
-
+        # 示例，在 iekt 分支下
         if emb_type in ["qc_merge", "qaid_qc"]:
             self.concept_emb = nn.Parameter(torch.randn(self.num_c, self.emb_size).to(device), requires_grad=True)
             self.que_emb = nn.Embedding(self.num_q, self.emb_size).to(device)  # 移动到 device
@@ -74,9 +74,52 @@ class QueEmb(nn.Module):
             self.que_emb = nn.Embedding(self.num_q, self.emb_size).to(device)
             self.concept_emb = nn.Parameter(torch.randn(self.num_c, self.emb_size).to(device), requires_grad=True)
             self.que_c_linear = nn.Linear(2 * self.emb_size, self.emb_size).to(device)
-        
+        if emb_type == "attn":
+            self.que_emb = nn.Embedding(self.num_q, self.emb_size).to(device)
+            self.concept_emb = nn.Parameter(torch.randn(self.num_c, self.emb_size).to(device), requires_grad=True)
+            self.que_c_linear = nn.Linear(2 * self.emb_size, self.emb_size).to(device)
+            self.att_dropout = nn.Dropout(0.1) 
+            self.att_query_proj = nn.Linear(self.emb_size, self.emb_size)
+            self.att_key_proj = nn.Linear(self.emb_size, self.emb_size)
+            self.att_value_proj = nn.Linear(self.emb_size, self.emb_size)
         self.output_emb_dim = emb_size
-
+    def get_att_skill_emb(self, q, c):
+        q = q.to(self.device)
+        c = c.to(self.device)
+        
+        # 1. 获取问题嵌入作为 query
+        emb_q = self.que_emb(q)  # [b, s, d] where b=batch, s=seq_len, d=emb_size
+        query = emb_q.unsqueeze(2)  # [b, s, 1, d] 为广播 matmul 准备
+        
+        # 2. 获取 KC 嵌入 (类似原代码)
+        concept_emb_cat = torch.cat([torch.zeros(1, self.emb_size).to(self.device), self.concept_emb], dim=0)
+        related_concepts = (c + 1).long()  # [b, s, k] where k=max_kcs
+        kc_embs = concept_emb_cat[related_concepts]  # [b, s, k, d] (keys/values)
+        
+        # 3. 计算注意力分数 (scaled dot-product)
+        # 可选：投影 query 和 key
+        # query = self.att_query_proj(query)  # 如果加了投影
+        # kc_embs_proj = self.att_key_proj(kc_embs)  # 用于 key
+        # attn_scores = torch.matmul(query, kc_embs_proj.transpose(-1, -2)) / math.sqrt(self.emb_size)  # [b, s, 1, k]
+        attn_scores = torch.matmul(query, kc_embs.transpose(-1, -2)) / math.sqrt(self.emb_size)  # [b, s, 1, k]
+        
+        # 4. 掩码 padding (避免 0/-1 影响)
+        mask = (related_concepts == 0).unsqueeze(2)  # [b, s, 1, k] 广播到 query dim
+        attn_scores = attn_scores.masked_fill(mask, -1e9)  # 将 padding 置为极小值
+        
+        # 5. softmax 加权 & dropout
+        attn_weights = F.softmax(attn_scores, dim=-1)  # [b, s, 1, k]
+        attn_weights = self.att_dropout(attn_weights)  # 可选 dropout
+        
+        # 6. 加权求和 (value = kc_embs)
+        att_emb = torch.matmul(attn_weights, kc_embs)  # [b, s, 1, d]
+        att_emb = att_emb.squeeze(2)  # [b, s, d] 去除 dummy dim
+        
+        # 处理无 KC 情况 (类似原代码避免除零，但注意力已掩码)
+        no_kc_mask = (related_concepts.sum(-1) == 0).unsqueeze(-1)  # [b, s, 1]
+        att_emb = torch.where(no_kc_mask, torch.zeros_like(att_emb), att_emb)
+        
+        return att_emb
     def get_avg_skill_emb(self, c):
         # 确保输入 c 在正确的设备上
         c = c.to(self.device)
@@ -150,7 +193,16 @@ class QueEmb(nn.Module):
                 emb_qc.mul(r.unsqueeze(-1).repeat(1, 1, self.emb_size * 2))
             ], dim=-1)
             return xemb, emb_qca, emb_qc, emb_q, emb_c
-
+        elif emb_type == "attn":
+            emb_c = self.get_att_skill_emb(q,c)  # [batch,max_len-1,emb_size]
+            emb_q = self.que_emb(q)  # [batch,max_len-1,emb_size]
+            emb_qc = torch.cat([emb_q, emb_c], dim=-1)  # [batch,max_len-1,2*emb_size]
+            xemb = self.que_c_linear(emb_qc)
+            emb_qca = torch.cat([
+                emb_qc.mul((1 - r).unsqueeze(-1).repeat(1, 1, self.emb_size * 2)),
+                emb_qc.mul(r.unsqueeze(-1).repeat(1, 1, self.emb_size * 2))
+            ], dim=-1)
+            return xemb, emb_qca, emb_qc, emb_q, emb_c
         return xemb
 
 from pykt.utils import set_seed
