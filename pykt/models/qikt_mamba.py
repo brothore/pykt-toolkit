@@ -144,7 +144,7 @@ class QIKTNet(nn.Module):
         return outputs
 
 class QIKT_MAMBA(QueBaseModel):
-    def __init__(self, num_q,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},**kwargs):
+    def __init__(self, num_q,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",**kwargs):
         model_name = "qikt_mamba"
        
         debug_print(f"emb_type is {emb_type}",fuc_name="QIKT")
@@ -152,6 +152,7 @@ class QIKT_MAMBA(QueBaseModel):
         super().__init__(model_name=model_name,emb_type=emb_type,emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,seed=seed)
         self.model = QIKTNet(num_q=num_q,num_c=num_c,emb_size=emb_size,dropout=dropout,emb_type=emb_type,
                                emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,mlp_layer_num=mlp_layer_num,other_config=other_config)
+        self.version = version
        
         self.model = self.model.to(device)
         self.emb_type = self.model.emb_type

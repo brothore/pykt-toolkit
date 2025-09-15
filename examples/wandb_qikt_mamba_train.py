@@ -36,6 +36,7 @@ if __name__ == "__main__":
     parser.add_argument("--output_c_next_lambda", type=float, default=1)
     
     parser.add_argument("--output_mode", type=str, default="an")
+    parser.add_argument("--version", type=str, default="an")
     args = parser.parse_args()
 
     params = vars(args)

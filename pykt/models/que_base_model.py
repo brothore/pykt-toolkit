@@ -82,6 +82,10 @@ class QueEmb(nn.Module):
             self.att_query_proj = nn.Linear(self.emb_size, self.emb_size)
             self.att_key_proj = nn.Linear(self.emb_size, self.emb_size)
             self.att_value_proj = nn.Linear(self.emb_size, self.emb_size)
+
+            self.num_heads = 2  # 小值起步
+            self.head_dim = self.emb_size // self.num_heads
+            self.att_out_proj = nn.Linear(self.emb_size, self.emb_size)  # 融合
         self.output_emb_dim = emb_size
     def get_att_skill_emb(self, q, c):
         q = q.to(self.device)
@@ -89,27 +93,28 @@ class QueEmb(nn.Module):
         
         # 1. 获取问题嵌入作为 query
         emb_q = self.que_emb(q)  # [b, s, d] where b=batch, s=seq_len, d=emb_size
-        query = emb_q.unsqueeze(2)  # [b, s, 1, d] 为广播 matmul 准备
+        query = self.att_query_proj(emb_q).unsqueeze(2)  # [b, s, 1, d] # [b, s, 1, d] 为广播 matmul 准备
         
         # 2. 获取 KC 嵌入 (类似原代码)
         concept_emb_cat = torch.cat([torch.zeros(1, self.emb_size).to(self.device), self.concept_emb], dim=0)
         related_concepts = (c + 1).long()  # [b, s, k] where k=max_kcs
         kc_embs = concept_emb_cat[related_concepts]  # [b, s, k, d] (keys/values)
-        
+        kc_keys = self.att_key_proj(kc_embs)  # [b, s, k, d]
+        kc_values = self.att_value_proj(kc_embs) if hasattr(self, 'att_value_proj') else kc_embs
         # 3. 计算注意力分数 (scaled dot-product)
         # 可选：投影 query 和 key
         # query = self.att_query_proj(query)  # 如果加了投影
         # kc_embs_proj = self.att_key_proj(kc_embs)  # 用于 key
         # attn_scores = torch.matmul(query, kc_embs_proj.transpose(-1, -2)) / math.sqrt(self.emb_size)  # [b, s, 1, k]
-        attn_scores = torch.matmul(query, kc_embs.transpose(-1, -2)) / math.sqrt(self.emb_size)  # [b, s, 1, k]
-        
+        # attn_scores = torch.matmul(query, kc_embs.transpose(-1, -2)) / math.sqrt(self.emb_size)  # [b, s, 1, k]
+        attn_scores = torch.matmul(query, kc_keys.transpose(-1, -2)) / math.sqrt(self.emb_size)
         # 4. 掩码 padding (避免 0/-1 影响)
         mask = (related_concepts == 0).unsqueeze(2)  # [b, s, 1, k] 广播到 query dim
         attn_scores = attn_scores.masked_fill(mask, -1e9)  # 将 padding 置为极小值
         
         # 5. softmax 加权 & dropout
         attn_weights = F.softmax(attn_scores, dim=-1)  # [b, s, 1, k]
-        attn_weights = self.att_dropout(attn_weights)  # 可选 dropout
+        # attn_weights = self.att_dropout(attn_weights)  # 可选 dropout
         
         # 6. 加权求和 (value = kc_embs)
         att_emb = torch.matmul(attn_weights, kc_embs)  # [b, s, 1, d]
