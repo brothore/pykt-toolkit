@@ -78,49 +78,114 @@ class QueEmb(nn.Module):
             self.que_emb = nn.Embedding(self.num_q, self.emb_size).to(device)
             self.concept_emb = nn.Parameter(torch.randn(self.num_c, self.emb_size).to(device), requires_grad=True)
             self.que_c_linear = nn.Linear(2 * self.emb_size, self.emb_size).to(device)
-            self.att_dropout = nn.Dropout(0.1) 
-            self.att_query_proj = nn.Linear(self.emb_size, self.emb_size)
-            self.att_key_proj = nn.Linear(self.emb_size, self.emb_size)
-            self.att_value_proj = nn.Linear(self.emb_size, self.emb_size)
-
-            self.num_heads = 2  # 小值起步
+            
+            # 已有 QKV 投影层 (独立 Linear)
+            self.att_query_proj = nn.Linear(self.emb_size, self.emb_size).to(device)
+            self.att_key_proj = nn.Linear(self.emb_size, self.emb_size).to(device)
+            self.att_value_proj = nn.Linear(self.emb_size, self.emb_size).to(device)
+            
+            # 新增: 多头参数
+            self.num_heads = 1  # 从 2 开始，emb_size 必须可被整除
+            assert self.emb_size % self.num_heads == 0, "emb_size must be divisible by num_heads"
             self.head_dim = self.emb_size // self.num_heads
-            self.att_out_proj = nn.Linear(self.emb_size, self.emb_size)  # 融合
+            self.att_dropout = nn.Dropout(0.1)
+            # 新增: 输出融合投影 (concat heads 后 Linear)
+            self.att_out_proj = nn.Linear(self.emb_size, self.emb_size).to(device)
+            
+            # 可选: 初始化 (Xavier for stability)
+            # nn.init.xavier_uniform_(self.att_query_proj.weight)
+            # nn.init.xavier_uniform_(self.att_key_proj.weight)
+            # nn.init.xavier_uniform_(self.att_value_proj.weight)
+            # nn.init.xavier_uniform_(self.att_out_proj.weight)
+
+
         self.output_emb_dim = emb_size
+    # def get_att_skill_emb(self, q, c):
+    #     q = q.to(self.device)
+    #     c = c.to(self.device)
+        
+    #     # 1. 获取问题嵌入作为 query
+    #     emb_q = self.que_emb(q)  # [b, s, d]
+        
+    #     # 2. 获取 KC 嵌入
+    #     concept_emb_cat = torch.cat([torch.zeros(1, self.emb_size).to(self.device), self.concept_emb], dim=0)
+    #     related_concepts = (c + 1).long()  # [b, s, k]
+    #     kc_embs = concept_emb_cat[related_concepts]  # [b, s, k, d]
+        
+    #     # 新增: 应用 QKV 投影
+    #     query = self.att_query_proj(emb_q)  # [b, s, d] → [b, s, d]
+    #     query = query.unsqueeze(2)  # [b, s, 1, d] 为 matmul 准备
+        
+    #     kc_keys = self.att_key_proj(kc_embs)  # [b, s, k, d] → [b, s, k, d]
+    #     kc_values = self.att_value_proj(kc_embs)  # [b, s, k, d] → [b, s, k, d] (独立于 keys)
+        
+    #     # 3. 计算注意力分数 (scaled dot-product)
+    #     attn_scores = torch.matmul(query, kc_keys.transpose(-1, -2)) / math.sqrt(self.emb_size)  # [b, s, 1, k]
+        
+    #     # 4. 掩码 padding
+    #     mask = (related_concepts == 0).unsqueeze(2)  # [b, s, 1, k]
+    #     attn_scores = attn_scores.masked_fill(mask, -1e9)
+        
+    #     # 5. softmax 加权 & dropout
+    #     attn_weights = F.softmax(attn_scores, dim=-1)  # [b, s, 1, k]
+    #     # attn_weights = self.att_dropout(attn_weights)
+        
+    #     # 6. 加权求和 (现在用 kc_values)
+    #     att_emb = torch.matmul(attn_weights, kc_values)  # [b, s, 1, d]
+    #     att_emb = att_emb.squeeze(2)  # [b, s, d]
+        
+    #     # 处理无 KC 情况
+    #     no_kc_mask = (related_concepts.sum(-1) == 0).unsqueeze(-1)  # [b, s, 1]
+    #     att_emb = torch.where(no_kc_mask, torch.zeros_like(att_emb), att_emb)
+        
+    #     return att_emb
     def get_att_skill_emb(self, q, c):
         q = q.to(self.device)
         c = c.to(self.device)
         
-        # 1. 获取问题嵌入作为 query
-        emb_q = self.que_emb(q)  # [b, s, d] where b=batch, s=seq_len, d=emb_size
-        query = self.att_query_proj(emb_q).unsqueeze(2)  # [b, s, 1, d] # [b, s, 1, d] 为广播 matmul 准备
+        b, s = q.shape  # batch, seq_len (for reshape)
+        k = c.size(-1)  # max_kcs
         
-        # 2. 获取 KC 嵌入 (类似原代码)
+        # 1. 获取问题嵌入作为 query，并投影
+        emb_q = self.que_emb(q)  # [b, s, d]
+        query = self.att_query_proj(emb_q)  # [b, s, d]
+        # Reshape to multi-head: [b, s, h, head_dim] → permute [b, h, s, head_dim] → unsqueeze(3)
+        query = query.view(b, s, self.num_heads, self.head_dim).permute(0, 2, 1, 3)  # [b, h, s, head_dim]
+        query = query.unsqueeze(3)  # [b, h, s, 1, head_dim]
+        
+        # 2. 获取 KC 嵌入，并投影 K/V
         concept_emb_cat = torch.cat([torch.zeros(1, self.emb_size).to(self.device), self.concept_emb], dim=0)
-        related_concepts = (c + 1).long()  # [b, s, k] where k=max_kcs
-        kc_embs = concept_emb_cat[related_concepts]  # [b, s, k, d] (keys/values)
+        related_concepts = (c + 1).long()  # [b, s, k]
+        kc_embs = concept_emb_cat[related_concepts]  # [b, s, k, d]
+        
         kc_keys = self.att_key_proj(kc_embs)  # [b, s, k, d]
-        kc_values = self.att_value_proj(kc_embs) if hasattr(self, 'att_value_proj') else kc_embs
-        # 3. 计算注意力分数 (scaled dot-product)
-        # 可选：投影 query 和 key
-        # query = self.att_query_proj(query)  # 如果加了投影
-        # kc_embs_proj = self.att_key_proj(kc_embs)  # 用于 key
-        # attn_scores = torch.matmul(query, kc_embs_proj.transpose(-1, -2)) / math.sqrt(self.emb_size)  # [b, s, 1, k]
-        # attn_scores = torch.matmul(query, kc_embs.transpose(-1, -2)) / math.sqrt(self.emb_size)  # [b, s, 1, k]
-        attn_scores = torch.matmul(query, kc_keys.transpose(-1, -2)) / math.sqrt(self.emb_size)
-        # 4. 掩码 padding (避免 0/-1 影响)
-        mask = (related_concepts == 0).unsqueeze(2)  # [b, s, 1, k] 广播到 query dim
-        attn_scores = attn_scores.masked_fill(mask, -1e9)  # 将 padding 置为极小值
+        kc_values = self.att_value_proj(kc_embs)  # [b, s, k, d]
         
-        # 5. softmax 加权 & dropout
-        attn_weights = F.softmax(attn_scores, dim=-1)  # [b, s, 1, k]
-        # attn_weights = self.att_dropout(attn_weights)  # 可选 dropout
+        # Reshape to multi-head: [b, s, k, h, head_dim] → permute [b, h, s, k, head_dim]
+        kc_keys = kc_keys.view(b, s, k, self.num_heads, self.head_dim).permute(0, 3, 1, 2, 4)  # [b, h, s, k, head_dim]
+        kc_values = kc_values.view(b, s, k, self.num_heads, self.head_dim).permute(0, 3, 1, 2, 4)  # [b, h, s, k, head_dim]
         
-        # 6. 加权求和 (value = kc_embs)
-        att_emb = torch.matmul(attn_weights, kc_embs)  # [b, s, 1, d]
-        att_emb = att_emb.squeeze(2)  # [b, s, d] 去除 dummy dim
+        # 3. 计算注意力分数 (per head, scaled by head_dim)
+        attn_scores = torch.matmul(query, kc_keys.transpose(-1, -2)) / math.sqrt(self.head_dim)  # [b, h, s, 1, k]
         
-        # 处理无 KC 情况 (类似原代码避免除零，但注意力已掩码)
+        # 4. 掩码 padding (广播到 heads dim)
+        mask = (related_concepts == 0).unsqueeze(1).unsqueeze(3)  # [b, 1, s, k] → [b, 1, s, 1, k] for broadcast
+        attn_scores = attn_scores.masked_fill(mask.expand(-1, self.num_heads, -1, -1, -1), -1e9)  # [b, h, s, 1, k]
+        
+        # 5. softmax 加权 & dropout (per head)
+        attn_weights = F.softmax(attn_scores, dim=-1)  # [b, h, s, 1, k]
+        attn_weights = self.att_dropout(attn_weights)
+        
+        # 6. 加权求和 (per head)
+        att_emb = torch.matmul(attn_weights, kc_values)  # [b, h, s, 1, head_dim]
+        att_emb = att_emb.squeeze(3)  # [b, h, s, head_dim]
+        
+        # 融合 heads: [b, h, s, head_dim] → [b, s, h*head_dim] → [b, s, d]
+        att_emb = att_emb.permute(0, 2, 1, 3).contiguous()  # [b, s, h, head_dim]
+        att_emb = att_emb.view(b, s, self.emb_size)  # [b, s, d]
+        att_emb = self.att_out_proj(att_emb)  # [b, s, d]
+        
+        # 处理无 KC 情况 (广播到 d)
         no_kc_mask = (related_concepts.sum(-1) == 0).unsqueeze(-1)  # [b, s, 1]
         att_emb = torch.where(no_kc_mask, torch.zeros_like(att_emb), att_emb)
         
@@ -243,6 +308,8 @@ class QueBaseModel(nn.Module):
             elif loss == "mse":
                 loss_func = F.mse_loss
             elif loss == "mae":
+                loss_func = F.l1_loss
+            elif loss == "focal":
                 loss_func = F.l1_loss
             else:
                 raise NotImplementedError

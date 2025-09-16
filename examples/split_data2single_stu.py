@@ -593,10 +593,14 @@ def parse_args():
         data_config = json.load(f)
     # 获取指定数据集的dpath
     if_quelevel = "_quelevel" if args.if_quelevel else "" 
-    dataset_dpath = data_config[args.dataset]["dpath"] if args.dataset not in ["peiyou"] else (data_config[args.dataset]["dpath_question"] if if_quelevel else data_config[args.dataset]["dpath"])
+    dataset_dpath = data_config[args.dataset]["dpath"]
     # 然后定义其他参数，使用 args.dataset 作为默认路径的一部分
     # 修改默认输入输出路径
-    default_input = f"{dataset_dpath}/{args.target_file_type}{if_quelevel}.csv" if if_quelevel else f"{dataset_dpath}/{args.target_file_type}.csv"
+    if args.dataset not in ["peiyou"]:
+        default_input = f"{dataset_dpath}/{args.target_file_type}{if_quelevel}.csv" if if_quelevel else f"{dataset_dpath}/{args.target_file_type}.csv"
+    else:
+        default_input = f"{dataset_dpath}/question_level/{args.target_file_type}{if_quelevel}.csv" if if_quelevel else f"{dataset_dpath}/kc_level/{args.target_file_type}.csv"
+
     default_output = f"{dataset_dpath}/"
 
     

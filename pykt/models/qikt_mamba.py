@@ -11,6 +11,35 @@ from torch.utils.data import DataLoader
 from .loss import Loss
 from scipy.special import softmax
 from mamba_ssm import Mamba
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=0.25, gamma=2.0, reduction='mean'):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, inputs, targets):
+        # inputs: 模型输出的 logits（未经过 sigmoid）
+        # targets: 真实标签（0 或 1）
+        p = torch.sigmoid(inputs)  # 转换为概率
+        ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
+        p_t = p * targets + (1 - p) * (1 - targets)  # 正确类别的概率
+        loss = ce_loss * ((1 - p_t) ** self.gamma)  # Focal Loss 的调制项
+
+        if self.alpha >= 0:
+            alpha_t = self.alpha * targets + (1 - self.alpha) * (1 - targets)
+            loss = alpha_t * loss  # 加入平衡因子
+
+        if self.reduction == 'mean':
+            return loss.mean()
+        elif self.reduction == 'sum':
+            return loss.sum()
+        else:
+            return loss
 class MLP(nn.Module):
     '''
     classifier decoder implemented with mlp
@@ -157,13 +186,14 @@ class QIKT_MAMBA(QueBaseModel):
         self.model = self.model.to(device)
         self.emb_type = self.model.emb_type
         self.loss_func = self._get_loss_func("binary_crossentropy")
+        # self.loss_func = FocalLoss(alpha=0.25, gamma=2.0, reduction='mean')
         self.eval_result = {}
     
 
 
     def train_one_step(self,data,process=True,return_all=False):
         outputs,data_new = self.predict_one_step(data,return_details=True,process=process)
-        # all 
+        # all -
         loss_q_all = self.get_loss(outputs['y_question_all'],data_new['rshft'],data_new['sm'])
         loss_c_all = self.get_loss(outputs['y_concept_all'],data_new['rshft'],data_new['sm'])
         # next
