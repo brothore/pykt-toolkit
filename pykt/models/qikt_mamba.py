@@ -15,31 +15,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class FocalLoss(nn.Module):
-    def __init__(self, alpha=0.25, gamma=2.0, reduction='mean'):
-        super(FocalLoss, self).__init__()
-        self.alpha = alpha
-        self.gamma = gamma
-        self.reduction = reduction
-
-    def forward(self, inputs, targets):
-        # inputs: 模型输出的 logits（未经过 sigmoid）
-        # targets: 真实标签（0 或 1）
-        p = torch.sigmoid(inputs)  # 转换为概率
-        ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
-        p_t = p * targets + (1 - p) * (1 - targets)  # 正确类别的概率
-        loss = ce_loss * ((1 - p_t) ** self.gamma)  # Focal Loss 的调制项
-
-        if self.alpha >= 0:
-            alpha_t = self.alpha * targets + (1 - self.alpha) * (1 - targets)
-            loss = alpha_t * loss  # 加入平衡因子
-
-        if self.reduction == 'mean':
-            return loss.mean()
-        elif self.reduction == 'sum':
-            return loss.sum()
-        else:
-            return loss
 class MLP(nn.Module):
     '''
     classifier decoder implemented with mlp
@@ -85,7 +60,7 @@ def get_outputs(self, emb_qc_shift, h, data, add_name="", model_type='question')
     return outputs
 
 class QIKTNet(nn.Module):
-    def __init__(self, num_q,num_c,emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',mlp_layer_num=1,other_config={}):
+    def __init__(self, num_q,num_c,emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',mlp_layer_num=1,other_config={},num_attn_head=2,version="v0"):
         super().__init__()
         self.model_name = "qikt_mamba"
         self.num_q = num_q
@@ -97,12 +72,12 @@ class QIKTNet(nn.Module):
         self.other_config = other_config
         self.output_mode = self.other_config.get('output_mode','an')
 
-
+        self.version = version
         self.emb_type = emb_type
       
 
         self.que_emb = QueEmb(num_q=num_q,num_c=num_c,emb_size=emb_size,emb_type=self.emb_type,model_name=self.model_name,device=device,
-                             emb_path=emb_path,pretrain_dim=pretrain_dim)
+                             emb_path=emb_path,pretrain_dim=pretrain_dim,num_attn_head=num_attn_head)
        
         self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size)
         self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
@@ -173,16 +148,16 @@ class QIKTNet(nn.Module):
         return outputs
 
 class QIKT_MAMBA(QueBaseModel):
-    def __init__(self, num_q,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",**kwargs):
+    def __init__(self, num_q,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",num_attn_head=2,**kwargs):
         model_name = "qikt_mamba"
        
         debug_print(f"emb_type is {emb_type}",fuc_name="QIKT")
 
         super().__init__(model_name=model_name,emb_type=emb_type,emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,seed=seed)
         self.model = QIKTNet(num_q=num_q,num_c=num_c,emb_size=emb_size,dropout=dropout,emb_type=emb_type,
-                               emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,mlp_layer_num=mlp_layer_num,other_config=other_config)
+                               emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,mlp_layer_num=mlp_layer_num,other_config=other_config,num_attn_head=num_attn_head,version=version)
         self.version = version
-       
+        self.num_attn_head = num_attn_head
         self.model = self.model.to(device)
         self.emb_type = self.model.emb_type
         self.loss_func = self._get_loss_func("binary_crossentropy")
@@ -213,7 +188,46 @@ class QIKT_MAMBA(QueBaseModel):
 
         
         if self.model.output_mode=="an_irt":
-            loss = loss_kt  + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all+ loss_c_next_lambda* loss_c_next
+            
+
+            if self.version == "all":
+                # 完整版本 - 所有损失项都保留
+                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next
+            elif self.version == "no_kt":
+                # 消融知识迁移损失
+                loss = loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next
+            elif self.version == "no_q_all":
+                # 消融所有问题损失
+                loss = loss_kt + loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next
+            elif self.version == "no_c_all":
+                # 消融所有上下文损失
+                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_next_lambda * loss_c_next
+            elif self.version == "no_c_next":
+                # 消融下一上下文损失
+                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all
+            elif self.version == "kt_only":
+                # 仅保留知识迁移损失
+                loss = loss_kt
+            elif self.version == "q_only":
+                # 仅保留问题相关损失
+                loss = loss_q_all_lambda * loss_q_all
+            elif self.version == "c_only":
+                # 仅保留上下文相关损失
+                loss = loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next
+            elif self.version == "no_next_context":
+                # 消融下一上下文但保留当前上下文
+                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all
+            elif self.version == "minimal":
+                # 最小组合 - 只保留知识迁移和问题损失
+                loss = loss_kt + loss_q_all_lambda * loss_q_all
+            elif self.version == "auto_uncertainty":
+                loss_func = UncertaintyWeightedLoss(num_tasks=4)
+                loss = loss_func([loss_kt, loss_q_all, loss_c_all, loss_c_next])
+            else:
+                # 默认完整版本
+                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next
+
+
         else:
             loss = loss_kt  + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda* loss_c_next + loss_q_next_lambda*loss_q_next
         # print(f"loss={loss:.3f},loss_kt={loss_kt:.3f},loss_q_all={loss_q_all:.3f},loss_c_all={loss_c_all:.3f},loss_q_next={loss_q_next:.3f},loss_c_next={loss_c_next:.3f}")
@@ -281,7 +295,7 @@ class QIKT_MAMBA(QueBaseModel):
        
         if self.model.output_mode=="an_irt":
             def sigmoid_inverse(x,epsilon=1e-8):
-                return torch.log(x/(1-x+epsilon)+epsilon)
+                return torch.log(x/(1-x+epsilon)+epsilon) if "no_sigmoid_inverse" not in self.version else x
             y = sigmoid_inverse(outputs['y_question_all'])*output_q_all_lambda + sigmoid_inverse(outputs['y_concept_all'])*output_c_all_lambda + sigmoid_inverse(outputs['y_concept_next'])*output_c_next_lambda
             y = torch.sigmoid(y)
         else:
@@ -294,3 +308,15 @@ class QIKT_MAMBA(QueBaseModel):
             return outputs,data_new
         else:
             return y
+
+class UncertaintyWeightedLoss(nn.Module):
+    def __init__(self, num_tasks):
+        super().__init__()
+        self.log_vars = nn.Parameter(torch.zeros(num_tasks))  # 可学习参数
+
+    def forward(self, losses):
+        total_loss = 0
+        for i, loss in enumerate(losses):
+            precision = torch.exp(-self.log_vars[i])
+            total_loss += precision * loss + 0.5 * self.log_vars[i]
+        return total_loss

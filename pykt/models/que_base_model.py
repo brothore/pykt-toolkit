@@ -20,7 +20,7 @@ emb_type_map = {"akt-iekt":"qc_merge",
   
 
 class QueEmb(nn.Module):
-    def __init__(self, num_q, num_c, emb_size, model_name, device='cpu', emb_type='qid', emb_path="", pretrain_dim=768):
+    def __init__(self, num_q, num_c, emb_size, model_name, device='cpu', emb_type='qid', emb_path="", pretrain_dim=768,num_attn_head=2):
         """_summary_
 
         Args:
@@ -38,6 +38,7 @@ class QueEmb(nn.Module):
         self.num_q = num_q
         self.num_c = num_c
         self.emb_size = emb_size
+
         tmp_emb_type = f"{model_name}-{emb_type}"
         emb_type = emb_type_map.get(tmp_emb_type, tmp_emb_type.replace(f"{model_name}-", ""))
         print(f"emb_type is {emb_type}")
@@ -85,7 +86,7 @@ class QueEmb(nn.Module):
             self.att_value_proj = nn.Linear(self.emb_size, self.emb_size).to(device)
             
             # 新增: 多头参数
-            self.num_heads = 1  # 从 2 开始，emb_size 必须可被整除
+            self.num_heads = int(num_attn_head)  # 从 2 开始，emb_size 必须可被整除
             assert self.emb_size % self.num_heads == 0, "emb_size must be divisible by num_heads"
             self.head_dim = self.emb_size // self.num_heads
             self.att_dropout = nn.Dropout(0.1)
@@ -100,45 +101,7 @@ class QueEmb(nn.Module):
 
 
         self.output_emb_dim = emb_size
-    # def get_att_skill_emb(self, q, c):
-    #     q = q.to(self.device)
-    #     c = c.to(self.device)
-        
-    #     # 1. 获取问题嵌入作为 query
-    #     emb_q = self.que_emb(q)  # [b, s, d]
-        
-    #     # 2. 获取 KC 嵌入
-    #     concept_emb_cat = torch.cat([torch.zeros(1, self.emb_size).to(self.device), self.concept_emb], dim=0)
-    #     related_concepts = (c + 1).long()  # [b, s, k]
-    #     kc_embs = concept_emb_cat[related_concepts]  # [b, s, k, d]
-        
-    #     # 新增: 应用 QKV 投影
-    #     query = self.att_query_proj(emb_q)  # [b, s, d] → [b, s, d]
-    #     query = query.unsqueeze(2)  # [b, s, 1, d] 为 matmul 准备
-        
-    #     kc_keys = self.att_key_proj(kc_embs)  # [b, s, k, d] → [b, s, k, d]
-    #     kc_values = self.att_value_proj(kc_embs)  # [b, s, k, d] → [b, s, k, d] (独立于 keys)
-        
-    #     # 3. 计算注意力分数 (scaled dot-product)
-    #     attn_scores = torch.matmul(query, kc_keys.transpose(-1, -2)) / math.sqrt(self.emb_size)  # [b, s, 1, k]
-        
-    #     # 4. 掩码 padding
-    #     mask = (related_concepts == 0).unsqueeze(2)  # [b, s, 1, k]
-    #     attn_scores = attn_scores.masked_fill(mask, -1e9)
-        
-    #     # 5. softmax 加权 & dropout
-    #     attn_weights = F.softmax(attn_scores, dim=-1)  # [b, s, 1, k]
-    #     # attn_weights = self.att_dropout(attn_weights)
-        
-    #     # 6. 加权求和 (现在用 kc_values)
-    #     att_emb = torch.matmul(attn_weights, kc_values)  # [b, s, 1, d]
-    #     att_emb = att_emb.squeeze(2)  # [b, s, d]
-        
-    #     # 处理无 KC 情况
-    #     no_kc_mask = (related_concepts.sum(-1) == 0).unsqueeze(-1)  # [b, s, 1]
-    #     att_emb = torch.where(no_kc_mask, torch.zeros_like(att_emb), att_emb)
-        
-    #     return att_emb
+    
     def get_att_skill_emb(self, q, c):
         q = q.to(self.device)
         c = c.to(self.device)

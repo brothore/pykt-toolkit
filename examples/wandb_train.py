@@ -38,7 +38,7 @@ def run_prediction(predict_mode, save_dir):
             if not os.path.exists(script_path):
                 print(f"Warning: {script_path} not found")
                 return False
-            cmd = [sys.executable, script_path, "--save_dir", save_dir]
+            cmd = [sys.executable, script_path, "--save_dir", save_dir ,"--bz", "64"]
             
         elif predict_mode == 2:
             script_path = "/root/autodl-tmp/pykt-toolkit/examples/wandb_predict.py"

@@ -34,6 +34,7 @@ if __name__ == "__main__":
     parser.add_argument("--output_c_all_lambda", type=float, default=1)
     parser.add_argument("--output_q_next_lambda", type=float, default=0)
     parser.add_argument("--output_c_next_lambda", type=float, default=1)
+    parser.add_argument("--num_attn_head", type=float, default=1)
     
     parser.add_argument("--output_mode", type=str, default="an")
     parser.add_argument("--version", type=str, default="an")

@@ -583,7 +583,7 @@ def parse_args():
                        help="Dataset name (default: %(default)s)")
     parser.add_argument("--if_quelevel", type=int, default=0,
                        help="question level")
-    parser.add_argument("--target_file_type", type=str, default="test_window_sequences",
+    parser.add_argument("--target_file_type", type=str, default="test_sequences",
                         help="切割哪个文件,test_question_window_sequences,test_window_sequences")
                         
     # 解析已知参数（只解析 dataset，不解析其他参数）
@@ -596,10 +596,8 @@ def parse_args():
     dataset_dpath = data_config[args.dataset]["dpath"]
     # 然后定义其他参数，使用 args.dataset 作为默认路径的一部分
     # 修改默认输入输出路径
-    if args.dataset not in ["peiyou"]:
-        default_input = f"{dataset_dpath}/{args.target_file_type}{if_quelevel}.csv" if if_quelevel else f"{dataset_dpath}/{args.target_file_type}.csv"
-    else:
-        default_input = f"{dataset_dpath}/question_level/{args.target_file_type}{if_quelevel}.csv" if if_quelevel else f"{dataset_dpath}/kc_level/{args.target_file_type}.csv"
+
+    default_input = f"{dataset_dpath}/{args.target_file_type}{if_quelevel}.csv" if if_quelevel else f"{dataset_dpath}/{args.target_file_type}.csv"
 
     default_output = f"{dataset_dpath}/"
 
