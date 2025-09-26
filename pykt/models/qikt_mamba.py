@@ -205,6 +205,8 @@ class QIKT_MAMBA(QueBaseModel):
             elif self.version == "no_c_next":
                 # 消融下一上下文损失
                 loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all
+            elif self.version == "no_c":
+                loss = loss_kt + loss_q_all_lambda * loss_q_all
             elif self.version == "kt_only":
                 # 仅保留知识迁移损失
                 loss = loss_kt
