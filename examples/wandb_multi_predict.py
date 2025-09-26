@@ -4,6 +4,8 @@ import json
 import copy
 import torch
 import pandas as pd
+from retrying import retry  # 添加retrying模块
+import traceback
 # from pykt.config import ERR_PATH, stu_pk
 from pykt.models import evaluate, evaluate_question, load_model,evaluate_return_results
 from pykt.datasets import init_test_datasets,init_test_datasets_multi_stu

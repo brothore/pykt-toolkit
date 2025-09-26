@@ -183,7 +183,7 @@ class QIKTNet(nn.Module):
         else:
             #原版
             que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
-        print(f"[DEBUG] que_h.shape: {que_h.shape} (type: {type(que_h.shape)})")
+        # print(f"[DEBUG] que_h.shape: {que_h.shape} (type: {type(que_h.shape)})")
         que_outputs = get_outputs(self, emb_qc_shift, que_h, data, add_name="", model_type="question")
         outputs = que_outputs
 
