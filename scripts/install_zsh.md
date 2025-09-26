@@ -21,7 +21,7 @@ git clone https://github.com/agkozak/zsh-z ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/pl
 4. 配置插件
 编辑 ~/.zshrc文件：
 
-nano ~/.zshrc
+vi ~/.zshrc
 找到 plugins=(git)这一行，修改为：
 
 plugins=(
@@ -31,6 +31,9 @@ plugins=(
   zsh-history-substring-search
   zsh-z
 )
+
+source ~/.zshrc
+
 5. 安装主题 (Powerlevel10k)
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 
