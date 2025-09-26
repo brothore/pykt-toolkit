@@ -79,14 +79,50 @@ class QIKTNet(nn.Module):
         self.que_emb = QueEmb(num_q=num_q,num_c=num_c,emb_size=emb_size,emb_type=self.emb_type,model_name=self.model_name,device=device,
                              emb_path=emb_path,pretrain_dim=pretrain_dim,num_attn_head=num_attn_head)
        
-        self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size)
-        self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
-        # self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, batch_first=True)
-        # self.concept_lstm_layer = nn.LSTM(self.emb_size*2, self.hidden_size, batch_first=True)
-        # 新增：投影层，将 Mamba 输出投影到 hidden_size
-        self.que_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 1024 -> 256
-        self.concept_proj = nn.Linear(self.emb_size*2, self.hidden_size)  # 512 -> 256
+        if self.version == "mamba":
+            pass
+            self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
+            self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
+            self.que_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 1024 -> 256
+            self.concept_proj = nn.Linear(self.emb_size*2, self.hidden_size)  # 512 -> 256
+        elif self.version in ["encoder",'decoder','full']:
+            #transformer
+            self.que_lstm_layer = TransformerBranch(emb_size_in=self.emb_size*4, emb_size_out=self.hidden_size,mode=self.version, causal=True)
+            self.concept_lstm_layer = TransformerBranch(emb_size_in=self.emb_size*2, emb_size_out=self.hidden_size,mode=self.version, causal=True)
+        elif self.version == "unzip_lstm":
+            self.four2two = nn.Linear(self.emb_size*4, self.emb_size*2)
+            self.que_lstm_layer = nn.LSTM(self.emb_size*2, self.hidden_size, batch_first=True)
+            self.concept_lstm_layer = nn.LSTM(self.emb_size*2, self.hidden_size, batch_first=True)
+        elif self.version == "zip_lstm":
+            # 压缩lstm
+            self.four2two = nn.Linear(self.emb_size*2, self.emb_size*4)
+            self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, batch_first=True)
+            self.concept_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, batch_first=True)
+        elif self.version == "public_lstm":
+            #共用lstm
+            self.four2two = nn.Linear(self.emb_size*2, self.emb_size*4)
+            self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, num_layers=2, batch_first=True)
+            self.concept_lstm_layer = self.que_lstm_layer
+        elif self.version == "public_mamba":
+            #共用lstm
+            self.four2two = nn.Linear(self.emb_size*2, self.emb_size*4)
+            self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
+            self.que_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 1024 -> 256
+            self.concept_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 512 -> 256
+            self.concept_lstm_layer = self.que_lstm_layer
+        elif self.version == "public_lstm_large":
+            #共用lstm
+            self.four2two = nn.Linear(self.emb_size*2, self.emb_size*4)
+            self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, num_layers=2, batch_first=True)
+            self.concept_lstm_layer = self.que_lstm_layer
+        else:
+            #原版
+            self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, batch_first=True)
+            self.concept_lstm_layer = nn.LSTM(self.emb_size*2, self.hidden_size, batch_first=True)
+
         self.dropout_layer = nn.Dropout(dropout)
+        
+
         
 
         self.out_question_next = MLP(self.mlp_layer_num,self.hidden_size*3,1,dropout)
@@ -96,7 +132,7 @@ class QIKTNet(nn.Module):
         self.out_concept_all = MLP(self.mlp_layer_num,self.hidden_size,num_c,dropout)
 
         self.que_disc = MLP(self.mlp_layer_num,self.hidden_size*2,1,dropout)
-
+        
         
 
     def get_avg_fusion_concepts(self,y_concept,cshft):
@@ -118,14 +154,35 @@ class QIKTNet(nn.Module):
         if data is not None:
             data = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in data.items()}
 
-        _, emb_qca, emb_qc, _, emb_c = self.que_emb(q, c, r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
+        _, emb_qca, emb_qc, emb_q, emb_c = self.que_emb(q, c, r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
         
         emb_qc_shift = emb_qc[:, 1:, :]
         emb_qca_current = emb_qca[:, :-1, :]
         # question model
-        que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current))
-        que_h = self.que_proj(que_h)
-        # que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
+        if self.version == "mamba":
+            #mamba
+            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current))
+            que_h = self.que_proj(que_h)
+        elif self.version in ["encoder",'decoder','full']:
+            #transformer
+            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current))
+        elif self.version == "zip_lstm":
+            # 压缩lstm
+            que_h = self.dropout_layer(self.que_lstm_layer((emb_qca_current))[0])
+        elif self.version == "unzip_lstm":
+            # 压缩lstm
+            que_h = self.dropout_layer(self.que_lstm_layer(self.four2two(emb_qca_current))[0])
+        elif self.version == "public_lstm":
+
+            #共用lstm
+            que_h = self.dropout_layer(self.que_lstm_layer((emb_qca_current))[0])
+        elif self.version == "public_mamba":
+
+            que_h = self.dropout_layer(self.que_lstm_layer((emb_qca_current)))
+            que_h = self.que_proj(que_h)
+        else:
+            #原版
+            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
         print(f"[DEBUG] que_h.shape: {que_h.shape} (type: {type(que_h.shape)})")
         que_outputs = get_outputs(self, emb_qc_shift, que_h, data, add_name="", model_type="question")
         outputs = que_outputs
@@ -137,10 +194,32 @@ class QIKTNet(nn.Module):
         ], dim=-1)
         
         emb_ca_current = emb_ca[:, :-1, :]
-        # concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
-        concept_h = self.concept_lstm_layer(emb_ca_current)  # [32, 199, 512]
-        concept_h = self.concept_proj(concept_h)  # [32, 199, 256]
-        concept_h = self.dropout_layer(concept_h)
+        if self.version == "mamba":
+            #mamba
+            concept_h = self.concept_lstm_layer(emb_ca_current)  # [32, 199, 512]
+            concept_h = self.concept_proj(concept_h)  # [32, 199, 256]
+            concept_h = self.dropout_layer(concept_h)
+        elif self.version in ["encoder",'decoder','full']:
+            #transformer
+            concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current))
+        elif self.version == "zip_lstm":
+            # 压缩lstm
+            concept_h = self.dropout_layer(self.concept_lstm_layer(self.four2two(emb_ca_current))[0])
+        elif self.version == "unzip_lstm":
+            # 压缩lstm
+            concept_h = self.dropout_layer(self.concept_lstm_layer((emb_ca_current))[0])
+        elif self.version == "public_lstm":
+            #共用lstm
+            concept_h = self.dropout_layer(self.concept_lstm_layer(self.four2two(emb_ca_current))[0])
+
+        elif self.version == "public_mamba":
+            #共用mamba
+            concept_h = self.concept_lstm_layer(self.four2two(emb_ca_current))  # [32, 199, 512]
+            concept_h = self.concept_proj(concept_h)  # [32, 199, 256]
+            concept_h = self.dropout_layer(concept_h)
+        else:
+            #原版
+            concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
         concept_outputs = get_outputs(self, emb_qc_shift, concept_h, data, add_name="", model_type="concept")
         outputs['y_concept_all'] = concept_outputs['y_concept_all']
         outputs['y_concept_next'] = concept_outputs['y_concept_next']

@@ -12,6 +12,18 @@ que_type_models = config_module.que_type_models
 import traceback  # 在文件顶部添加导入
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:2'
+# 添加CUDA内存错误重试装饰器
+def retry_if_cuda_oom(exception):
+    """检查是否为CUDA内存不足错误"""
+    return isinstance(exception, torch.cuda.OutOfMemoryError)
+
+# 重试装饰器配置
+retry_decorator = retry(
+    retry_on_exception=retry_if_cuda_oom,
+    wait_fixed=300000,  # 5分钟 = 300,000毫秒
+    stop_max_attempt_number=36,  # 最多重试3次
+    wrap_exception=True
+)
 def parse_dataset_name(save_dir):
     """从save_dir参数中解析数据集名称"""
     # 获取最后一个目录（模型目录）
@@ -194,7 +206,7 @@ def predict_interval_data(model, data_config, model_name, fusion_type, save_dir)
             
     return interval_results
 
-    
+@retry_decorator  # 添加这行装饰器
 def evaluate_single_student(params, student_id,save_reult):
     """评估单个学生的函数"""
     print(f"\n开始评估学生 {student_id}")
@@ -272,8 +284,13 @@ def evaluate_single_student(params, student_id,save_reult):
 
     print(f"学生 {student_id}: 开始预测模型 {model_name}, embtype: {emb_type}, dataset_name: {dataset_name}")
 
-    model = load_model(model_name, model_config, data_config, emb_type, save_dir)
-
+    try:
+        model = load_model(model_name, model_config, data_config, emb_type, save_dir)
+    except torch.cuda.OutOfMemoryError as oom_error:
+        print(f"CUDA内存不足，清理缓存并等待重试...")
+        torch.cuda.empty_cache()
+        time.sleep(300)  # 等待5分钟
+        raise oom_error  # 重新抛出异常，由重试装饰器处理
     save_test_path = os.path.join(save_dir, f"{model.emb_type}_test_predictions_student_{student_id}.txt")
     # 在评估前提取学生统计信息
     stats_file_path = os.path.join(data_config["dpath"], predict_files)
@@ -402,12 +419,27 @@ def main(params):
     print(f"开始批量评估，共 {total_students} 个学生，从学生 {start_student} 开始")
     
     for student_id in range(start_student, total_students + 1):
-        # 评估单个学生
-        result,student_df = evaluate_single_student(params, student_id,save_reult=params.get('save_reult',0))
-        all_results.append(result)
-        all_student_dfs.append(student_df)
-        # print(f"[DEBUG] student_df: {student_df} (type: {type(student_df)})")
-        print(f"完成学生 {student_id} 的评估 ({student_id - start_student + 1}/{total_students - start_student + 1})")
+        try:
+            # 评估单个学生
+            result, student_df = evaluate_single_student(params, student_id, save_reult=params.get('save_reult',0))
+            all_results.append(result)
+            all_student_dfs.append(student_df)
+            
+            # 每个学生评估后清理GPU内存
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                
+        except Exception as e:
+            print(f"评估学生 {student_id} 时发生错误: {str(e)}")
+            # 如果是CUDA内存错误，清理后继续下一个学生
+            if "CUDA out of memory" in str(e):
+                print(f"跳过学生 {student_id}，继续下一个...")
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                continue
+            else:
+                # 其他错误可能需要处理或抛出
+                raise e
     def all_none(lst):
         return all(item is None for item in lst)
 
