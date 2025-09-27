@@ -203,8 +203,8 @@ def predict_interval_data(model, data_config, model_name, fusion_type, save_dir)
 def evaluate_single_student(params, student_id,save_reult):
     """评估单个学生的函数"""
     print(f"\n开始评估学生 {student_id}")
-    target_file_type = params["target_file_type"]
-    
+    target_file_type = params["target_file_type"] if save_reult == 0 else "test_sequences"
+    use_saved_result =  params["use_saved_result"] if save_reult == 0 else 0
     
     if params['use_wandb'] == 1:
         import wandb
@@ -218,7 +218,7 @@ def evaluate_single_student(params, student_id,save_reult):
     
     # 检查是否已存在预测结果
     results_path = os.path.join(save_dir, "evaluate_results_all_stu.jsonl")
-    if os.path.exists(results_path) and params["use_saved_result"] == 1:
+    if os.path.exists(results_path) and  use_saved_result == 1:
         try:
             with open(results_path, "r", encoding='utf-8') as fin:
                 for line in fin:
@@ -268,13 +268,14 @@ def evaluate_single_student(params, student_id,save_reult):
             data_config["num_at"] = config["data_config"]["num_at"]
             data_config["num_it"] = config["data_config"]["num_it"]
     predict_files = f"{target_file_type}_top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"{target_file_type}_top_{student_id}_student.csv"
-
+    load_flags=[0,1,0,0] if save_reult == 1 or model_name in que_type_models else [0,0,0,1]
+    # print(f"[DEBUG] load_flags: {load_flags} (type: {type(load_flags)})")
     if model_name not in ["dimkt"]:
-        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[0,1,0,1])
+        test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=load_flags)
     else:
         diff_level = trained_params["difficult_levels"]
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size, diff_level=diff_level)
-
+    # print(f"[DEBUG] test_window_loader: {test_window_loader} (type: {type(test_window_loader)})")
     print(f"学生 {student_id}: 开始预测模型 {model_name}, embtype: {emb_type}, dataset_name: {dataset_name}")
 
     try:
@@ -309,22 +310,26 @@ def evaluate_single_student(params, student_id,save_reult):
         "student_id": student_id,
     }
     stu_df =None
-    if model_name in que_type_models:
+    if model_name in que_type_models or save_reult == 1:
         # 对于 que_type_models，使用 evaluate 获取 window_testauc 和 window_testacc
         if test_window_loader is not None:
+            # print(f"[DEBUG] test_window_loader: {test_window_loader} (type: {type(test_window_loader)})")
             save_test_window_path = os.path.join(save_dir, f"{model.emb_type}_test_window_predictions_student_{student_id}.txt")
+
             if model.model_name == "rkt":
                 window_testauc, window_testacc,stu_df = evaluate_return_results(model, test_window_loader, model_name, rel, save_test_window_path)
             else:
                 window_testauc, window_testacc,stu_df = evaluate_return_results(model, test_window_loader, model_name, save_test_window_path)
 
+            print(f"学生 {student_id}: 已完成窗口评估，结果保存到 {save_test_window_path},结果\n{stu_df}")
             
             dres["window_testauc"] = window_testauc
             dres["window_testacc"] = window_testacc
             print(f"学生 {student_id}: window_testauc: {window_testauc}, window_testacc: {window_testacc}")
         # 不运行 evaluate_question
-    else:
+    else :
         # 原有 evaluate_question 逻辑（非 que_type_models 运行）
+        
         if "test_question_window_file" in data_config and not test_question_window_loader is None:
             save_test_question_window_path = os.path.join(save_dir, f"summary_{model.emb_type}_test_question_window_predictions_student.txt")
             qw_testaucs, qw_testaccs = evaluate_question(model, test_question_window_loader, model_name, fusion_type, save_test_question_window_path)
@@ -372,6 +377,7 @@ def evaluate_single_student(params, student_id,save_reult):
         print(f"学生 {student_id}: 评估结果已追加保存到 {results_path}")
     except Exception as e:
         print(f"学生 {student_id}: 保存评估结果到 JSONL 时出错: {e}")
+    stu_df.insert(0, 'student_id', student_id)
     if save_reult:
         return dres,stu_df
     else:

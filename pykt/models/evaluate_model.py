@@ -69,6 +69,56 @@ def process_results_to_df(result_string):
     df = pd.DataFrame(parsed_results, columns=columns)
     
     return df
+
+# def process_results_to_df(result_string):
+#     """
+#     接收 save_cur_predict_result 返回的字符串，并将其处理为 Pandas DataFrame。
+
+#     参数：
+#     result_string (str): 由 save_cur_predict_result 函数返回的字符串，每行是一个序列的结果列表。
+
+#     返回：
+#     pd.DataFrame: 包含所有序列结果的 Pandas DataFrame。
+#     """
+#     if not result_string:
+#         print("[DEBUG] result_string is empty, returning empty DataFrame")
+#         return pd.DataFrame()
+
+#     # 将字符串按行分割，每一行代表一个序列的结果
+#     result_lines = result_string.strip().split('\n')
+#     print(f"[DEBUG] Number of result lines: {len(result_lines)}")
+    
+#     # 解析每一行的字符串，将其转换为 Python 列表
+#     parsed_results = []
+#     for i, line in enumerate(result_lines):
+#         print(f"[DEBUG] Processing line {i}: {line}")
+#         try:
+#             parsed_result = ast.literal_eval(line)
+#             if not isinstance(parsed_result, list):
+#                 print(f"[ERROR] Line {i} parsed to {type(parsed_result)}, expected list: {line}")
+#                 continue
+#             parsed_results.append(parsed_result)
+#         except (ValueError, SyntaxError) as e:
+#             print(f"[ERROR] Failed to parse line {i}: {line}, Error: {str(e)}")
+#             continue
+
+#     if not parsed_results:
+#         print("[WARNING] No valid parsed results, returning empty DataFrame")
+#         return pd.DataFrame()
+
+#     # 定义 DataFrame 的列名
+#     columns = ['qs', 'rs', 'ds', 'ts', 'ps', 'prelabels', 'auc', 'acc']
+    
+#     # 使用解析后的列表创建一个 DataFrame
+#     try:
+#         df = pd.DataFrame(parsed_results, columns=columns)
+#         print(f"[DEBUG] Created DataFrame with shape: {df.shape}")
+#         return df
+#     except ValueError as e:
+#         print(f"[ERROR] Failed to create DataFrame: {str(e)}")
+#         print(f"[DEBUG] Parsed results: {parsed_results}")
+#         return pd.DataFrame()
+
 def    save_cur_predict_result(dres, q, r, d, t, m, sm, p):
     # dres, q, r, qshft, rshft, m, sm, y
     results = []
@@ -90,7 +140,7 @@ def    save_cur_predict_result(dres, q, r, d, t, m, sm, p):
             ps.append(cp.item())
             ds.append(cd.item())
         try:
-            auc = metrics.roc_auc_score(
+            auc = safe_roc_auc(
                 y_true=np.array(ts), y_score=np.array(ps)
             )
             
@@ -362,7 +412,44 @@ def save_question_res(dres, fout, early=False):
         curstr = "\t".join([str(round(s, 4)) if type(s) == type(0.1) or type(s) == np.float32 else str(s) for s in curres])
         fout.write(curstr + "\n")
 
-
+def concat_batches(all_batches_results):
+    """
+    Concatenates a list of DataFrames, joining non-auc/acc columns end-to-end and keeping first row's auc/acc.
+    For columns containing lists, concatenates the list elements into a single list.
+    
+    Args:
+        all_batches_results (list): List of pandas DataFrames with consistent columns.
+        
+    Returns:
+        pd.DataFrame: A single-row DataFrame with concatenated columns (except auc/acc) and first row's auc/acc.
+    """
+    # 合并所有DataFrame
+    results_df = pd.concat(all_batches_results, ignore_index=True)
+    
+    # 获取所有列名
+    columns = results_df.columns
+    
+    # 创建新的字典来存储结果
+    new_results = {}
+    
+    # 处理auc和acc，只取第一行的值
+    for col in ['auc', 'acc']:
+        if col in columns:
+            new_results[col] = results_df[col].iloc[0]
+    
+    # 处理其他列
+    for col in columns:
+        if col not in ['auc', 'acc']:
+            # 检查列是否包含列表
+            if results_df[col].apply(lambda x: isinstance(x, list)).all():
+                # 将所有行的列表展平并拼接成一个列表
+                new_results[col] = [item for sublist in results_df[col] for item in sublist]
+            else:
+                # 非列表类型，按原样转换为字符串并拼接
+                new_results[col] = ''.join(results_df[col].astype(str))
+    
+    # 返回单行DataFrame
+    return pd.DataFrame([new_results])
 def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=""):
     eval_student_state_manager = None
     all_batches_results = []
@@ -534,7 +621,7 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
             y_trues.append(t.numpy())
             y_scores.append(y.numpy())
             test_mini_index+=1
-        results_df = pd.concat(all_batches_results, ignore_index=True)
+        results_df = concat_batches(all_batches_results)
         ts = np.concatenate(y_trues, axis=0)
         ps = np.concatenate(y_scores, axis=0)
         print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
