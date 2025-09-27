@@ -1,7 +1,7 @@
 import torch
 import time
 
-def safe_cuda_execution(func, max_retries=999, wait_seconds=10):
+def safe_cuda_execution(func, max_retries=999, wait_seconds=300):
     for attempt in range(max_retries):
         try:
             return func()  # 执行可能耗尽内存的函数

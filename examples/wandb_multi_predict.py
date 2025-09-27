@@ -3,6 +3,7 @@ import argparse
 import json
 import copy
 import torch
+import time
 import pandas as pd
 from retrying import retry  # 添加retrying模块
 import traceback
@@ -16,14 +17,19 @@ device = "cpu" if not torch.cuda.is_available() else "cuda"
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:2'
 # 添加CUDA内存错误重试装饰器
 def retry_if_cuda_oom(exception):
-    """检查是否为CUDA内存不足错误"""
-    return isinstance(exception, torch.cuda.OutOfMemoryError)
-
+    """检查是否为CUDA内存不足相关错误"""
+    # 检查标准PyTorch CUDA OOM错误
+    if isinstance(exception, torch.cuda.OutOfMemoryError):
+        return True
+    # 检查HAMI-core的CUDA内存分配错误
+    if isinstance(exception, RuntimeError) and "cuMemoryAllocate failed" in str(exception):
+        return True
+    return False
 # 重试装饰器配置
 retry_decorator = retry(
     retry_on_exception=retry_if_cuda_oom,
     wait_fixed=300000,  # 5分钟 = 300,000毫秒
-    stop_max_attempt_number=36,  # 最多重试3次
+    stop_max_attempt_number=36,  # 最多重试36次
     wrap_exception=True
 )
 def parse_dataset_name(save_dir):
@@ -773,7 +779,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--start_student", type=int, default=1, help="开始评估的学生ID")
     parser.add_argument("--save_reult", type=int, default=0, help="保存结果的路径")
-    parser.add_argument("--use_saved_result", type=int, default=0, help="是否使用已有结果")
+    parser.add_argument("--use_saved_result", type=int, default=1, help="是否使用已有结果")
     parser.add_argument("--only_stu", type=int, default=0, help="只对学生进行评估")
     parser.add_argument("--target_file_type", type=str, default="test_window_sequences",
                         help="切割哪个文件,test_question_window_sequences,test_window_sequences")
