@@ -79,12 +79,13 @@ class QIKTNet(nn.Module):
         self.que_emb = QueEmb(num_q=num_q,num_c=num_c,emb_size=emb_size,emb_type=self.emb_type,model_name=self.model_name,device=device,
                              emb_path=emb_path,pretrain_dim=pretrain_dim,num_attn_head=num_attn_head)
        
-        if self.version == "mamba":
-            pass
-            self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
-            self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
-            self.que_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 1024 -> 256
-            self.concept_proj = nn.Linear(self.emb_size*2, self.hidden_size)  # 512 -> 256
+        if self.version == "lstm":
+            #原版
+            self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, batch_first=True)
+            self.concept_lstm_layer = nn.LSTM(self.emb_size*2, self.hidden_size, batch_first=True)
+            # self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
+            # self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
+
         elif self.version in ["encoder",'decoder','full']:
             #transformer
             self.que_lstm_layer = TransformerBranch(emb_size_in=self.emb_size*4, emb_size_out=self.hidden_size,mode=self.version, causal=True)
@@ -116,10 +117,12 @@ class QIKTNet(nn.Module):
             self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, num_layers=2, batch_first=True)
             self.concept_lstm_layer = self.que_lstm_layer
         else:
-            #原版
-            self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, batch_first=True)
-            self.concept_lstm_layer = nn.LSTM(self.emb_size*2, self.hidden_size, batch_first=True)
+            
+            self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
+            self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
 
+            self.que_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 1024 -> 256
+            self.concept_proj = nn.Linear(self.emb_size*2, self.hidden_size)  # 512 -> 256
         self.dropout_layer = nn.Dropout(dropout)
         
 
@@ -159,10 +162,9 @@ class QIKTNet(nn.Module):
         emb_qc_shift = emb_qc[:, 1:, :]
         emb_qca_current = emb_qca[:, :-1, :]
         # question model
-        if self.version == "mamba":
-            #mamba
-            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current))
-            que_h = self.que_proj(que_h)
+        if self.version == "lstm":
+
+            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
         elif self.version in ["encoder",'decoder','full']:
             #transformer
             que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current))
@@ -182,7 +184,9 @@ class QIKTNet(nn.Module):
             que_h = self.que_proj(que_h)
         else:
             #原版
-            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
+            
+            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current))
+            que_h = self.que_proj(que_h)
         # print(f"[DEBUG] que_h.shape: {que_h.shape} (type: {type(que_h.shape)})")
         que_outputs = get_outputs(self, emb_qc_shift, que_h, data, add_name="", model_type="question")
         outputs = que_outputs
@@ -194,11 +198,9 @@ class QIKTNet(nn.Module):
         ], dim=-1)
         
         emb_ca_current = emb_ca[:, :-1, :]
-        if self.version == "mamba":
+        if self.version == "lstm":
             #mamba
-            concept_h = self.concept_lstm_layer(emb_ca_current)  # [32, 199, 512]
-            concept_h = self.concept_proj(concept_h)  # [32, 199, 256]
-            concept_h = self.dropout_layer(concept_h)
+            concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
         elif self.version in ["encoder",'decoder','full']:
             #transformer
             concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current))
@@ -219,7 +221,10 @@ class QIKTNet(nn.Module):
             concept_h = self.dropout_layer(concept_h)
         else:
             #原版
-            concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
+            
+            concept_h = self.concept_lstm_layer(emb_ca_current)  # [32, 199, 512]
+            concept_h = self.concept_proj(concept_h)  # [32, 199, 256]
+            concept_h = self.dropout_layer(concept_h)
         concept_outputs = get_outputs(self, emb_qc_shift, concept_h, data, add_name="", model_type="concept")
         outputs['y_concept_all'] = concept_outputs['y_concept_all']
         outputs['y_concept_next'] = concept_outputs['y_concept_next']

@@ -530,11 +530,11 @@ def model_forward(model, data, rel=None):
     return loss
     
 
-def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, test_loader=None, test_window_loader=None, save_model=False, data_config=None, fold=None):
+def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, test_loader=None, test_window_loader=None, save_model=False, data_config=None, fold=None,use_trained=0):
     max_auc, best_epoch = 0, -1
     train_step = 0
     model_path = os.path.join(ckpt_path, model.emb_type + "_model.ckpt")
-    if os.path.exists(model_path):
+    if os.path.exists(model_path) and use_trained==1:
         print(f"检测到预训练模型文件，正在从 {model_path} 加载...")
         model.load_state_dict(torch.load(model_path))
         print("模型加载成功！")
