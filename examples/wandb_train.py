@@ -101,9 +101,9 @@ def main(params):
         if "use_trained" not in params:
             params['use_trained'] = 1
         use_trained = params['use_trained']
-
+        # print(f"\n\n\n\n\nuse_trained!!!!!!!!!!!\n\n\n\n\n: {use_trained}")
         if "use_wandb" not in params:
-            params['use_wandb'] = 1
+            params['use_wandb'] = 0
 
         if params['use_wandb']==1:
             import wandb
@@ -112,7 +112,14 @@ def main(params):
         set_seed(params["seed"])
         model_name, dataset_name, fold, emb_type, save_dir = params["model_name"], params["dataset_name"], \
             params["fold"], params["emb_type"], params["save_dir"]
-            
+        save_path_param = f"saved_params_{model_name}.json"
+        # 确保保存目录存在
+        save_dir = params.get('save_dir', 'saved_model')
+        os.makedirs(save_dir, exist_ok=True)
+        with open(os.path.join(save_dir, save_path_param), 'w') as f:
+            json.dump(params, f, indent=4)
+        
+        print(f"✅ 参数已保存至: {os.path.join(save_dir, save_path_param)}")    
         debug_print(text = "load config files.",fuc_name="main")
         
         with open("../configs/kt_config.json") as f:
