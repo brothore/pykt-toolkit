@@ -117,9 +117,13 @@ class QIKTNet(nn.Module):
             self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, num_layers=2, batch_first=True)
             self.concept_lstm_layer = self.que_lstm_layer
         else:
-            
-            self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
-            self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
+            if self.version.startswith("mamba_d_state"):
+                # 提取下划线后的数字部分
+                d_state = int(self.version.split("_")[-1])  # 得到 16      
+            else:
+                d_state = self.hidden_size
+            self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=d_state) 
+            self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=d_state)
 
             self.que_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 1024 -> 256
             self.concept_proj = nn.Linear(self.emb_size*2, self.hidden_size)  # 512 -> 256

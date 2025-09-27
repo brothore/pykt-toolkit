@@ -63,7 +63,7 @@
         "students_num_eval": 114
     },
     "assist2009": {
-        "dpath": "/data/pykt_datasets/data/assist2009",
+        "dpath": "../data/assist2009",
         "num_q": 17737,
         "num_c": 123,
         "input_type": [
