@@ -3,6 +3,7 @@ import argparse
 import json
 import subprocess
 import sys
+import datetime
 from pykt.models.cuda_retry import retry_decorator
 import torch
 # torch.set_num_threads(4) 
@@ -95,14 +96,72 @@ def run_prediction(predict_mode, save_dir):
     except Exception as e:
         print(f"Error running prediction: {str(e)}")
         return False
+def update_run_history(file_path, run_id, status):
+    """
+    更新 run_history.txt 中指定 run_id 的 Is_Completed 状态。
+    """
+    if not os.path.exists(file_path):
+        print(f"错误: 历史文件不存在，无法更新状态: {file_path}")
+        return
+        
+    # 读取所有行
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+
+    # 找到并更新对应的行
+    updated_lines = []
+    # 跳过表头
+    for i, line in enumerate(lines):
+        if i == 0:
+            updated_lines.append(line)
+            continue
+            
+        parts = line.strip().split('\t')
+        if len(parts) >= 4 and parts[0] == run_id:
+            # 假设 Is_Completed 是第三列 (索引 2)
+            parts[2] = status 
+            updated_lines.append('\t'.join(parts) + '\n')
+        else:
+            updated_lines.append(line)
+
+    # 写回文件
+    with open(file_path, 'w') as f:
+        f.writelines(updated_lines)
+
 @retry_decorator
 def main(params):
     try:
+        # **开始记录运行历史**
+        save_dir = params.get('save_dir', 'saved_model')
+        os.makedirs(save_dir, exist_ok=True)
+        run_history_path = os.path.join(save_dir, 'run_history.txt')
+        
+        # 记录开始时间
+        start_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # **生成唯一的本次运行ID** (用于后续更新状态，确保唯一性)
+        import uuid
+        run_id = str(uuid.uuid4())
+        # 检查文件是否存在，如果不存在则创建表头
+        if not os.path.exists(run_history_path):
+            header = "Run_ID\tRun_Start_Time\tIs_Completed\tRun_Path\n"
+            with open(run_history_path, 'w') as f:
+                f.write(header)
+                
+        # 立即写入运行记录，'Is_Completed' 暂时设为 'Running' 或占位符
+        initial_log_line = f"{run_id}\t{start_time}\tRunning\t{save_dir}\n"
+        with open(run_history_path, 'a') as f:
+            f.write(initial_log_line)
+        print(f"✅ 初始运行记录已写入: {run_history_path} (ID: {run_id})")
+
+        start_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         if "use_trained" not in params:
             params['use_trained'] = 1
         use_trained = params['use_trained']
         # print(f"\n\n\n\n\nuse_trained!!!!!!!!!!!\n\n\n\n\n: {use_trained}")
+        # print(f"\n\n\n\n\nuse_trained!!!!!!!!!!!\n\n\n\n\n: {use_trained}")
         if "use_wandb" not in params:
+            params['use_wandb'] = 0
             params['use_wandb'] = 0
 
         if params['use_wandb']==1:
@@ -115,6 +174,15 @@ def main(params):
         save_path_param = f"saved_params_{model_name}.json"
         # 确保保存目录存在
         save_dir = params.get('save_dir', 'saved_model')
+        os.makedirs(save_dir, exist_ok=True)
+        with open(os.path.join(save_dir, save_path_param), 'w') as f:
+            json.dump(params, f, indent=4)
+        
+        print(f"✅ 参数已保存至: {os.path.join(save_dir, save_path_param)}")    
+        save_path_param = f"saved_params_{model_name}.json"
+        # 确保保存目录存在
+        save_dir = params.get('save_dir', 'saved_model')
+
         os.makedirs(save_dir, exist_ok=True)
         with open(os.path.join(save_dir, save_path_param), 'w') as f:
             json.dump(params, f, indent=4)
@@ -279,9 +347,18 @@ def main(params):
             print(f"Invalid predict_after_train value: {predict_after_train}. Valid values are 0, 1, or 2.")
             
         print(f"Training and prediction process completed at: {datetime.datetime.now()}")
+        
+        # **添加：更新运行历史为成功**
+        update_run_history(run_history_path, run_id, 'True')
+        print(f"✅ 运行历史状态已更新为成功 (ID: {run_id})")
     except Exception as e:
         # 记录错误信息
         print(f"训练过程中发生错误: {e}")
+        if 'run_id' in locals():
+            # 确保在异常发生时，如果 run_id 已经被定义，就去更新状态
+            update_run_history(run_history_path, run_id, 'False')
+            print(f"⚠️ 运行历史状态已更新为失败 (ID: {run_id})")
+        
         # 重新抛出异常，让装饰器捕获并决定是否重试
         raise e
     
