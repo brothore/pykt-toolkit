@@ -543,7 +543,7 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
     # 为long_dkt创建学生隐藏状态管理器
     student_state_manager = None
     if model.model_name == "long_dkt":
-        # 假设模型有hidden_size属性，如果没有需要从模型配置中获取
+    
         hidden_size = getattr(model, 'emb_size')  # 默认256
         num_layers = getattr(model, 'num_layers',1)      # 默认1层
         dpath = data_config["dpath"]

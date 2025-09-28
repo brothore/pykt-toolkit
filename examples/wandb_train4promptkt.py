@@ -10,7 +10,7 @@ import copy
 
 from pykt.models import train_model4promptkt, evaluate, init_model4promptkt, load_model4promptkt
 from pykt.utils import set_seed, debug_print
-from pykt.datasets import init_dataset4train
+from pykt.datasets import init_dataset4train,init_dataset4train_local
 import datetime
 
 import os

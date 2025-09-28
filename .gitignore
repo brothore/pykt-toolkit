@@ -73,3 +73,4 @@ data/
 saved_model/
 examples/saved_model/
 data
+local_data/

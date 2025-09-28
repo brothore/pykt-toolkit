@@ -12,7 +12,7 @@ import copy
 
 from pykt.models import train_model,evaluate,init_model
 from pykt.utils import debug_print,set_seed
-from pykt.datasets import init_dataset4train
+from pykt.datasets import init_dataset4train,init_dataset4train_local
 from pykt.config import predict_after_train
 import datetime
 
@@ -221,7 +221,7 @@ def main(params):
             train_config["seq_len"] = data_config[dataset_name]['maxlen']
         seq_len = train_config["seq_len"]
 
-        print("Start init data")
+        # print("Start init data")
         print(dataset_name, model_name, data_config, fold, batch_size)
         
         debug_print(text="init_dataset",fuc_name="main")
@@ -258,9 +258,9 @@ def main(params):
             model_config["seq_len"] = seq_len
             
         debug_print(text = "init_model",fuc_name="main")
-        print(f"model_name:{model_name}")
+        # print(f"model_name:{model_name}")
         model = init_model(model_name, model_config, data_config[dataset_name], emb_type)
-        print(f"model is {model}")
+        # print(f"model is {model}")
         if model_name == "hawkes":
             weight_p, bias_p = [], []
             for name, p in filter(lambda x: x[1].requires_grad, model.named_parameters()):
@@ -329,10 +329,9 @@ def main(params):
             print(f"\n{'='*50}")
             print(f"Training completed. Starting prediction with predict_after_train={predict_after_train}")
             print(f"{'='*50}")
-            def _safe_predict():
-                return run_prediction(predict_after_train, ckpt_path)
+
             # 运行预测脚本
-            prediction_success = safe_cuda_execution(_safe_predict)
+            prediction_success = run_prediction(predict_after_train, ckpt_path)
             if prediction_success:
                 print("Prediction completed successfully!")
                 if params['use_wandb']==1:

@@ -200,11 +200,11 @@ def predict_interval_data(model, data_config, model_name, fusion_type, save_dir)
     return interval_results
 
 @retry_decorator
-def evaluate_single_student(params, student_id,save_reult):
+def evaluate_single_student(params, student_id,save_result):
     """评估单个学生的函数"""
     print(f"\n开始评估学生 {student_id}")
-    target_file_type = params["target_file_type"] if save_reult == 0 else "test_sequences"
-    use_saved_result =  params["use_saved_result"] if save_reult == 0 else 0
+    target_file_type = params["target_file_type"] if save_result == 0 else "test_sequences"
+    use_saved_result =  params["use_saved_result"] if save_result == 0 else 0
     
     if params['use_wandb'] == 1:
         import wandb
@@ -268,7 +268,7 @@ def evaluate_single_student(params, student_id,save_reult):
             data_config["num_at"] = config["data_config"]["num_at"]
             data_config["num_it"] = config["data_config"]["num_it"]
     predict_files = f"{target_file_type}_top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"{target_file_type}_top_{student_id}_student.csv"
-    load_flags=[0,1,0,0] if save_reult == 1 or model_name in que_type_models else [0,0,0,1]
+    load_flags=[0,1,0,0] if save_result == 1 or model_name in que_type_models else [0,0,0,1]
     # print(f"[DEBUG] load_flags: {load_flags} (type: {type(load_flags)})")
     if model_name not in ["dimkt"]:
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=load_flags)
@@ -310,7 +310,7 @@ def evaluate_single_student(params, student_id,save_reult):
         "student_id": student_id,
     }
     stu_df =None
-    if model_name in que_type_models or save_reult == 1:
+    if model_name in que_type_models or save_result == 1:
         # 对于 que_type_models，使用 evaluate 获取 window_testauc 和 window_testacc
         if test_window_loader is not None:
             # print(f"[DEBUG] test_window_loader: {test_window_loader} (type: {type(test_window_loader)})")
@@ -378,7 +378,7 @@ def evaluate_single_student(params, student_id,save_reult):
     except Exception as e:
         print(f"学生 {student_id}: 保存评估结果到 JSONL 时出错: {e}")
     stu_df.insert(0, 'student_id', student_id)
-    if save_reult:
+    if save_result:
         return dres,stu_df
     else:
         return dres,None
@@ -421,7 +421,7 @@ def main(params):
         for student_id in range(start_student, total_students + 1):
             try:
                 # 评估单个学生
-                result, student_df = evaluate_single_student(params, student_id, save_reult=params.get('save_reult',0))
+                result, student_df = evaluate_single_student(params, student_id, save_result=params.get('save_result',0))
                 all_results.append(result)
                 all_student_dfs.append(student_df)
                 
@@ -774,7 +774,7 @@ if __name__ == "__main__":
     parser.add_argument("--use_wandb", type=int, default=0)
 
     parser.add_argument("--start_student", type=int, default=1, help="开始评估的学生ID")
-    parser.add_argument("--save_reult", type=int, default=0, help="保存结果的路径")
+    parser.add_argument("--save_result", type=int, default=0, help="保存结果的路径")
     parser.add_argument("--use_saved_result", type=int, default=1, help="是否使用已有结果")
     parser.add_argument("--only_stu", type=int, default=0, help="只对学生进行评估")
     parser.add_argument("--target_file_type", type=str, default="test_window_sequences",
