@@ -82,13 +82,7 @@ class CudaOOMRetryHandler:
 
 def cuda_oom_retry_decorator(max_attempts=3, base_delay=1.0, max_delay=300.0, cleanup_cache=True):
     """
-    创建CUDA OOM重试装饰器，支持指数退避和随机抖动。
-    
-    参数:
-        max_attempts (int): 最大重试次数
-        base_delay (float): 初始等待时间（秒）
-        max_delay (float): 最大等待时间（秒）
-        cleanup_cache (bool): 是否在重试前清理CUDA缓存
+    修正版：采用双层 wrapper 结构，确保状态在独立调用间重置，在重试循环内保持。
     """
     def retry_if_cuda_oom(exception, handler=None):
         """包装retry_if_cuda_oom，注入handler"""
@@ -96,35 +90,46 @@ def cuda_oom_retry_decorator(max_attempts=3, base_delay=1.0, max_delay=300.0, cl
             raise ValueError("Retry handler not provided")
         return handler.should_retry(exception)
 
+
     def decorator(func):
+        # Handler实例创建一次，用于管理该被装饰函数的所有状态
         handler = CudaOOMRetryHandler(max_attempts, base_delay, max_delay, cleanup_cache)
         
+        # 1. 内部 Wrapper：仅负责重试逻辑
         @retry(
             retry_on_exception=lambda e: retry_if_cuda_oom(e, handler=handler),
             stop_max_attempt_number=max_attempts,
             wrap_exception=True
         )
-        def wrapper(*args, **kwargs):
-            # 重置尝试次数（每次调用函数时重置）
-            handler.attempt = 0
+        def retry_logic_wrapper(*args, **kwargs):
+            # 重试循环期间，此函数被反复调用
+            # 关键：此处不进行 handler.attempt = 0 的重置操作
             return func(*args, **kwargs)
+
+        # 2. 外部 Wrapper：仅负责在函数被调用时，进行状态初始化/重置
+        def reset_wrapper(*args, **kwargs):
+            # 当用户第一次调用被装饰的函数时，将尝试次数重置为0
+            handler.attempt = 0 
+            # 然后将控制权交给内部的重试逻辑
+            return retry_logic_wrapper(*args, **kwargs)
         
-        return wrapper
+        return reset_wrapper
     
     return decorator
 
+
 # 重试装饰器配置
 retry_decorator = cuda_oom_retry_decorator(
-    max_attempts=36,           # 最多重试36次
+    max_attempts=99,           # 最多重试36次
     base_delay=1.0,            # 初始等待1秒
-    max_delay=300.0,           # 最大等待5分钟
+    max_delay=1200.0,           # 最大等待5分钟
     cleanup_cache=True         # 清理显存
 )
 
 # 快速重试版本（用于测试）
 quick_retry_decorator = cuda_oom_retry_decorator(
-    max_attempts=3,            # 最多重试3次
+    max_attempts=99,            # 最多重试3次
     base_delay=0.5,            # 初始等待0.5秒
-    max_delay=10.0,            # 最大等待10秒
+    max_delay=1200.0,            # 最大等待10秒
     cleanup_cache=True         # 清理显存
 )

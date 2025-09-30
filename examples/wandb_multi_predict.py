@@ -321,7 +321,7 @@ def evaluate_single_student(params, student_id,save_result):
             else:
                 window_testauc, window_testacc,stu_df = evaluate_return_results(model, test_window_loader, model_name, save_test_window_path)
 
-            print(f"学生 {student_id}: 已完成窗口评估，结果保存到 {save_test_window_path},结果\n{stu_df}")
+            # print(f"学生 {student_id}: 已完成窗口评估，结果保存到 {save_test_window_path},结果\n{stu_df}")
             
             dres["window_testauc"] = window_testauc
             dres["window_testacc"] = window_testacc
@@ -382,7 +382,7 @@ def evaluate_single_student(params, student_id,save_result):
         return dres,stu_df
     else:
         return dres,None
-
+@retry_decorator
 def main(params):
     try:
         dataset_name = parse_dataset_name(params["save_dir"])
@@ -765,6 +765,13 @@ def main(params):
         print(f"预测过程中发生错误: {e}")
         # 重新抛出异常，让装饰器捕获并决定是否重试
         raise e
+    finally:
+        # 无论 try 块是成功执行、还是通过 except 块抛出异常（准备重试或退出），finally 都会执行。
+        print("💡 正在执行最终资源清理...")
+        
+        # 1. 确保释放 PyTorch 内部缓存 (对 OOM 尤为重要)
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()

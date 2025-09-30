@@ -25,7 +25,7 @@ def save_config(train_config, model_config, data_config, params, save_dir):
     save_path = os.path.join(save_dir, "config.json")
     with open(save_path, "w") as fout:
         json.dump(d, fout)
-
+@retry_decorator
 def run_prediction(predict_mode, save_dir):
     """
     运行预测脚本并实时显示输出
@@ -39,7 +39,7 @@ def run_prediction(predict_mode, save_dir):
             if not os.path.exists(script_path):
                 print(f"Warning: {script_path} not found")
                 return False
-            cmd = [sys.executable, script_path, "--save_dir", save_dir ,"--bz", "64"]
+            cmd = [sys.executable, script_path, "--save_dir", save_dir,"--bz","16" ]
             
         elif predict_mode == 2:
             script_path = "/root/autodl-tmp/pykt-toolkit/examples/wandb_predict.py"
@@ -360,4 +360,10 @@ def main(params):
         
         # 重新抛出异常，让装饰器捕获并决定是否重试
         raise e
-    
+    finally:
+        # 无论 try 块是成功执行、还是通过 except 块抛出异常（准备重试或退出），finally 都会执行。
+        print("💡 正在执行最终资源清理...")
+        
+        # 1. 确保释放 PyTorch 内部缓存 (对 OOM 尤为重要)
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
