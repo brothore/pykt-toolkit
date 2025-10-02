@@ -122,14 +122,14 @@ def cuda_oom_retry_decorator(max_attempts=3, base_delay=1.0, max_delay=300.0, cl
 retry_decorator = cuda_oom_retry_decorator(
     max_attempts=999,           # 最多重试36次
     base_delay=1.0,            # 初始等待1秒
-    max_delay=120,           # 最大等待5分钟
+    max_delay=300,           # 最大等待5分钟
     cleanup_cache=True         # 清理显存
 )
 
 # 快速重试版本（用于测试）
 quick_retry_decorator = cuda_oom_retry_decorator(
     max_attempts=999,            # 最多重试3次
-    base_delay=0.5,            # 初始等待0.5秒
-    max_delay=120.0,            # 最大等待10秒
+    base_delay=1.0,            # 初始等待0.5秒
+    max_delay=300.0,            # 最大等待10秒
     cleanup_cache=True         # 清理显存
 )

@@ -206,7 +206,7 @@ def main(params):
             if model_name in ["long_dkt"]:
                 train_config["batch_size"] = 1 ## because of OOM
             model_config = copy.deepcopy(params)
-            for key in ["model_name", "dataset_name", "emb_type", "save_dir", "fold", "seed"]:
+            for key in ["model_name", "dataset_name", "emb_type", "save_dir", "fold", "seed","use_trained"]:
                 del model_config[key]
             if 'batch_size' in params:
                 train_config["batch_size"] = params['batch_size']
