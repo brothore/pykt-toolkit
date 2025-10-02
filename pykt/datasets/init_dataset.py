@@ -15,10 +15,10 @@ from .que_data_loader_promptkt import KTQueDataset_promptKT
 from .pretrain_utils import get_pretrain_data
 # 1. 在文件开头添加新的导入
 from .multi_dataset_akt_dataloader import MultiKTDataset
-
+from pykt.models.cuda_retry import retry_decorator
 import os
 from torch.utils.data import DataLoader
-
+@retry_decorator
 def init_test_datasets_multi_stu(
     data_config, 
     model_name, 
@@ -224,6 +224,9 @@ def init_test_datasets_multi_stu(
             test_question_window_loader = DataLoader(test_question_window_dataset, batch_size=batch_size, shuffle=False)
 
     return test_loader, test_window_loader, test_question_loader, test_question_window_loader
+
+
+@retry_decorator
 def init_test_datasets(data_config, model_name, batch_size, diff_level=None, args=None, re_mapping=False):
     dataset_name = data_config["dataset_name"]
     print(f"model_name is {model_name}, dataset_name is {dataset_name}")

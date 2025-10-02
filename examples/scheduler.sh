@@ -1,5 +1,8 @@
 #!/bin/bash
-
+# 加载 ~/.bashrc
+if [ -f "$HOME/.bashrc" ]; then
+    . "$HOME/.bashrc"
+fi
 # 默认并发上限
 MAX_JOBS=6
 
@@ -40,6 +43,24 @@ queue=($(seq 0 $((${#commands[@]}-1))))
 running_pids=()
 running_cmds=()  # 记录对应的命令索引，用于日志
 
+# 函数：打印当前运行任务的表格
+print_running_tasks() {
+    if [ ${#running_pids[@]} -eq 0 ]; then
+        echo "No tasks are currently running."
+        return
+    fi
+    echo "Current running tasks:"
+    # 打印表头
+    printf "%-8s %-5s %-8s %s\n" "Task ID" "Fold" "PID" "Command"
+    # 打印每一行，限制命令长度为100字符以避免过长
+    for i in "${!running_pids[@]}"; do
+        cmd="${commands[${running_cmds[$i]}]}"
+        # 截断命令以提高可读性（可选，调整100为其他值或移除）
+        printf "%-8s %-5s %-8s %s\n" "${running_cmds[$i]}" "${line_numbers[${running_cmds[$i]}]}" "${running_pids[$i]}" "$cmd"
+    done
+    echo ""
+}
+
 # 函数：启动一个任务
 start_task() {
     if [ ${#queue[@]} -eq 0 ]; then
@@ -65,6 +86,8 @@ start_task() {
     running_cmds+=("$idx")
     
     echo "Started task $idx (fold ${line_numbers[$idx]}) with PID $pid at $(date)"
+    echo "Command: $cmd"
+    print_running_tasks
     return 0
 }
 
@@ -80,6 +103,9 @@ while [ ${#queue[@]} -gt 0 ] || [ ${#running_pids[@]} -gt 0 ]; do
     if [ ${#running_pids[@]} -eq 0 ]; then
         break
     fi
+    
+    # 打印当前运行任务
+    print_running_tasks
     
     # 等待检查间隔
     sleep $CHECK_INTERVAL
@@ -101,7 +127,7 @@ while [ ${#queue[@]} -gt 0 ] || [ ${#running_pids[@]} -gt 0 ]; do
             if [ $exit_code -eq 0 ]; then
                 echo "Task $cmd_idx (fold ${line_numbers[$cmd_idx]}) with PID $pid completed successfully at $(date)"
             else
-                echo "Task $cmd_idx (fold ${cmd_idx}) with PID $pid failed with exit code $exit_code at $(date)"
+                echo "Task $cmd_idx (fold ${line_numbers[$cmd_idx]}) with PID $pid failed with exit code $exit_code at $(date)"
             fi
         fi
     done
