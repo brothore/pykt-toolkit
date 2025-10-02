@@ -327,7 +327,7 @@
         "test_original_file_quelevel": "test_quelevel.csv"
     },
     "nips_task34": {
-        "dpath": "/data/pykt_datasets/data/nips_task34",
+        "dpath": "../data/nips_task34",
         "num_q": 948,
         "num_c": 57,
         "students_num_eval": 983,

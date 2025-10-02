@@ -4,6 +4,7 @@ import json
 import copy
 import torch
 import pandas as pd
+from pykt.models.cuda_retry import retry_decorator
 # from pykt.config import ERR_PATH, stu_pk
 from pykt.models import evaluate, evaluate_question, load_model,evaluate_return_results
 from pykt.datasets import init_test_datasets,init_test_datasets_multi_stu
@@ -389,7 +390,7 @@ def evaluate_single_student(params, student_id,save_reult):
         return dres,stu_df
     else:
         return dres,None
-
+@retry_decorator
 def main(params):
     if params["mode"] in ["all","stu"]:   
         dataset_name = parse_dataset_name(params["save_dir"])
@@ -792,7 +793,7 @@ def main(params):
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("--bz", type=int, default=512)
+    parser.add_argument("--bz", type=int, default=16)
     parser.add_argument("--save_dir", type=str, default="/data/pykt_datasets/saved_model")
     parser.add_argument("--fusion_type", type=str, default="late_fusion")
     parser.add_argument("--use_wandb", type=int, default=0)
