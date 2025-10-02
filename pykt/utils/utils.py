@@ -2,8 +2,6 @@ import os, sys
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
-from pykt.datasets.data_loader import KTDataset
-from pykt.datasets.dkt_forget_dataloader import DktForgetDataset
 
 def set_seed(seed):
     """Set the global random seed.

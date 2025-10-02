@@ -1,14 +1,22 @@
 #!/bin/bash
+
 # 加载 ~/.bashrc
 if [ -f "$HOME/.bashrc" ]; then
     . "$HOME/.bashrc"
 fi
+
 # 默认并发上限
 MAX_JOBS=6
 
-# 如果有命令行参数，用它覆盖MAX_JOBS
+# 默认 GPU 数量
+NUM_GPUS=3
+
+# 如果有命令行参数，覆盖 MAX_JOBS 和 NUM_GPUS
 if [ $# -gt 0 ]; then
     MAX_JOBS=$1
+    if [ $# -gt 1 ]; then
+        NUM_GPUS=$2
+    fi
 fi
 
 # 检查间隔（秒）
@@ -41,7 +49,8 @@ queue=($(seq 0 $((${#commands[@]}-1))))
 
 # 初始化运行中的PID数组
 running_pids=()
-running_cmds=()  # 记录对应的命令索引，用于日志
+running_cmds=()  # 记录对应的命令索引
+running_gpus=()  # 记录每个任务使用的 GPU
 
 # 函数：打印当前运行任务的表格
 print_running_tasks() {
@@ -51,12 +60,12 @@ print_running_tasks() {
     fi
     echo "Current running tasks:"
     # 打印表头
-    printf "%-8s %-5s %-8s %s\n" "Task ID" "Fold" "PID" "Command"
+    printf "%-8s %-5s %-8s %-5s %s\n" "Task ID" "Fold" "PID" "GPU" "Command"
     # 打印每一行，限制命令长度为100字符以避免过长
     for i in "${!running_pids[@]}"; do
         cmd="${commands[${running_cmds[$i]}]}"
         # 截断命令以提高可读性（可选，调整100为其他值或移除）
-        printf "%-8s %-5s %-8s %s\n" "${running_cmds[$i]}" "${line_numbers[${running_cmds[$i]}]}" "${running_pids[$i]}" "$cmd"
+        printf "%-8s %-5s %-8s %-5s %s\n" "${running_cmds[$i]}" "${line_numbers[${running_cmds[$i]}]}" "${running_pids[$i]}" "${running_gpus[$i]}" "$cmd"
     done
     echo ""
 }
@@ -73,9 +82,13 @@ start_task() {
     
     cmd="${commands[$idx]}"
     
+    # 分配 GPU（循环使用 0 到 NUM_GPUS-1）
+    gpu=$((idx % NUM_GPUS))
+    cmd="export CUDA_VISIBLE_DEVICES=$gpu && $cmd"
+    
     # 如果启用nohup，添加它
     if [ $USE_NOHUP -eq 1 ]; then
-        cmd="nohup ${cmd}"
+        cmd="nohup $cmd"
     fi
     
     # 运行命令
@@ -84,8 +97,9 @@ start_task() {
     
     running_pids+=("$pid")
     running_cmds+=("$idx")
+    running_gpus+=("$gpu")
     
-    echo "Started task $idx (fold ${line_numbers[$idx]}) with PID $pid at $(date)"
+    echo "Started task $idx (fold ${line_numbers[$idx]}) with PID $pid on GPU $gpu at $(date)"
     echo "Command: $cmd"
     print_running_tasks
     return 0
@@ -113,26 +127,30 @@ while [ ${#queue[@]} -gt 0 ] || [ ${#running_pids[@]} -gt 0 ]; do
     # 检查运行中的PID
     new_pids=()
     new_cmds=()
+    new_gpus=()
     for i in "${!running_pids[@]}"; do
         pid="${running_pids[$i]}"
         cmd_idx="${running_cmds[$i]}"
+        gpu="${running_gpus[$i]}"
         if kill -0 "$pid" 2>/dev/null; then
             # 还在运行
             new_pids+=("$pid")
             new_cmds+=("$cmd_idx")
+            new_gpus+=("$gpu")
         else
             # 已完成或失败
             wait "$pid"
             exit_code=$?
             if [ $exit_code -eq 0 ]; then
-                echo "Task $cmd_idx (fold ${line_numbers[$cmd_idx]}) with PID $pid completed successfully at $(date)"
+                echo "Task $cmd_idx (fold ${line_numbers[$cmd_idx]}) with PID $pid on GPU $gpu completed successfully at $(date)"
             else
-                echo "Task $cmd_idx (fold ${line_numbers[$cmd_idx]}) with PID $pid failed with exit code $exit_code at $(date)"
+                echo "Task $cmd_idx (fold ${line_numbers[$cmd_idx]}) with PID $pid on GPU $gpu failed with exit code $exit_code at $(date)"
             fi
         fi
     done
     running_pids=("${new_pids[@]}")
     running_cmds=("${new_cmds[@]}")
+    running_gpus=("${new_gpus[@]}")
 done
 
 # 清除trap
