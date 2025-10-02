@@ -9,7 +9,7 @@ import torch
 # torch.set_num_threads(4) 
 from torch.optim import SGD, Adam
 import copy
-
+from wandb_multi_predict import main as predict_main
 from pykt.models import train_model,evaluate,init_model
 from pykt.utils import debug_print,set_seed
 from pykt.datasets import init_dataset4train,init_dataset4train_local
@@ -330,16 +330,39 @@ def main(params):
             print(f"Training completed. Starting prediction with predict_after_train={predict_after_train}")
             print(f"{'='*50}")
 
-            # 运行预测脚本
-            prediction_success = run_prediction(predict_after_train, ckpt_path)
-            if prediction_success:
-                print("Prediction completed successfully!")
-                if params['use_wandb']==1:
-                    wandb.log({"prediction_status": "success"})
-            else:
-                print("Prediction failed!")
-                if params['use_wandb']==1:
-                    wandb.log({"prediction_status": "failed"})
+            # # 运行预测脚本
+            # prediction_success = run_prediction(predict_after_train, ckpt_path)
+            # if prediction_success:
+            #     print("Prediction completed successfully!")
+            #     if params['use_wandb']==1:
+            #         wandb.log({"prediction_status": "success"})
+            # else:
+            #     print("Prediction failed!")
+            #     if params['use_wandb']==1:
+            #         wandb.log({"prediction_status": "failed"})
+            if predict_after_train == 1:
+                predict_params = {
+                    "bz": 16,  # 来自原cmd的--bz 16
+                    "save_dir": ckpt_path,
+                    "fusion_type": "late_fusion",  # 原脚本默认
+                    "use_wandb": params['use_wandb'],
+                    "start_student": 1,  # 原脚本默认
+                    "save_reult": 0,  # 原脚本默认
+                    "use_saved_result": 0,  # 原脚本默认
+                    "mode": "all",  # 原脚本默认
+                    "target_file_type": "test_window_sequences"  # 原脚本默认
+                }
+                try:
+                    predict_main(predict_params)  # 直接调用wandb_multi_predict的main
+                    prediction_success = True
+                    print("Prediction completed successfully!")
+                    if params['use_wandb']==1:
+                        wandb.log({"prediction_status": "success"})
+                except Exception as e:
+                    prediction_success = False
+                    print(f"Prediction failed: {str(e)}")
+                    if params['use_wandb']==1:
+                        wandb.log({"prediction_status": "failed"})
         elif predict_after_train == 0:
             print("predict_after_train is set to 0, skipping prediction.")
         else:

@@ -390,7 +390,7 @@ def evaluate_single_student(params, student_id,save_reult):
         return dres,stu_df
     else:
         return dres,None
-@retry_decorator
+
 def main(params):
     if params["mode"] in ["all","stu"]:   
         dataset_name = parse_dataset_name(params["save_dir"])
