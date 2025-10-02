@@ -1,6 +1,6 @@
 {
     "assist2015": {
-        "dpath": "/data/pykt_datasets/data/assist2015",
+        "dpath": "../data/assist2015",
         "num_q": 0,
         "num_c": 100,
         "input_type": [
@@ -29,7 +29,7 @@
         "test_original_file_quelevel": "test_quelevel.csv"
     },
     "algebra2005": {
-        "dpath": "/data/pykt_datasets/data/algebra2005",
+        "dpath": "../data/algebra2005",
         "num_q": 173113,
         "num_c": 112,
         "input_type": [
@@ -114,7 +114,7 @@
         "students_num_train": 3082
     },
     "slepemapy": {
-        "dpath": "/data/pykt_datasets/data/slepemapy",
+        "dpath": "../data/slepemapy",
         "num_q": 2913,
         "num_c": 1458,
         "input_type": [
@@ -138,7 +138,7 @@
         "test_question_window_file": "test_question_window_sequences.csv"
     },
     "assist2017": {
-        "dpath": "/data/pykt_datasets/data/assist2017",
+        "dpath": "../data/assist2017",
         "num_q": 3162,
         "num_c": 102,
         "input_type": [
@@ -164,7 +164,7 @@
         "test_question_window_file": "test_question_window_sequences.csv"
     },
     "assist2012": {
-        "dpath": "/data/pykt_datasets/data/assist2012",
+        "dpath": "../data/assist2012",
         "num_q": 53070,
         "num_c": 265,
         "input_type": [
@@ -188,7 +188,7 @@
         "test_question_window_file": "test_question_window_sequences.csv"
     },
     "statics2011": {
-        "dpath": "/data/pykt_datasets/data/statics2011",
+        "dpath": "../data/statics2011",
         "num_q": 0,
         "num_c": 1223,
         "input_type": [
@@ -217,7 +217,7 @@
         "test_original_file_quelevel": "test_quelevel.csv"
     },
     "junyi2015": {
-        "dpath": "/data/pykt_datasets/data/junyi2015",
+        "dpath": "../data/junyi2015",
         "num_q": 721,
         "num_c": 39,
         "input_type": [
@@ -244,7 +244,7 @@
         "test_question_window_file": "test_question_window_sequences.csv"
     },
     "bridge2algebra2006": {
-        "dpath": "/data/pykt_datasets/data/bridge2algebra2006",
+        "dpath": "../data/bridge2algebra2006",
         "num_q": 129263,
         "num_c": 493,
         "input_type": [
@@ -295,7 +295,7 @@
         "questions_range_high_interval_file": "questions_range_high_interval.csv"
     },
     "ednet": {
-        "dpath": "/data/pykt_datasets/data/ednet",
+        "dpath": "../data/ednet",
         "num_q": 11901,
         "num_c": 188,
         "input_type": [
@@ -327,7 +327,7 @@
         "test_original_file_quelevel": "test_quelevel.csv"
     },
     "nips_task34": {
-        "dpath": "/data/pykt_datasets/data/nips_task34",
+        "dpath": "../data/nips_task34",
         "num_q": 948,
         "num_c": 57,
         "students_num_eval": 983,
@@ -379,7 +379,7 @@
         "questions_range_high_interval_file": "questions_range_high_interval.csv"
     },
     "poj": {
-        "dpath": "/data/pykt_datasets/data/poj",
+        "dpath": "../data/poj",
         "num_q": 0,
         "num_c": 2748,
         "input_type": [
@@ -442,7 +442,7 @@
         "students_num_train": 14453
     },
     "ednet5w": {
-        "dpath": "/data/pykt_datasets/data/ednet5w",
+        "dpath": "../data/ednet5w",
         "num_q": 12235,
         "num_c": 188,
         "input_type": [
@@ -474,7 +474,7 @@
         "test_original_file_quelevel": "test_quelevel.csv"
     },
     "pretrain": {
-        "dpath": "/data/pykt_datasets/data/pretrain",
+        "dpath": "../data/pretrain",
         "num_q": 340614,
         "num_c": 1838,
         "input_type": [
@@ -506,7 +506,7 @@
         "test_original_file_quelevel": "test_quelevel.csv"
     },
     "assist2009Anips_task34Abridge2algebra2006": {
-        "dpath": "/data/pykt_datasets/data/assist2009Anips_task34Abridge2algebra2006",
+        "dpath": "../data/assist2009Anips_task34Abridge2algebra2006",
         "num_q": 147948,
         "num_c": 673,
         "input_type": [
@@ -557,7 +557,7 @@
         "students_num_train": 7933
     },
     "peiyouAnips_task34Abridge2algebra2006": {
-        "dpath": "/data/pykt_datasets/data/peiyouAnips_task34Abridge2algebra2006",
+        "dpath": "../data/peiyouAnips_task34Abridge2algebra2006",
         "num_q": 137863,
         "num_c": 1415,
         "input_type": [
