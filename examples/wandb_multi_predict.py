@@ -265,7 +265,7 @@ def evaluate_single_student(params, student_id,save_reult):
     if dataset_name not in ["peiyou"]:
         predict_files = f"{target_file_type}_top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"{target_file_type}_top_{student_id}_student.csv"
     else:
-        predict_files = f"question_level/{target_file_type}_top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"kc_level/{target_file_type}_top_{student_id}_student.csv"
+        predict_files = f"{target_file_type}_top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"{target_file_type}_top_{student_id}_student.csv"
     if model_name not in ["dimkt"]:
         # test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[0,1,0,0] if model_name in que_type_models else [0,0,0,1])
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[1,0,0,1] if params["save_reult"] == "" else [1,0,0,0])

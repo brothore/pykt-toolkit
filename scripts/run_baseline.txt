@@ -1,0 +1,1 @@
+nohup ./scheduler.sh > ./logs/scheduler-1002-1315.log 2>&1 &
