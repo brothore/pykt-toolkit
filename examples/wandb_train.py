@@ -348,7 +348,7 @@ def main(params):
                     "use_wandb": params['use_wandb'],
                     "start_student": 1,  # 原脚本默认
                     "save_reult": 0,  # 原脚本默认
-                    "use_saved_result": 0,  # 原脚本默认
+                    "use_saved_result": 1,  # 原脚本默认
                     "mode": "all",  # 原脚本默认
                     "target_file_type": "test_window_sequences"  # 原脚本默认
                 }
