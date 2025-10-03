@@ -6,10 +6,10 @@ if [ -f "$HOME/.bashrc" ]; then
 fi
 
 # 默认并发上限
-MAX_JOBS=9
+MAX_JOBS=8
 
 # 默认 GPU 数量
-NUM_GPUS=3
+NUM_GPUS=4
 
 # 如果有命令行参数，覆盖 MAX_JOBS 和 NUM_GPUS
 if [ $# -gt 0 ]; then
@@ -85,6 +85,8 @@ running_gpus=()  # 记录每个任务使用的 GPU
 
 # 函数：打印当前运行任务的表格
 print_running_tasks() {
+    # 在打印任务列表前显示当前时间
+    echo "--- Current Status: $(date '+%Y-%m-%d %H:%M:%S') ---"
     if [ ${#running_pids[@]} -eq 0 ]; then
         echo "No tasks are currently running."
         return
@@ -158,8 +160,12 @@ start_task() {
 }
 
 # 捕获退出信号，杀死所有子进程
-trap 'echo "Exiting script, killing all running tasks..."; for pid in "${running_pids[@]}"; do kill -TERM "$pid" 2>/dev/null; done; exit' EXIT INT TERM
-
+trap '
+    echo "Exiting script, killing tasks via pkill..."; 
+    # 注意：这里直接终止 Python 进程，不再依赖调度器记录的 PID
+    pkill -TERM -f "wandb_qikt_mamba_train.py"; 
+    exit
+' EXIT INT TERM
 # 主循环
 while [ ${#queue[@]} -gt 0 ] || [ ${#running_pids[@]} -gt 0 ]; do
     # 启动新任务直到达到上限

@@ -128,7 +128,6 @@ def update_run_history(file_path, run_id, status):
     with open(file_path, 'w') as f:
         f.writelines(updated_lines)
 
-@retry_decorator
 def main(params):
     try:
         # **开始记录运行历史**
@@ -330,16 +329,7 @@ def main(params):
             print(f"Training completed. Starting prediction with predict_after_train={predict_after_train}")
             print(f"{'='*50}")
 
-            # # 运行预测脚本
-            # prediction_success = run_prediction(predict_after_train, ckpt_path)
-            # if prediction_success:
-            #     print("Prediction completed successfully!")
-            #     if params['use_wandb']==1:
-            #         wandb.log({"prediction_status": "success"})
-            # else:
-            #     print("Prediction failed!")
-            #     if params['use_wandb']==1:
-            #         wandb.log({"prediction_status": "failed"})
+           
             if predict_after_train == 1:
                 predict_params = {
                     "bz": 16,  # 来自原cmd的--bz 16
