@@ -14,8 +14,9 @@ class LPKT(nn.Module):
         self.d_k = d_k
         self.d_a = d_a
         self.d_e = d_e
+        # Move q_matrix to the correct device
         q_matrix[q_matrix==0] = gamma
-        self.q_matrix = q_matrix
+        self.q_matrix = q_matrix.to(device)  # Move q_matrix to device
         self.n_question = n_question
         print(f"n_question:{self.n_question}")
         self.emb_type = emb_type
@@ -29,7 +30,7 @@ class LPKT(nn.Module):
         torch.nn.init.xavier_uniform_(self.e_embed.weight)
 
         if emb_type.startswith("qidcatr"):
-            self.interaction_emb = nn.Embedding(self.num_exercise * 2, self.d_k)
+            self.interaction_emb = nn.Embedding(self.num_exercise * 2, self.d_k)  # This might cause an error - see below
             self.catrlinear = nn.Linear(self.d_k * 2, self.d_k)
             self.pooling = nn.MaxPool1d(2, stride=2)
             self.avg_pooling = nn.AvgPool1d(2, stride=2)
@@ -66,12 +67,23 @@ class LPKT(nn.Module):
     def forward(self, e_data, a_data, it_data=None, at_data=None, qtest=False):
         emb_type = self.emb_type
         batch_size, seq_len = e_data.size(0), e_data.size(1)
+        
+        # Move input tensors to device
+        e_data = e_data.to(device)
+        a_data = a_data.to(device)
+        if it_data is not None:
+            it_data = it_data.to(device)
+        if at_data is not None:
+            at_data = at_data.to(device)
+        
         e_embed_data = self.e_embed(e_data)
         if self.use_time:
             if at_data != None:
                 at_embed_data = self.at_embed(at_data)
             it_embed_data = self.it_embed(it_data)
         a_data = a_data.view(-1, 1).repeat(1, self.d_a).view(batch_size, -1, self.d_a)
+        
+        # Initialize tensors on the correct device
         h_pre = nn.init.xavier_uniform_(torch.zeros(self.n_question + 1, self.d_k)).repeat(batch_size, 1, 1).to(device)
         h_tilde_pre = None
         if emb_type == "qid":

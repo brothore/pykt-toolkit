@@ -18,7 +18,7 @@ class ATDKT(Module):
         self.emb_size = emb_size
         self.hidden_size = emb_size
         self.emb_type = emb_type
-
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.interaction_emb = Embedding(self.num_c * 2, self.emb_size)
 
         self.lstm_layer = LSTM(self.emb_size, self.hidden_size, batch_first=True)
@@ -70,6 +70,7 @@ class ATDKT(Module):
                 self.hisloss = nn.MSELoss()
 
     def predcurc(self, dcur, q, c, r, xemb, train):
+        
         emb_type = self.emb_type
         y2, y3 = 0, 0
         if emb_type.find("delxemb") != -1:
@@ -94,7 +95,7 @@ class ATDKT(Module):
         else:
             qh, _ = self.qlstm(catemb)
         if train:
-            sm = dcur["smasks"].long()
+            sm = dcur["smasks"].long().to(self.device)
             start = 0
             cpreds = self.qclasifier(qh[:,start:,:])
             flag = sm[:,start:]==1
@@ -109,12 +110,12 @@ class ATDKT(Module):
         # predict history correctness rates
         rpreds = None
         if train and emb_type.find("his") != -1:
-            sm = dcur["smasks"].long()
+            sm = dcur["smasks"].long().to(self.device)
             start = self.start
             rpreds = torch.sigmoid(self.hisclasifier(h)).squeeze(-1)
             rsm = sm[:,start:]
             rflag = rsm==1
-            rtrues = dcur["historycorrs"][:,start:]
+            rtrues = dcur["historycorrs"][:,start:].to(self.device)
             y3 = self.hisloss(rpreds[:,start:][rflag], rtrues[rflag])
 
         # predict response
@@ -125,7 +126,11 @@ class ATDKT(Module):
 
     def forward(self, dcur, train=False): ## F * xemb
         # print(f"keys: {dcur.keys()}")
-        q, c, r = dcur["qseqs"].long(), dcur["cseqs"].long(), dcur["rseqs"].long()
+        
+        # Move tensors to the correct device
+        q = dcur["qseqs"].long().to(self.device)
+        c = dcur["cseqs"].long().to(self.device)
+        r = dcur["rseqs"].long().to(self.device)
         
         y2, y3 = 0, 0
 
@@ -149,12 +154,12 @@ class ATDKT(Module):
             h, _ = self.lstm_layer(xemb)
             # predict history correctness rates
             if train:
-                sm = dcur["smasks"].long()
+                sm = dcur["smasks"].long().to(self.device)
                 start = self.start
                 rpreds = torch.sigmoid(self.hisclasifier(h)[:,start:,:]).squeeze(-1)
                 rsm = sm[:,start:]
                 rflag = rsm==1
-                rtrues = dcur["historycorrs"][:,start:]
+                rtrues = dcur["historycorrs"][:,start:].to(self.device)
                 y2 = self.hisloss(rpreds[rflag], rtrues[rflag])
 
             h = self.dropout_layer(h)
@@ -167,4 +172,3 @@ class ATDKT(Module):
             return y, y2, y3
         else:
             return y
-  
