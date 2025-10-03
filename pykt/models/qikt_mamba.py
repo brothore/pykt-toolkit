@@ -14,7 +14,65 @@ from mamba_ssm import Mamba
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.utils import weight_norm
+class Chomp1d(nn.Module):
+    def __init__(self, chomp_size):
+        super(Chomp1d, self).__init__()
+        self.chomp_size = chomp_size
 
+    def forward(self, x):
+        return x[:, :, :-self.chomp_size].contiguous()
+
+
+class TemporalBlock(nn.Module):
+    def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, dropout=0.2):
+        super(TemporalBlock, self).__init__()
+        self.conv1 = weight_norm(nn.Conv1d(n_inputs, n_outputs, kernel_size,
+                                           stride=stride, padding=padding, dilation=dilation))
+        self.chomp1 = Chomp1d(padding)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(dropout)
+
+        self.conv2 = weight_norm(nn.Conv1d(n_outputs, n_outputs, kernel_size,
+                                           stride=stride, padding=padding, dilation=dilation))
+        self.chomp2 = Chomp1d(padding)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout)
+
+        self.net = nn.Sequential(self.conv1, self.chomp1, self.relu1, self.dropout1,
+                                 self.conv2, self.chomp2, self.relu2, self.dropout2)
+        self.downsample = nn.Conv1d(n_inputs, n_outputs, 1) if n_inputs != n_outputs else None
+        self.relu = nn.ReLU()
+        self.init_weights()
+
+    def init_weights(self):
+        self.conv1.weight.data.normal_(0, 0.01)
+        self.conv2.weight.data.normal_(0, 0.01)
+        if self.downsample is not None:
+            self.downsample.weight.data.normal_(0, 0.01)
+
+    def forward(self, x):
+        out = self.net(x)
+        res = x if self.downsample is None else self.downsample(x)
+        return self.relu(out + res)
+
+
+class TemporalConvNet(nn.Module):
+    def __init__(self, num_inputs, num_channels, kernel_size=2, dropout=0.2):
+        super(TemporalConvNet, self).__init__()
+        layers = []
+        num_levels = len(num_channels)
+        for i in range(num_levels):
+            dilation_size = 2 ** i
+            in_channels = num_inputs if i == 0 else num_channels[i-1]
+            out_channels = num_channels[i]
+            layers += [TemporalBlock(in_channels, out_channels, kernel_size, stride=1, dilation=dilation_size,
+                                     padding=(kernel_size-1) * dilation_size, dropout=dropout)]
+
+        self.network = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.network(x)
 class MLP(nn.Module):
     '''
     classifier decoder implemented with mlp
@@ -82,6 +140,7 @@ class QIKTNet(nn.Module):
         if self.version == "lstm":
             #原版
             self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, batch_first=True)
+
             self.concept_lstm_layer = nn.LSTM(self.emb_size*2, self.hidden_size, batch_first=True)
             # self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
             # self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
@@ -116,6 +175,11 @@ class QIKTNet(nn.Module):
             self.four2two = nn.Linear(self.emb_size*2, self.emb_size*4)
             self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, num_layers=2, batch_first=True)
             self.concept_lstm_layer = self.que_lstm_layer
+        elif self.version == "gru":
+            self.que_lstm_layer = nn.GRU(self.emb_size*4, self.hidden_size, batch_first=True)
+            self.concept_lstm_layer = nn.GRU(self.emb_size*2, self.hidden_size, batch_first=True)
+        elif self.version == "tcn":
+            pass
         else:
             
             self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
@@ -162,7 +226,7 @@ class QIKTNet(nn.Module):
         emb_qc_shift = emb_qc[:, 1:, :]
         emb_qca_current = emb_qca[:, :-1, :]
         # question model
-        if self.version == "lstm":
+        if self.version in ["lstm","gru"]:
 
             que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
         elif self.version in ["encoder",'decoder','full']:
@@ -182,6 +246,8 @@ class QIKTNet(nn.Module):
 
             que_h = self.dropout_layer(self.que_lstm_layer((emb_qca_current)))
             que_h = self.que_proj(que_h)
+        elif self.version == "tcn":
+            pass
         else:
             #原版
             
@@ -198,9 +264,10 @@ class QIKTNet(nn.Module):
         ], dim=-1)
         
         emb_ca_current = emb_ca[:, :-1, :]
-        if self.version == "lstm":
+        if self.version in ["lstm","gru"]:
             #mamba
             concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
+        
         elif self.version in ["encoder",'decoder','full']:
             #transformer
             concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current))
@@ -219,6 +286,8 @@ class QIKTNet(nn.Module):
             concept_h = self.concept_lstm_layer(self.four2two(emb_ca_current))  # [32, 199, 512]
             concept_h = self.concept_proj(concept_h)  # [32, 199, 256]
             concept_h = self.dropout_layer(concept_h)
+        elif self.version == "tcn":
+            pass
         else:
             #原版
             
