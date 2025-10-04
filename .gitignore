@@ -49,7 +49,7 @@ __pycache__/
 log.*
 *.swp
 *.bak
-logs/
+# logs/
 examples/best_model_path
 examples/all_wandbs_pred/
 examples/best_model_path_1002
@@ -66,6 +66,7 @@ examples/nips2022-ednet/
 examples/models/
 docs/
 *.vsix
+finished*.txt
 .private
 *.npy
 llm_config.py
