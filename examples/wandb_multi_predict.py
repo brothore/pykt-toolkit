@@ -4,6 +4,8 @@ import json
 import copy
 import torch
 import pandas as pd
+import time
+from datetime import datetime
 from pykt.models.cuda_retry import retry_decorator
 # from pykt.config import ERR_PATH, stu_pk
 from pykt.models import evaluate, evaluate_question, load_model,evaluate_return_results
@@ -13,6 +15,13 @@ que_type_models = config_module.que_type_models
 import traceback  # 在文件顶部添加导入
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:2'
+def log_step_time(start_time, step_name):
+    """记录步骤的当前时间和耗时，并返回新的开始时间"""
+    end_time = time.time()
+    current_time_str = datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S')
+    elapsed_time = end_time - start_time
+    print(f"**{step_name}** | **当前时间**: {current_time_str} | **耗时**: {elapsed_time:.4f} 秒")
+    return end_time
 def parse_dataset_name(save_dir):
     """从save_dir参数中解析数据集名称"""
     # 获取最后一个目录（模型目录）
@@ -198,6 +207,9 @@ def predict_interval_data(model, data_config, model_name, fusion_type, save_dir)
     
 def evaluate_single_student(params, student_id,save_reult):
     """评估单个学生的函数"""
+    start_time_total = time.time() # 初始化总计时器
+    last_step_time = start_time_total # 初始化第一个步骤的开始时间
+
     target_file_type = params["target_file_type"]
     print(f"\n开始评估学生 {student_id}")
     
@@ -208,7 +220,7 @@ def evaluate_single_student(params, student_id,save_reult):
             wandb_config = json.load(fin)
         os.environ['WANDB_API_KEY'] = wandb_config["api_key"]
         wandb.init(project="wandb_predict")
-
+    last_step_time = log_step_time(last_step_time, "步骤 1: WANDB 初始化完成") # 新增计时点
     save_dir, batch_size, fusion_type = params["save_dir"], params["bz"], params["fusion_type"].split(",")
     results_path = os.path.join(save_dir, f"evaluation_results_{student_id}.json")
     #  检查是否已存在预测结果
@@ -234,6 +246,7 @@ def evaluate_single_student(params, student_id,save_reult):
             print(f"将重新运行预测...")
     else:
         print(f"不使用学生 {student_id}: JSONL 文件 {results_path} ，将运行预测...")
+    last_step_time = log_step_time(last_step_time, "步骤 2: 检查现有结果完成") # 新增计时点
     # 确保保存目录存在
     os.makedirs(save_dir, exist_ok=True)
 
@@ -272,7 +285,7 @@ def evaluate_single_student(params, student_id,save_reult):
     else:
         diff_level = trained_params["difficult_levels"]
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size, diff_level=diff_level)
-
+    last_step_time = log_step_time(last_step_time, "步骤 3: 加载配置和数据集完成") # 新增计时点
     print(f"学生 {student_id}: 开始预测模型 {model_name}, embtype: {emb_type}, dataset_name: {dataset_name}")
 
     model = load_model(model_name, model_config, data_config, emb_type, save_dir)
@@ -282,7 +295,7 @@ def evaluate_single_student(params, student_id,save_reult):
     stats_file_path = os.path.join(data_config["dpath"], predict_files)
     student_stats = extract_student_stats(stats_file_path)
     print(f"学生 {student_id}: 已加载统计信息")
-
+    last_step_time = log_step_time(last_step_time, "步骤 4: 模型加载和统计信息提取完成") # 新增计时点
 
     if model.model_name == "rkt":
         dpath = data_config["dpath"]
@@ -318,6 +331,7 @@ def evaluate_single_student(params, student_id,save_reult):
         dres["window_testauc"] = window_testauc
         dres["window_testacc"] = window_testacc
         print(f"学生 {student_id}: window_testauc: {window_testauc}, window_testacc: {window_testacc}")
+        last_step_time = log_step_time(last_step_time, "步骤 5: Window Test 评估完成") # 新增计时点
 
     elif test_loader is not None:
         # print(f"[DEBUG] test_window_loader: {test_window_loader is not None} (type: {type(test_window_loader)})")
@@ -333,7 +347,8 @@ def evaluate_single_student(params, student_id,save_reult):
         dres["testauc"] = testauc
         dres["testauc"] = testacc
         print(f"学生 {student_id}: testauc: {testauc}, testacc: {testacc}")
-
+        last_step_time = log_step_time(last_step_time, "步骤 5: Full Test 评估完成") # 新增计时点
+    
     else:
         # print(f"[DEBUG] test_window_loader: {test_window_loader is not None} (type: {type(test_window_loader)})")
         pass
@@ -346,6 +361,8 @@ def evaluate_single_student(params, student_id,save_reult):
             dres["windowauc" + key] = qw_testaucs[key]
         for key in qw_testaccs:
             dres["windowacc" + key] = qw_testaccs[key]
+
+        last_step_time = log_step_time(last_step_time, "步骤 6: Question-level 评估完成") # 新增计时点
     raw_config = json.load(open(os.path.join(save_dir, "config.json")))
     dres.update(raw_config['params'])
     # if student_stats and stu_df is not None:
@@ -386,6 +403,13 @@ def evaluate_single_student(params, student_id,save_reult):
         print(f"学生 {student_id}: 评估结果已追加保存到 {results_path}")
     except Exception as e:
         print(f"学生 {student_id}: 保存评估结果到 JSONL 时出错: {e}")
+
+    last_step_time = log_step_time(last_step_time, "步骤 7: 评估结果保存完成") # 新增计时点
+    
+    # 打印总耗时
+    log_step_time(start_time_total, f"**学生 {student_id} 总评估时间**")
+
+    
     if save_reult:
         return dres,stu_df
     else:
