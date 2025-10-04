@@ -4,8 +4,6 @@ import json
 import copy
 import torch
 import pandas as pd
-import time
-from datetime import datetime
 from pykt.models.cuda_retry import retry_decorator
 # from pykt.config import ERR_PATH, stu_pk
 from pykt.models import evaluate, evaluate_question, load_model,evaluate_return_results
@@ -15,13 +13,6 @@ que_type_models = config_module.que_type_models
 import traceback  # 在文件顶部添加导入
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:2'
-def log_step_time(start_time, step_name):
-    """记录步骤的当前时间和耗时，并返回新的开始时间"""
-    end_time = time.time()
-    current_time_str = datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S')
-    elapsed_time = end_time - start_time
-    print(f"**{step_name}** | **当前时间**: {current_time_str} | **耗时**: {elapsed_time:.4f} 秒")
-    return end_time
 def parse_dataset_name(save_dir):
     """从save_dir参数中解析数据集名称"""
     # 获取最后一个目录（模型目录）
@@ -207,9 +198,7 @@ def predict_interval_data(model, data_config, model_name, fusion_type, save_dir)
     
 def evaluate_single_student(params, student_id,save_reult):
     """评估单个学生的函数"""
-    start_time_total = time.time() # 初始化总计时器
-    last_step_time = start_time_total # 初始化第一个步骤的开始时间
-
+    needs_seq_len = params["seq_len"]
     target_file_type = params["target_file_type"]
     print(f"\n开始评估学生 {student_id}")
     
@@ -220,11 +209,11 @@ def evaluate_single_student(params, student_id,save_reult):
             wandb_config = json.load(fin)
         os.environ['WANDB_API_KEY'] = wandb_config["api_key"]
         wandb.init(project="wandb_predict")
-    last_step_time = log_step_time(last_step_time, "步骤 1: WANDB 初始化完成") # 新增计时点
+
     save_dir, batch_size, fusion_type = params["save_dir"], params["bz"], params["fusion_type"].split(",")
     results_path = os.path.join(save_dir, f"evaluation_results_{student_id}.json")
     #  检查是否已存在预测结果
-    results_path = os.path.join(save_dir, "evaluate_results_all_stu.jsonl")
+    results_path = os.path.join(save_dir, f"seq_len_{needs_seq_len}_evaluate_results_all_stu.jsonl")
     if os.path.exists(results_path) and params["use_saved_result"] == 1:
         try:
             with open(results_path, "r", encoding='utf-8') as fin:
@@ -246,7 +235,6 @@ def evaluate_single_student(params, student_id,save_reult):
             print(f"将重新运行预测...")
     else:
         print(f"不使用学生 {student_id}: JSONL 文件 {results_path} ，将运行预测...")
-    last_step_time = log_step_time(last_step_time, "步骤 2: 检查现有结果完成") # 新增计时点
     # 确保保存目录存在
     os.makedirs(save_dir, exist_ok=True)
 
@@ -263,7 +251,7 @@ def evaluate_single_student(params, student_id,save_reult):
             train_config = config["train_config"]
             seq_len = train_config["seq_len"]
             model_config["seq_len"] = seq_len
-    target_file_type = "test_question_window_sequences" if model_name not in que_type_models else "test_window_sequences"
+
     with open("../configs/data_config.json") as fin:
         curconfig = copy.deepcopy(json.load(fin))
         data_config = curconfig[dataset_name]
@@ -285,7 +273,7 @@ def evaluate_single_student(params, student_id,save_reult):
     else:
         diff_level = trained_params["difficult_levels"]
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size, diff_level=diff_level)
-    last_step_time = log_step_time(last_step_time, "步骤 3: 加载配置和数据集完成") # 新增计时点
+
     print(f"学生 {student_id}: 开始预测模型 {model_name}, embtype: {emb_type}, dataset_name: {dataset_name}")
 
     model = load_model(model_name, model_config, data_config, emb_type, save_dir)
@@ -295,7 +283,7 @@ def evaluate_single_student(params, student_id,save_reult):
     stats_file_path = os.path.join(data_config["dpath"], predict_files)
     student_stats = extract_student_stats(stats_file_path)
     print(f"学生 {student_id}: 已加载统计信息")
-    last_step_time = log_step_time(last_step_time, "步骤 4: 模型加载和统计信息提取完成") # 新增计时点
+
 
     if model.model_name == "rkt":
         dpath = data_config["dpath"]
@@ -331,7 +319,6 @@ def evaluate_single_student(params, student_id,save_reult):
         dres["window_testauc"] = window_testauc
         dres["window_testacc"] = window_testacc
         print(f"学生 {student_id}: window_testauc: {window_testauc}, window_testacc: {window_testacc}")
-        last_step_time = log_step_time(last_step_time, "步骤 5: Window Test 评估完成") # 新增计时点
 
     elif test_loader is not None:
         # print(f"[DEBUG] test_window_loader: {test_window_loader is not None} (type: {type(test_window_loader)})")
@@ -347,8 +334,7 @@ def evaluate_single_student(params, student_id,save_reult):
         dres["testauc"] = testauc
         dres["testauc"] = testacc
         print(f"学生 {student_id}: testauc: {testauc}, testacc: {testacc}")
-        last_step_time = log_step_time(last_step_time, "步骤 5: Full Test 评估完成") # 新增计时点
-    
+
     else:
         # print(f"[DEBUG] test_window_loader: {test_window_loader is not None} (type: {type(test_window_loader)})")
         pass
@@ -361,8 +347,6 @@ def evaluate_single_student(params, student_id,save_reult):
             dres["windowauc" + key] = qw_testaucs[key]
         for key in qw_testaccs:
             dres["windowacc" + key] = qw_testaccs[key]
-
-        last_step_time = log_step_time(last_step_time, "步骤 6: Question-level 评估完成") # 新增计时点
     raw_config = json.load(open(os.path.join(save_dir, "config.json")))
     dres.update(raw_config['params'])
     # if student_stats and stu_df is not None:
@@ -395,7 +379,7 @@ def evaluate_single_student(params, student_id,save_reult):
     # print(f"学生 {student_id}: 评估结果已保存到 {results_path}")
     # # except Exception as e:
     #     print(f"学生 {student_id}: 保存评估结果时出错: {e}")
-    results_path = os.path.join(save_dir, "evaluate_results_all_stu.jsonl")
+    results_path = os.path.join(save_dir, f"seq_len_{needs_seq_len}_evaluate_results_all_stu.jsonl")
     try:
         with open(results_path, "a", encoding='utf-8') as fout:
             json.dump(dres, fout, ensure_ascii=False)
@@ -403,19 +387,13 @@ def evaluate_single_student(params, student_id,save_reult):
         print(f"学生 {student_id}: 评估结果已追加保存到 {results_path}")
     except Exception as e:
         print(f"学生 {student_id}: 保存评估结果到 JSONL 时出错: {e}")
-
-    last_step_time = log_step_time(last_step_time, "步骤 7: 评估结果保存完成") # 新增计时点
-    
-    # 打印总耗时
-    log_step_time(start_time_total, f"**学生 {student_id} 总评估时间**")
-
-    
     if save_reult:
         return dres,stu_df
     else:
         return dres,None
 
 def main(params):
+    seq_len = params["seq_len"]
     if params["mode"] in ["all","stu"]:   
         dataset_name = parse_dataset_name(params["save_dir"])
         print(f"解析出的数据集名称: {dataset_name}")
@@ -429,7 +407,7 @@ def main(params):
                 
                 if dataset_config:
                     # 获取学生总数
-                    total_students = dataset_config["students_num_eval"]
+                    total_students = dataset_config[f'seq_len_{seq_len}_students_num_eval']
                     print(f"从配置加载总学生数: {total_students}")
                     params['total_students'] = total_students
                     # 数据集配置存入params
@@ -443,7 +421,7 @@ def main(params):
         save_dir = params["save_dir"]
         
         # 创建统计文件路径
-        stat_file_path = os.path.join(save_dir, "evaluation_statistics.txt")
+        stat_file_path = os.path.join(save_dir, f"seq_len_{args.seq_len}_evaluation_statistics.txt")
         
         # 存储所有学生的评估结果
         all_results = []
@@ -466,7 +444,7 @@ def main(params):
             final_df = pd.concat(valid_dfs, ignore_index=True)
         else:
             final_df = pd.DataFrame() # 处理空列表或全 None 列表的情况
-        save_path = os.path.join(save_dir, "all_students_evaluation_results.csv")
+        save_path = os.path.join(save_dir, f"seq_len_{args.seq_len}_all_students_evaluation_results.csv")
 
         # 将合并后的 DataFrame 保存为 CSV 文件
         final_df.to_csv(save_path, index=False)
@@ -679,10 +657,10 @@ def main(params):
                 data_config["num_at"] = config["data_config"]["num_at"]
                 data_config["num_it"] = config["data_config"]["num_it"]
         if model_name not in ["dimkt"]:
-            test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
+            _, test_window_loader, _, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
         else:
             diff_level = trained_params["difficult_levels"]
-            test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
+            _, test_window_loader, _, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
 
         print(f"Start predicting model: {model_name}, embtype: {emb_type}, save_dir: {save_dir}, dataset_name: {dataset_name}")
         print(f"model_config: {model_config}")
@@ -756,7 +734,7 @@ def main(params):
         
         # 将评估结果保存到 save_dir 目录下的 evaluation_results.json 文件
         
-        results_path = os.path.join(save_dir, "evaluation_results.json")
+        results_path = os.path.join(save_dir, f"seq_len_{args.seq_len}_evaluation_results.json")
         try:
             with open(results_path, "w") as fout:
                 json.dump(dres, fout, indent=4, ensure_ascii=False)
@@ -824,11 +802,11 @@ if __name__ == "__main__":
 
     parser.add_argument("--start_student", type=int, default=1, help="开始评估的学生ID")
     parser.add_argument("--save_reult", type=int, default=0, help="保存结果的路径")
-    parser.add_argument("--use_saved_result", type=int, default=0, help="是否使用已有结果")
+    parser.add_argument("--use_saved_result", type=int, default=1, help="是否使用已有结果")
     parser.add_argument("--mode", type=str, default="all", help="只对学生进行评估,all全部，auc只评测全部auc，stu只评测学生")
     parser.add_argument("--target_file_type", type=str, default="test_window_sequences",
                         help="切割哪个文件,test_question_window_sequences,test_window_sequences")
-
+    parser.add_argument("--seq_len", type=int, default=0, help="开启序列模式")
     # 添加新参数：统计信息文件目录
     # parser.add_argument("--stats_dir", type=str, default="", required=True, help="学生统计信息文件目录")
 

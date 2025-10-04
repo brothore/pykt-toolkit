@@ -6,10 +6,10 @@ if [ -f "$HOME/.bashrc" ]; then
 fi
 
 # 默认并发上限
-MAX_JOBS=12
+MAX_JOBS=8
 
 # 默认 GPU 数量
-NUM_GPUS=6
+NUM_GPUS=4
 
 # 如果有命令行参数，覆盖 MAX_JOBS 和 NUM_GPUS
 if [ $# -gt 0 ]; then

@@ -530,7 +530,7 @@ def model_forward(model, data, rel=None):
     return loss
     
 
-def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, test_loader=None, test_window_loader=None, save_model=False, data_config=None, fold=None,use_trained=0):
+def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, test_loader=None, test_window_loader=None, save_model=False, data_config=None, fold=None,use_trained=1):
     max_auc, best_epoch = 0, -1
     train_step = 0
     model_path = os.path.join(ckpt_path, model.emb_type + "_model.ckpt")
@@ -633,6 +633,6 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
         print(f"            testauc: {round(testauc,4)}, testacc: {round(testacc,4)}, window_testauc: {round(window_testauc,4)}, window_testacc: {round(window_testacc,4)}")
 
 
-        if i - best_epoch >= 10:
+        if i - best_epoch >= 5:
             break
     return testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch

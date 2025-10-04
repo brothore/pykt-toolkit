@@ -18,7 +18,7 @@ from .multi_dataset_akt_dataloader import MultiKTDataset
 from pykt.models.cuda_retry import retry_decorator
 import os
 from torch.utils.data import DataLoader
-@retry_decorator
+
 def init_test_datasets_multi_stu(
     data_config, 
     model_name, 
@@ -161,14 +161,32 @@ def init_test_datasets_multi_stu(
 
     elif model_name in ["atdkt"]:
         if flag_test:
-            test_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
+            if predict_file_type == "0":
+                test_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_file"]), data_config["input_type"], {-1})
+            else:
+                test_dataset = ATDKTDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1})
+
         if flag_test_window:
-            test_window_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
+            if predict_file_type == "0":
+            
+                test_window_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_window_file"]), data_config["input_type"], {-1})
+            else:
+                test_window_dataset = ATDKTDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1})
+
         if "test_question_file" in data_config:
             if flag_test_question:
-                test_question_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_question_file"]), data_config["input_type"], {-1}, True)
+                if predict_file_type == "0":
+                    test_question_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_question_file"]), data_config["input_type"], {-1}, True)
+                else:
+                    test_question_dataset = ATDKTDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1}, True)
+
             if flag_test_question_window:
-                test_question_window_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
+                if predict_file_type == "0":
+                    test_question_window_dataset = ATDKTDataset(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
+                else:
+                    test_question_window_dataset = ATDKTDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1}, True)
+
+
 
     elif model_name in ["dimkt"]:
         if flag_test:
@@ -226,7 +244,7 @@ def init_test_datasets_multi_stu(
     return test_loader, test_window_loader, test_question_loader, test_question_window_loader
 
 
-@retry_decorator
+
 def init_test_datasets(data_config, model_name, batch_size, diff_level=None, args=None, re_mapping=False):
     dataset_name = data_config["dataset_name"]
     print(f"model_name is {model_name}, dataset_name is {dataset_name}")

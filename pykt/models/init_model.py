@@ -6,7 +6,7 @@ from pykt.models.cuda_retry import retry_decorator
 # ⚠️ 注意: os、torch和numpy是基础库，通常保留在文件顶部以供全局使用。
 
 device = "cpu" if not torch.cuda.is_available() else "cuda"
-@retry_decorator
+
 def init_model(model_name, model_config, data_config, emb_type):
     if model_name == "dkt":
         from .dkt import DKT

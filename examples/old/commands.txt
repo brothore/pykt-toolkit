@@ -1,0 +1,182 @@
+##dkt_plus+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "assist2009" --fold 0 --emb_type "qid" --emb_size 256 --lambda_w1 0.1 --dropout 0.5 --lambda_w2 0.3 --seed 3407 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_dkt_plus_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "nips_task34" --fold 0 --emb_type "qid" --emb_size 256 --lambda_w1 0.1 --dropout 0.3 --lambda_w2 0.3 --seed 42 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_dkt_plus_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "peiyou" --fold 0 --emb_type "qid" --emb_size 256 --lambda_w1 0.1 --dropout 0.3 --lambda_w2 0.3 --seed 42 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_dkt_plus_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "assist2009" --fold 0 --emb_type "qid" --emb_size 256 --lambda_w1 0.1 --dropout 0.5 --lambda_w2 0.3 --seed 3407 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_dkt_plus_fold_0.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "assist2009" --fold 1 --emb_type "qid" --emb_size 256 --lambda_w1 0.1 --dropout 0.5 --lambda_w2 1 --seed 3407 --lambda_r 0.05 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_dkt_plus_fold_1.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "assist2009" --fold 2 --emb_type "qid" --emb_size 256 --lambda_w1 0.03 --dropout 0.5 --lambda_w2 0.3 --seed 3407 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_dkt_plus_fold_2.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "assist2009" --fold 3 --emb_type "qid" --emb_size 256 --lambda_w1 0.03 --dropout 0.5 --lambda_w2 0.3 --seed 3407 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_dkt_plus_fold_3.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "assist2009" --fold 4 --emb_type "qid" --emb_size 256 --lambda_w1 0.1 --dropout 0.5 --lambda_w2 0 --seed 42 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_dkt_plus_fold_4.log 2>&1
+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "nips_task34" --fold 0 --emb_type "qid" --emb_size 256 --lambda_w1 0.1 --dropout 0.3 --lambda_w2 0.3 --seed 42 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_dkt_plus_fold_0.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "nips_task34" --fold 1 --emb_type "qid" --emb_size 256 --lambda_w1 0.03 --dropout 0.5 --lambda_w2 0.3 --seed 42 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_dkt_plus_fold_1.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "nips_task34" --fold 2 --emb_type "qid" --emb_size 256 --lambda_w1 0 --dropout 0.3 --lambda_w2 1 --seed 3407 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_dkt_plus_fold_2.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "nips_task34" --fold 2 --emb_type "qid" --emb_size 256 --lambda_w1 0 --dropout 0.3 --lambda_w2 1 --seed 3407 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_dkt_plus_fold_3.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "nips_task34" --fold 4 --emb_type "qid" --emb_size 256 --lambda_w1 0.03 --dropout 0.5 --lambda_w2 1 --seed 3407 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_dkt_plus_fold_4.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "peiyou" --fold 0 --emb_type "qid" --emb_size 256 --lambda_w1 0.1 --dropout 0.3 --lambda_w2 0.3 --seed 42 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_dkt_plus_fold_0.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "peiyou" --fold 1 --emb_type "qid" --emb_size 256 --lambda_w1 0.03 --dropout 0.5 --lambda_w2 0.3 --seed 42 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_dkt_plus_fold_1.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "peiyou" --fold 2 --emb_type "qid" --emb_size 256 --lambda_w1 0 --dropout 0.3 --lambda_w2 1 --seed 3407 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_dkt_plus_fold_2.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "peiyou" --fold 2 --emb_type "qid" --emb_size 256 --lambda_w1 0 --dropout 0.3 --lambda_w2 1 --seed 3407 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_dkt_plus_fold_3.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_dkt_plus_train.py --model_name "dkt+" --dataset_name "peiyou" --fold 4 --emb_type "qid" --emb_size 256 --lambda_w1 0.03 --dropout 0.5 --lambda_w2 1 --seed 3407 --lambda_r 0 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_dkt_plus_fold_4.log 2>&1
+
+##deep_irt+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "assist2009" --fold 0 --emb_type "qid" --dim_s 256 --dropout 0.1 --size_m 32 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_deep_irt_fold_0.log 2>&1
+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "nips_task34" --fold 0 --emb_type "qid" --dim_s 256 --dropout 0.3 --size_m 64 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_deep_irt_fold_0.log 2>&1
+
+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "peiyou" --fold 0 --emb_type "qid" --dim_s 256 --dropout 0.3 --size_m 64 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_deep_irt_fold_0.log 2>&1
+
+##deep_irt+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "assist2009" --fold 0 --emb_type "qid" --dim_s 256 --dropout 0.1 --size_m 32 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_deep_irt_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "assist2009" --fold 1 --emb_type "qid" --dim_s 256 --dropout 0.3 --size_m 32 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_deep_irt_fold_1.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "assist2009" --fold 2 --emb_type "qid" --dim_s 256 --dropout 0.05 --size_m 32 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_deep_irt_fold_2.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "assist2009" --fold 3 --emb_type "qid" --dim_s 256 --dropout 0.1 --size_m 32 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_deep_irt_fold_3.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "assist2009" --fold 4 --emb_type "qid" --dim_s 256 --dropout 0.3 --size_m 32 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_deep_irt_fold_4.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "nips_task34" --fold 0 --emb_type "qid" --dim_s 256 --dropout 0.3 --size_m 64 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_deep_irt_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "nips_task34" --fold 1 --emb_type "qid" --dim_s 256 --dropout 0.3 --size_m 32 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_deep_irt_fold_1.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "nips_task34" --fold 2 --emb_type "qid" --dim_s 256 --dropout 0.3 --size_m 64 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_deep_irt_fold_2.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "nips_task34" --fold 3 --emb_type "qid" --dim_s 256 --dropout 0.3 --size_m 32 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_deep_irt_fold_3.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "nips_task34" --fold 4 --emb_type "qid" --dim_s 256 --dropout 0.05 --size_m 32 --seed 3407 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_deep_irt_fold_4.log 2>&1
+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "peiyou" --fold 0 --emb_type "qid" --dim_s 256 --dropout 0.3 --size_m 64 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_deep_irt_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "peiyou" --fold 1 --emb_type "qid" --dim_s 256 --dropout 0.3 --size_m 32 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_deep_irt_fold_1.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "peiyou" --fold 2 --emb_type "qid" --dim_s 256 --dropout 0.3 --size_m 64 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_deep_irt_fold_2.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "peiyou" --fold 3 --emb_type "qid" --dim_s 256 --dropout 0.3 --size_m 32 --seed 42 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_deep_irt_fold_3.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_deep_irt_train.py --model_name "deep_irt" --dataset_name "peiyou" --fold 4 --emb_type "qid" --dim_s 256 --dropout 0.05 --size_m 32 --seed 3407 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_deep_irt_fold_4.log 2>&1
+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "assist2009" --fold 0 --emb_type "qid_alibi" --seed 3407 --dropout 0.1 --d_model 64 --d_ff 256 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.0001 --use_wandb 0 >> ./logs/assist2009_folibikt_fold_0.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "assist2009" --fold 1 --emb_type "qid_alibi" --seed 3407 --dropout 0.1 --d_model 128 --d_ff 64 --num_attn_heads 4 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_folibikt_fold_1.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "assist2009" --fold 2 --emb_type "qid_alibi" --seed 3407 --dropout 0.05 --d_model 64 --d_ff 128 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_folibikt_fold_2.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "assist2009" --fold 3 --emb_type "qid_alibi" --seed 3407 --dropout 0.05 --d_model 64 --d_ff 256 --num_attn_heads 4 --n_blocks 4 --learning_rate 0.0001 --use_wandb 0 >> ./logs/assist2009_folibikt_fold_3.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "assist2009" --fold 4 --emb_type "qid_alibi" --seed 3407 --dropout 0.3 --d_model 128 --d_ff 256 --num_attn_heads 8 --n_blocks 2 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_folibikt_fold_4.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "nips_task34" --fold 0 --emb_type "qid_alibi" --seed 3407 --dropout 0.3 --d_model 64 --d_ff 128 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_folibikt_fold_0.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "nips_task34" --fold 1 --emb_type "qid_alibi" --seed 3407 --dropout 0.3 --d_model 64 --d_ff 64 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_folibikt_fold_1.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "nips_task34" --fold 2 --emb_type "qid_alibi" --seed 3407 --dropout 0.3 --d_model 64 --d_ff 256 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_folibikt_fold_2.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "nips_task34" --fold 3 --emb_type "qid_alibi" --seed 42 --dropout 0.1 --d_model 128 --d_ff 128 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_folibikt_fold_3.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "nips_task34" --fold 4 --emb_type "qid_alibi" --seed 3407 --dropout 0.3 --d_model 64 --d_ff 128 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_folibikt_fold_4.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "peiyou" --fold 0 --emb_type "qid_alibi" --seed 3407 --dropout 0.3 --d_model 64 --d_ff 128 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_folibikt_fold_0.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "peiyou" --fold 1 --emb_type "qid_alibi" --seed 3407 --dropout 0.3 --d_model 64 --d_ff 64 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_folibikt_fold_1.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "peiyou" --fold 2 --emb_type "qid_alibi" --seed 3407 --dropout 0.3 --d_model 64 --d_ff 256 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_folibikt_fold_2.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "peiyou" --fold 3 --emb_type "qid_alibi" --seed 42 --dropout 0.1 --d_model 128 --d_ff 128 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_folibikt_fold_3.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "peiyou" --fold 4 --emb_type "qid_alibi" --seed 3407 --dropout 0.3 --d_model 64 --d_ff 128 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_folibikt_fold_4.log 2>&1
+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "assist2009" --fold 0 --emb_type "qid_alibi" --seed 3407 --dropout 0.1 --d_model 64 --d_ff 256 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.0001 --use_wandb 0 >> ./logs/assist2009_folibikt_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "nips_task34" --fold 0 --emb_type "qid_alibi" --seed 3407 --dropout 0.3 --d_model 64 --d_ff 128 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_folibikt_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_folibikt_train.py --model_name "folibikt" --dataset_name "peiyou" --fold 0 --emb_type "qid_alibi" --seed 3407 --dropout 0.3 --d_model 64 --d_ff 128 --num_attn_heads 8 --n_blocks 4 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_folibikt_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atdkt_train.py --model_name "atdkt" --dataset_name "nips_task34" --fold 0 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 4 --l1 1 --num_layers 1 --seed 42 --l2 0.1 --start 30 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_atdkt_fold_0.log 2>&1
+
+
+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atdkt_train.py --model_name "atdkt" --dataset_name "assist2009" --fold 1 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 4 --l1 1 --num_layers 4 --seed 3407 --l2 1 --start 70 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_atdkt_fold_1.log 2>&1
+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atdkt_train.py --model_name "atdkt" --dataset_name "peiyou" --fold 0 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 4 --l1 1 --num_layers 1 --seed 42 --l2 0.1 --start 30 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_atdkt_fold_0.log 2>&1
+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atdkt_train.py --model_name "atdkt" --dataset_name "nips_task34" --fold 0 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 4 --l1 1 --num_layers 1 --seed 42 --l2 0.1 --start 30 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_atdkt_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atkt_train.py --model_name "atdkt" --dataset_name "nips_task34" --fold 4 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 8 --l1 1 --num_layers 1 --seed 3407 --l2 1 --start 10 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_atdkt_fold_4.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atkt_train.py --model_name "atdkt" --dataset_name "nips_task34" --fold 3 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 4 --l1 1 --num_layers 2 --seed 42 --l2 0.3 --start 50 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_atdkt_fold_3.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atkt_train.py --model_name "atdkt" --dataset_name "nips_task34" --fold 2 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 0.3 --num_attn_heads 4 --l1 1 --num_layers 1 --seed 42 --l2 0.5 --start 150 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_atdkt_fold_2.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atkt_train.py --model_name "atdkt" --dataset_name "nips_task34" --fold 1 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 0.7 --num_attn_heads 4 --l1 1 --num_layers 1 --seed 3407 --l2 0.5 --start 120 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_atdkt_fold_1.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atdkt_train.py --model_name "atdkt" --dataset_name "nips_task34" --fold 0 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 4 --l1 1 --num_layers 1 --seed 42 --l2 0.1 --start 30 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_atdkt_fold_0.log 2>&1
+
+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atdkt_train.py --model_name "atdkt" --dataset_name "assist2009" --fold 1 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 4 --l1 1 --num_layers 4 --seed 3407 --l2 1 --start 70 --learning_rate 0.001 --use_wandb 0 >> ./logs/nips_task34_atdkt_fold_1.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atdkt_train.py --model_name "atdkt" --dataset_name "assist2009" --fold 2 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 0.7 --num_attn_heads 8 --l1 1 --num_layers 4 --seed 42 --l2 1 --start 30 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_atdkt_fold_2.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atdkt_train.py --model_name "atdkt" --dataset_name "assist2009" --fold 3 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 0.5 --num_attn_heads 8 --l1 1 --num_layers 4 --seed 42 --l2 0.5 --start 100 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_atdkt_fold_3.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atdkt_train.py --model_name "atdkt" --dataset_name "assist2009" --fold 4 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 8 --l1 1 --num_layers 4 --seed 42 --l2 0.3 --start 150 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_atdkt_fold_4.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atkt_train.py --model_name "atdkt" --dataset_name "assist2009" --fold 0 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.5 --l3 1 --num_attn_heads 4 --l1 1 --num_layers 4 --seed 3407 --l2 1 --start 50 --learning_rate 0.001 --use_wandb 0 >> ./logs/assist2009_fold_0.log 2>&1
+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atdkt_train.py --model_name "atdkt" --dataset_name "peiyou" --fold 0 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 4 --l1 1 --num_layers 1 --seed 42 --l2 0.1 --start 30 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_atdkt_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atkt_train.py --model_name "atdkt" --dataset_name "peiyou" --fold 4 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 8 --l1 1 --num_layers 1 --seed 3407 --l2 1 --start 10 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_atdkt_fold_4.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atkt_train.py --model_name "atdkt" --dataset_name "peiyou" --fold 3 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 4 --l1 1 --num_layers 2 --seed 42 --l2 0.3 --start 50 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_atdkt_fold_3.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atkt_train.py --model_name "atdkt" --dataset_name "peiyou" --fold 2 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 0.3 --num_attn_heads 4 --l1 1 --num_layers 1 --seed 42 --l2 0.5 --start 150 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_atdkt_fold_2.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atkt_train.py --model_name "atdkt" --dataset_name "peiyou" --fold 1 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 0.7 --num_attn_heads 4 --l1 1 --num_layers 1 --seed 3407 --l2 0.5 --start 120 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_atdkt_fold_1.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_atdkt_train.py --model_name "atdkt" --dataset_name "peiyou" --fold 0 --emb_type "qiddelxembhistranscembpredcurc" --emb_size 256 --dropout 0.3 --l3 1 --num_attn_heads 4 --l1 1 --num_layers 1 --seed 42 --l2 0.1 --start 30 --learning_rate 0.001 --use_wandb 0 >> ./logs/peiyou_atdkt_fold_0.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "assist2009" --fold 0 --emb_type "qid" --d_a 64 --dropout 0.5 --gamma 0.07 --d_e 16 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/assist2009_lpkt_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "nips_task34" --fold 0 --emb_type "qid" --d_a 64 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/nips_task34_lpkt_fold_0.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "peiyou" --fold 0 --emb_type "qid" --d_a 64 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/peiyou_lpkt_fold_0.log 2>&1
+
+
+##lpkt+
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "assist2009" --fold 0 --emb_type "qid" --d_a 64 --dropout 0.5 --gamma 0.07 --d_e 16 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/assist2009_lpkt_fold_0.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "assist2009" --fold 1 --emb_type "qid" --d_a 16 --dropout 0.1 --gamma 0.05 --d_e 16 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/assist2009_lpkt_fold_1.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "assist2009" --fold 2 --emb_type "qid" --d_a 64 --dropout 0.05 --gamma 0.1 --d_e 16 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/assist2009_lpkt_fold_2.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "assist2009" --fold 3 --emb_type "qid" --d_a 16 --dropout 0.1 --gamma 0.07 --d_e 16 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/assist2009_lpkt_fold_3.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "assist2009" --fold 4 --emb_type "qid" --d_a 16 --dropout 0.1 --gamma 0.05 --d_e 16 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/assist2009_lpkt_fold_4.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "nips_task34" --fold 0 --emb_type "qid" --d_a 64 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/nips_task34_lpkt_fold_0.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "nips_task34" --fold 1 --emb_type "qid" --d_a 64 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/nips_task34_lpkt_fold_1.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "nips_task34" --fold 2 --emb_type "qid" --d_a 16 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/nips_task34_lpkt_fold_2.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "nips_task34" --fold 3 --emb_type "qid" --d_a 16 --dropout 0.5 --gamma 0.07 --d_e 64 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/nips_task34_lpkt_fold_3.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "nips_task34" --fold 4 --emb_type "qid" --d_a 16 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/nips_task34_lpkt_fold_4.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "assist2009" --fold 0 --emb_type "qid" --d_a 64 --dropout 0.5 --gamma 0.07 --d_e 16 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/assist2009_lpkt_fold_0.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "assist2009" --fold 1 --emb_type "qid" --d_a 16 --dropout 0.1 --gamma 0.05 --d_e 16 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/assist2009_lpkt_fold_1.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "assist2009" --fold 2 --emb_type "qid" --d_a 64 --dropout 0.05 --gamma 0.1 --d_e 16 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/assist2009_lpkt_fold_2.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "assist2009" --fold 3 --emb_type "qid" --d_a 16 --dropout 0.1 --gamma 0.07 --d_e 16 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/assist2009_lpkt_fold_3.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "assist2009" --fold 4 --emb_type "qid" --d_a 16 --dropout 0.1 --gamma 0.05 --d_e 16 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/assist2009_lpkt_fold_4.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "nips_task34" --fold 0 --emb_type "qid" --d_a 64 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/nips_task34_lpkt_fold_0.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "nips_task34" --fold 1 --emb_type "qid" --d_a 64 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/nips_task34_lpkt_fold_1.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "nips_task34" --fold 2 --emb_type "qid" --d_a 16 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/nips_task34_lpkt_fold_2.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "nips_task34" --fold 3 --emb_type "qid" --d_a 16 --dropout 0.5 --gamma 0.07 --d_e 64 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/nips_task34_lpkt_fold_3.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "nips_task34" --fold 4 --emb_type "qid" --d_a 16 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/nips_task34_lpkt_fold_4.log 2>&1
+
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "peiyou" --fold 0 --emb_type "qid" --d_a 64 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/peiyou_lpkt_fold_0.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "peiyou" --fold 1 --emb_type "qid" --d_a 64 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/peiyou_lpkt_fold_1.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "peiyou" --fold 2 --emb_type "qid" --d_a 16 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/peiyou_lpkt_fold_2.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "peiyou" --fold 3 --emb_type "qid" --d_a 16 --dropout 0.5 --gamma 0.07 --d_e 64 --seed 42 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/peiyou_lpkt_fold_3.log 2>&1
+[ "$(basename "$PWD")" != "examples" ] && cd ~/pykt-toolkit/examples || : &&python wandb_lpkt_train.py --model_name "lpkt" --dataset_name "peiyou" --fold 4 --emb_type "qid" --d_a 16 --dropout 0.1 --gamma 0.1 --d_e 64 --seed 3407 --learning_rate 0.001 --d_k 64 --use_wandb 0 >> ./logs/peiyou_lpkt_fold_4.log 2>&1
