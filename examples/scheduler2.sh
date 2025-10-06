@@ -6,10 +6,10 @@ if [ -f "$HOME/.bashrc" ]; then
 fi
 
 # 默认并发上限
-MAX_JOBS=6
+MAX_JOBS=8
 
 # 默认 GPU 数量
-NUM_GPUS=3
+NUM_GPUS=4
 
 # 如果有命令行参数，覆盖 MAX_JOBS 和 NUM_GPUS
 if [ $# -gt 0 ]; then
@@ -26,7 +26,7 @@ CHECK_INTERVAL=30
 USE_NOHUP=0
 
 # 命令文件
-COMMANDS_FILE="commands.txt"
+COMMANDS_FILE="commands2.txt"
 
 # 新增：已完成任务记录文件
 COMPLETED_FILE="completed_tasks.log"
@@ -217,19 +217,3 @@ done
 trap - EXIT INT TERM
 
 echo "All tasks completed at $(date)"
-
-# --- 新增的关机逻辑 ---
-SHUTDOWN_DELAY_MINUTES=1 # 延迟关机时间（分钟）
-SHUTDOWN_MSG="All tasks completed. System will shut down in ${SHUTDOWN_DELAY_MINUTES} minute(s). Run 'shutdown -c' to cancel."
-
-# 使用 shutdown 命令延迟关机，并给出提示
-# -h: 停止/关机
-# +M: M分钟后关机
-sudo shutdown -h "+${SHUTDOWN_DELAY_MINUTES}" "${SHUTDOWN_MSG}"
-
-# 打印提示信息，告知用户如何取消关机
-echo "--------------------------------------------------------"
-echo "ATTENTION: System shutdown scheduled for ${SHUTDOWN_DELAY_MINUTES} minute(s) from now."
-echo "To CANCEL the shutdown, execute the following command (requires root/sudo access):"
-echo "sudo shutdown -c"
-echo "--------------------------------------------------------"

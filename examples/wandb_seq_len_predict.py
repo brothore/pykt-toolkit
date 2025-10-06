@@ -802,7 +802,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--start_student", type=int, default=1, help="开始评估的学生ID")
     parser.add_argument("--save_reult", type=int, default=0, help="保存结果的路径")
-    parser.add_argument("--use_saved_result", type=int, default=1, help="是否使用已有结果")
+    parser.add_argument("--use_saved_result", type=int, default=0, help="是否使用已有结果")
     parser.add_argument("--mode", type=str, default="all", help="只对学生进行评估,all全部，auc只评测全部auc，stu只评测学生")
     parser.add_argument("--target_file_type", type=str, default="test_window_sequences",
                         help="切割哪个文件,test_question_window_sequences,test_window_sequences")

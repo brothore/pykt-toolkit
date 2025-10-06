@@ -214,10 +214,43 @@ def init_model(model_name, model_config, data_config, emb_type):
         print("The wrong model name was used...")
         return None
     return model
+def load_checkpoint_from_dir(ckpt_path: str):
+    """
+    在指定的目录下查找并加载第一个找到的 .ckpt 模型文件。
 
+    Args:
+        ckpt_path: 存放模型的目录路径。
+
+    Returns:
+        加载的模型 (PyTorch state_dict 或完整模型对象)。
+
+    Raises:
+        FileNotFoundError: 如果目录下没有找到任何 .ckpt 文件。
+    """
+    
+    # 1. 遍历目录，查找所有 .ckpt 文件
+    ckpt_files = [f for f in os.listdir(ckpt_path) if f.endswith('.ckpt')]
+
+    if not ckpt_files:
+        raise FileNotFoundError(f"在目录 '{ckpt_path}' 中未找到任何 '.ckpt' 文件。")
+
+    # 2. 选取第一个找到的文件
+    # 如果目录中只有一个 .ckpt 文件，它会被选中。
+    # 如果有多个，我们选择列表中的第一个 (可以根据需要修改排序逻辑)。
+    model_filename = ckpt_files[0]
+    full_path = os.path.join(ckpt_path, model_filename)
+
+    print(f"找到并加载模型文件: {model_filename}")
+
+    # 3. 加载模型
+    # net = torch.load(full_path, map_location='cpu') # 可以添加 map_location 以防 GPU 环境问题
+    net = torch.load(full_path)
+    
+    return net
 def load_model(model_name, model_config, data_config, emb_type, ckpt_path):
     model = init_model(model_name, model_config, data_config, emb_type)
     if model_name not in ["llm", "mpllm"]:
-        net = torch.load(os.path.join(ckpt_path, emb_type + "_model.ckpt"))
+        # net = torch.load(os.path.join(ckpt_path, emb_type + "_model.ckpt"))
+        net = load_checkpoint_from_dir(ckpt_path)
         model.load_state_dict(net)
     return model

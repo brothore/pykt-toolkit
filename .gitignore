@@ -49,7 +49,7 @@ __pycache__/
 log.*
 *.swp
 *.bak
-logs/
+*.txt
 examples/best_model_path
 examples/all_wandbs_pred/
 examples/best_model_path_1002

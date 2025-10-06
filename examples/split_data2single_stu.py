@@ -579,11 +579,11 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Process dataset parameters")
     
     # 先定义 dataset 参数
-    parser.add_argument("--dataset", type=str, default="assist2009",
+    parser.add_argument("--dataset", type=str, default="peiyou",
                        help="Dataset name (default: %(default)s)")
     parser.add_argument("--if_quelevel", type=int, default=0,
                        help="question level")
-    parser.add_argument("--target_file_type", type=str, default="test_sequences",
+    parser.add_argument("--target_file_type", type=str, default="test_question_window_sequences",
                         help="切割哪个文件,test_question_window_sequences,test_window_sequences")
                         
     # 解析已知参数（只解析 dataset，不解析其他参数）

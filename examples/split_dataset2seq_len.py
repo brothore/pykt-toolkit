@@ -255,12 +255,12 @@ def main(args):
 
     global_concept_threshold = 0
 
-    if_quelevel = "_quelevel" if args.if_quelevel else "" 
+    if_quelevel = "_quelevel" if args.if_quelevel else ""
     """主函数：处理数据并保存所有学生数据"""
     print("正在读取CSV文件...")
     config_path = "../configs/data_config.json"
     dataset_name = args.dataset
-    
+
     # --- 训练集学生数量更新（保留原逻辑） ---
     with open(config_path, 'r', encoding='utf-8') as f:
         data_config = json.load(f)
@@ -274,120 +274,133 @@ def main(args):
     output_dir = args.output_directory
     df = pd.read_csv(input_csv_path)
     print(f"共读取到 {len(df)} 条记录")
-    
+
     # 创建输出目录
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    
+
     # 用于收集所有生成的文件名
     all_generated_files = []
-    
+
     # 计算全局统计信息（使用原始df计算）
     print("\n正在计算全局question和concept统计信息...")
     question_stats, concept_stats = calculate_global_stats(df)
     print(f"共有 {len(question_stats)} 个不同的question")
     print(f"共有 {len(concept_stats)} 个不同的concept")
-    
+
     # 保存全局统计信息
     global_files = save_global_stats(question_stats, concept_stats, output_dir)
     all_generated_files.extend(global_files)
-    
+
     print("\n正在计算学生详细统计信息...")
     student_info = {}
     for uid, group in df.groupby('uid'):
         # 传递知识点阈值
         student_info[uid] = calculate_student_detailed_stats(group, global_concept_threshold)
         student_info[uid]['uid'] = uid
-    
-    # 创建学生DataFrame并排序
+
+    # 创建学生DataFrame
     student_summary = pd.DataFrame(list(student_info.values()))
-    
+
+    # --- 【修改：新增】筛选前所有学生的 total_questions 统计 ---
+    if not student_summary.empty:
+        all_total_questions = student_summary['total_questions']
+        avg_q = all_total_questions.mean()
+        max_q = all_total_questions.max()
+        min_q = all_total_questions.min()
+
+        print("\n🎉 **筛选前所有学生 total_questions 统计** 🎉")
+        print(f"  学生总数: {len(student_summary)}")
+        print(f"  平均做题数: **{avg_q:.2f}**")
+        print(f"  最大做题数: **{max_q}**")
+        print(f"  最小做题数: **{min_q}**")
+    # -------------------------------------------------------------
+
     # --- 【新增】筛选学生逻辑：total_questions 在 600 ± 5 ---
-    print(f"\n=== 开始筛选学生：total_questions 在{args.seq_len}范围内 ===")
-    lower_bound = args.seq_len -5
-    upper_bound = args.seq_len +5
-    
+    print(f"\n=== 开始筛选学生：total_questions 在 {args.seq_len}±5 范围内 ===")
+    lower_bound = args.seq_len -args.seq_len*0.1
+    upper_bound = args.seq_len +args.seq_len*0.1
+
     # 筛选学生摘要
     filtered_summary = student_summary[
-        (student_summary['total_questions'] >= lower_bound) & 
+        (student_summary['total_questions'] >= lower_bound) &
         (student_summary['total_questions'] <= upper_bound)
     ].sort_values('total_questions', ascending=False)
-    
+
     num_filtered_students = len(filtered_summary)
     print(f"筛选出 {num_filtered_students} 个学生满足条件。")
 
     # 更新后续流程中使用的学生列表和数量
     top_students = filtered_summary
-    num_needs_stu = num_filtered_students 
-    
+    num_needs_stu = num_filtered_students
+
     # 筛选原始数据 df
     student_uids_to_keep = filtered_summary['uid'].tolist()
     df_filtered = df[df['uid'].isin(student_uids_to_keep)]
     df = df_filtered # 替换原始数据框为筛选后的数据框
-    
+
     # --- 【新增】使用筛选后的学生数量更新 eval 配置 ---
     try:
         print(f"测试集共有 {num_needs_stu} 个不同的学生 (筛选后)")
-        
+
         # 读取配置
         with open(config_path, 'r', encoding='utf-8') as f:
             data_config = json.load(f)
-            
+
         # 更新 eval 数量
         if dataset_name in data_config:
             data_config[dataset_name][f'seq_len_{args.seq_len}_students_num_eval'] = int(num_needs_stu)
-            
+
             # 写回 JSON 文件
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(data_config, f, indent=4, ensure_ascii=False)
             print(f"成功更新 {dataset_name} 的 students_num_eval 为 {num_needs_stu} (筛选后)")
         else:
             print(f"警告: 配置文件中未找到数据集 {dataset_name}")
-            
+
     except Exception as e:
         print(f"更新 eval 配置时出错: {e}")
     # ------------------------------------------------
 
     # 打印top学生详细信息（现在是筛选后的学生）
     print_top_students_details(top_students, min(5, num_needs_stu))
-    
+
     # 为所有筛选后的学生保存单独文件
     print(f"\n保存所有{num_needs_stu}个筛选后的学生数据:")
-    for i, row in top_students.iterrows(): 
+    for i, row in top_students.iterrows():
         uid = row['uid']
         record_lines = row['record_lines']
-        
+
         # 从筛选后的 df (即 df_filtered) 中获取学生数据
         student_data = df[df['uid'] == uid]
-        
+
         # 添加concept和question正确率序列
         student_data = add_accuracy_sequences(student_data, question_stats, concept_stats)
-        
+
         # 添加统计信息到学生数据中
         for stat_col in ['record_lines', 'total_questions', 'num_valid_concepts',
-                         'avg_questions_per_concept', 'max_questions_per_concept', 
-                         'min_questions_per_concept', 'questions_range', 
+                         'avg_questions_per_concept', 'max_questions_per_concept',
+                         'min_questions_per_concept', 'questions_range',
                          'overall_accuracy', 'accuracy_range', 'accuracy_variance',
                          'max_accuracy', 'min_accuracy']:
             if stat_col in row:
                 student_data[stat_col] = row[stat_col]
-        
-        filename = f"{args.target_file_type}_top_{i+1}_student{if_quelevel}.csv" if args.if_quelevel else f"{args.target_file_type}_top_{i+1}_student.csv"
+
+        filename = f"seq_len_{args.seq_len}_{args.target_file_type}_top_{i+1}_student{if_quelevel}.csv" if args.if_quelevel else f"seq_len_{args.seq_len}_{args.target_file_type}_top_{i+1}_student.csv"
         filepath = os.path.join(output_dir, filename)
-        
+
         student_data.to_csv(filepath, index=False)
         all_generated_files.append(filename)
-        print(f"  学生#{i+1}: uid={uid}, 记录行数={record_lines}, 做题数={row['total_questions']} -> 已保存到 {filename}")
-    
+        print(f"  学生#{i+1}: uid={uid}, 记录行数={record_lines}, 做题数={row['total_questions']} -> 已保存到 {filename}")
+
     # 保存筛选后的学生统计摘要
-    summary_filename = "student_summary_filtered.csv" 
+    summary_filename = "student_summary_filtered.csv"
     summary_output_path = os.path.join(output_dir, summary_filename)
     filtered_summary.to_csv(summary_output_path, index=False)
     all_generated_files.append(summary_filename)
     print(f"\n学生统计摘要 (筛选后) 已保存到: {summary_output_path}")
 
     print(f"\n处理完成！共生成了 {len(all_generated_files)} 个文件。")
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Process dataset parameters")

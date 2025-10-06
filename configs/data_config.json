@@ -111,7 +111,14 @@
         "questions_range_low_interval_file": "questions_range_low_interval.csv",
         "questions_range_medium_interval_file": "questions_range_medium_interval.csv",
         "questions_range_high_interval_file": "questions_range_high_interval.csv",
-        "students_num_train": 3082
+        "students_num_train": 3082,
+        "seq_len_400_students_num_eval": 1,
+        "seq_len_500_students_num_eval": 0,
+        "seq_len_600_students_num_eval": 1,
+        "seq_len_6000_students_num_eval": 5,
+        "seq_len_5000_students_num_eval": 9,
+        "seq_len_4000_students_num_eval": 0,
+        "seq_len_7000_students_num_eval": 5
     },
     "slepemapy": {
         "dpath": "../data/slepemapy",
@@ -376,7 +383,11 @@
         "accuracy_variance_high_interval_file": "accuracy_variance_high_interval.csv",
         "questions_range_low_interval_file": "questions_range_low_interval.csv",
         "questions_range_medium_interval_file": "questions_range_medium_interval.csv",
-        "questions_range_high_interval_file": "questions_range_high_interval.csv"
+        "questions_range_high_interval_file": "questions_range_high_interval.csv",
+        "seq_len_0_students_num_eval": 0,
+        "seq_len_20000_students_num_eval": 23,
+        "seq_len_30000_students_num_eval": 43,
+        "seq_len_10000_students_num_eval": 23
     },
     "poj": {
         "dpath": "../data/poj",
@@ -439,7 +450,12 @@
         "test_file_quelevel": "test_sequences_quelevel.csv",
         "test_window_file_quelevel": "test_window_sequences_quelevel.csv",
         "test_original_file_quelevel": "test_quelevel.csv",
-        "students_num_train": 14453
+        "students_num_train": 14453,
+        "seq_len_300_students_num_eval": 0,
+        "seq_len_30000_students_num_eval": 403,
+        "seq_len_10000_students_num_eval": 0,
+        "seq_len_20000_students_num_eval": 375,
+        "seq_len_40000_students_num_eval": 403
     },
     "ednet5w": {
         "dpath": "../data/ednet5w",

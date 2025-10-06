@@ -23,20 +23,37 @@ def log_step_time(start_time, step_name):
     print(f"**{step_name}** | **当前时间**: {current_time_str} | **耗时**: {elapsed_time:.4f} 秒")
     return end_time
 def parse_dataset_name(save_dir):
-    """从save_dir参数中解析数据集名称"""
-    # 获取最后一个目录（模型目录）
-    model_dir = os.path.basename(os.path.normpath(save_dir))
-    # 提取数据集名称的逻辑
-    if "nips_task34" in model_dir:
-        # 对于nips_task34: 取第二个横线前的部分
-        parts = model_dir.split('_')
-        if len(parts) >= 4:  # 确保有足够的横线
-            # 前两部分组合为数据集名称
-            return "_".join(parts[0:2])
-        return "nips_task34"  # 回退值
-    else:
-        # 其他数据集: 取第一个横线前的部分
-        return model_dir.split('_')[0]
+    """
+    从 save_dir 目录下的 config.json 文件中获取数据集名称 (dataset_name)。
+
+    Args:
+        save_dir: 包含 config.json 文件的目录路径 (例如: 'saved_model/extrakt_assist2009_fold0')。
+
+    Returns:
+        数据集的名称字符串 (例如: 'assist2009')。
+
+    Raises:
+        FileNotFoundError: 如果 config.json 文件不存在。
+        KeyError: 如果 JSON 结构不符合预期 (缺少 'params' 或 'dataset_name' 键)。
+    """
+    # 1. 构建 config.json 的完整路径
+    config_path = os.path.join(save_dir, 'config.json')
+
+    # 检查文件是否存在
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"未找到配置文件: {config_path}")
+
+    # 2. 打开并加载 JSON 文件
+    with open(config_path, 'r', encoding='utf-8') as f:
+        config_data = json.load(f)
+
+    # 3 & 4. 从 'params' 字典中获取 'dataset_name'
+    try:
+        dataset_name = config_data['params']['dataset_name']
+        return dataset_name
+    except KeyError as e:
+        raise KeyError(f"config.json 结构错误，无法找到所需的键: {e}")
+
     
 def extract_student_stats(stats_file_path):
     """从学生统计文件中提取统计数据"""
@@ -431,7 +448,7 @@ def main(params):
                     # 获取学生总数
                     total_students = dataset_config["students_num_eval"]
                     print(f"从配置加载总学生数: {total_students}")
-                    params['total_students'] = total_students
+                    # params['total_students'] = total_students
                     # 数据集配置存入params
                     params['full_data_config'] = dataset_config  
                 else:
@@ -824,9 +841,9 @@ if __name__ == "__main__":
 
     parser.add_argument("--start_student", type=int, default=1, help="开始评估的学生ID")
     parser.add_argument("--save_reult", type=int, default=0, help="保存结果的路径")
-    parser.add_argument("--use_saved_result", type=int, default=0, help="是否使用已有结果")
+    parser.add_argument("--use_saved_result", type=int, default=1, help="是否使用已有结果")
     parser.add_argument("--mode", type=str, default="all", help="只对学生进行评估,all全部，auc只评测全部auc，stu只评测学生")
-    parser.add_argument("--target_file_type", type=str, default="test_window_sequences",
+    parser.add_argument("--target_file_type", type=str, default="test_question_window_sequences",
                         help="切割哪个文件,test_question_window_sequences,test_window_sequences")
 
     # 添加新参数：统计信息文件目录
