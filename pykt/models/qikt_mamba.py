@@ -14,7 +14,65 @@ from mamba_ssm import Mamba
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.utils import weight_norm
+class Chomp1d(nn.Module):
+    def __init__(self, chomp_size):
+        super(Chomp1d, self).__init__()
+        self.chomp_size = chomp_size
 
+    def forward(self, x):
+        return x[:, :, :-self.chomp_size].contiguous()
+
+
+class TemporalBlock(nn.Module):
+    def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, dropout=0.2):
+        super(TemporalBlock, self).__init__()
+        self.conv1 = weight_norm(nn.Conv1d(n_inputs, n_outputs, kernel_size,
+                                           stride=stride, padding=padding, dilation=dilation))
+        self.chomp1 = Chomp1d(padding)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(dropout)
+
+        self.conv2 = weight_norm(nn.Conv1d(n_outputs, n_outputs, kernel_size,
+                                           stride=stride, padding=padding, dilation=dilation))
+        self.chomp2 = Chomp1d(padding)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout)
+
+        self.net = nn.Sequential(self.conv1, self.chomp1, self.relu1, self.dropout1,
+                                 self.conv2, self.chomp2, self.relu2, self.dropout2)
+        self.downsample = nn.Conv1d(n_inputs, n_outputs, 1) if n_inputs != n_outputs else None
+        self.relu = nn.ReLU()
+        self.init_weights()
+
+    def init_weights(self):
+        self.conv1.weight.data.normal_(0, 0.01)
+        self.conv2.weight.data.normal_(0, 0.01)
+        if self.downsample is not None:
+            self.downsample.weight.data.normal_(0, 0.01)
+
+    def forward(self, x):
+        out = self.net(x)
+        res = x if self.downsample is None else self.downsample(x)
+        return self.relu(out + res)
+
+
+class TemporalConvNet(nn.Module):
+    def __init__(self, num_inputs, num_channels, kernel_size=2, dropout=0.2):
+        super(TemporalConvNet, self).__init__()
+        layers = []
+        num_levels = len(num_channels)
+        for i in range(num_levels):
+            dilation_size = 2 ** i
+            in_channels = num_inputs if i == 0 else num_channels[i-1]
+            out_channels = num_channels[i]
+            layers += [TemporalBlock(in_channels, out_channels, kernel_size, stride=1, dilation=dilation_size,
+                                     padding=(kernel_size-1) * dilation_size, dropout=dropout)]
+
+        self.network = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.network(x)
 class MLP(nn.Module):
     '''
     classifier decoder implemented with mlp
@@ -78,14 +136,15 @@ class QIKTNet(nn.Module):
 
         self.que_emb = QueEmb(num_q=num_q,num_c=num_c,emb_size=emb_size,emb_type=self.emb_type,model_name=self.model_name,device=device,
                              emb_path=emb_path,pretrain_dim=pretrain_dim,num_attn_head=num_attn_head)
-       
+
         if self.version == "lstm":
             #原版
             self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, batch_first=True)
+
             self.concept_lstm_layer = nn.LSTM(self.emb_size*2, self.hidden_size, batch_first=True)
             # self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
             # self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
-
+        
         elif self.version in ["encoder",'decoder','full']:
             #transformer
             self.que_lstm_layer = TransformerBranch(emb_size_in=self.emb_size*4, emb_size_out=self.hidden_size,mode=self.version, causal=True)
@@ -116,13 +175,65 @@ class QIKTNet(nn.Module):
             self.four2two = nn.Linear(self.emb_size*2, self.emb_size*4)
             self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, num_layers=2, batch_first=True)
             self.concept_lstm_layer = self.que_lstm_layer
-        else:
+        elif self.version == "gru":
+            self.que_lstm_layer = nn.GRU(self.emb_size*4, self.hidden_size, batch_first=True)
+            self.concept_lstm_layer = nn.GRU(self.emb_size*2, self.hidden_size, batch_first=True)
+        elif "tcn" in self.version:  # 建议修改版本标识符
+            version_tcn = self.version
+            # 1. 移除不必要的固定前缀和分隔符
+            temp_string = version_tcn.replace("tcn_hid", "").replace("_k", "_")
+
+            # 2. 按下划线 '_' 拆分字符串
+            parts = temp_string.split('_')
+
+            # 3. 提取数字并转换为整数
+            num_channel = int(parts[0])  
+            kernel_size = int(parts[1])  
+            # ----------------------------------------------------
+            # TCN 参数说明
+            # num_inputs (输入通道数) = LSTM的 input_size (即特征维度)
+            # num_channels (隐藏层输出通道列表) = 决定层数和每层的输出维度
+            # ----------------------------------------------------
+            
+            # 1. 替换 que_lstm_layer
+            que_input_size = self.emb_size * 4
+            que_output_size = self.hidden_size
+            
+            # TCN 隐藏层配置示例 (假设使用 3 层 TCN, 且希望最终输出维度是 self.hidden_size)
+            # num_channels 中的最后一个元素决定了最终输出的通道数
+            que_channels = [que_output_size]*num_channel
+            
+            self.que_tcn_layer = TemporalConvNet(
+                num_inputs=que_input_size, 
+                num_channels=que_channels, 
+                kernel_size=kernel_size,  # 常用值，可调
+                dropout=0.2    # 可调
+            )
+
+            # 2. 替换 concept_lstm_layer
+            concept_input_size = self.emb_size * 2
+            concept_output_size = self.hidden_size
+            
+            # TCN 隐藏层配置示例 (假设使用 3 层 TCN, 且希望最终输出维度是 self.hidden_size)
+            concept_channels = [concept_output_size]*num_channel
+            
+            self.concept_tcn_layer = TemporalConvNet(
+                num_inputs=concept_input_size, 
+                num_channels=concept_channels, 
+                kernel_size=kernel_size, 
+                dropout=0.2
+            )
+        elif self.version in ["mamba"]:
+            
             
             self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
             self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
 
             self.que_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 1024 -> 256
             self.concept_proj = nn.Linear(self.emb_size*2, self.hidden_size)  # 512 -> 256
+        else:
+            self.que_lstm_layer = nn.GRU(self.emb_size*4, self.hidden_size, batch_first=True)
+            self.concept_lstm_layer = nn.GRU(self.emb_size*2, self.hidden_size, batch_first=True)
         self.dropout_layer = nn.Dropout(dropout)
         
 
@@ -162,7 +273,7 @@ class QIKTNet(nn.Module):
         emb_qc_shift = emb_qc[:, 1:, :]
         emb_qca_current = emb_qca[:, :-1, :]
         # question model
-        if self.version == "lstm":
+        if self.version in ["lstm","gru"]:
 
             que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
         elif self.version in ["encoder",'decoder','full']:
@@ -182,11 +293,23 @@ class QIKTNet(nn.Module):
 
             que_h = self.dropout_layer(self.que_lstm_layer((emb_qca_current)))
             que_h = self.que_proj(que_h)
-        else:
+        elif "tcn" in self.version:
+            # TCN 需要 (B, F, L) 输入
+            x_que_tcn = emb_qca_current.permute(0, 2, 1) # (B, L, F) -> (B, F, L)
+            
+            # TCN 处理
+            que_output_tcn = self.que_tcn_layer(x_que_tcn) # (B, F, L) -> (B, H, L)
+            
+            # TCN 输出恢复到 RNN 格式 (B, H, L) -> (B, L, H)
+            que_output = que_output_tcn.permute(0, 2, 1) 
+            que_h = self.dropout_layer(que_output)
+        elif self.version == "mamba":
             #原版
             
             que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current))
             que_h = self.que_proj(que_h)
+        else:
+            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
         # print(f"[DEBUG] que_h.shape: {que_h.shape} (type: {type(que_h.shape)})")
         que_outputs = get_outputs(self, emb_qc_shift, que_h, data, add_name="", model_type="question")
         outputs = que_outputs
@@ -198,9 +321,10 @@ class QIKTNet(nn.Module):
         ], dim=-1)
         
         emb_ca_current = emb_ca[:, :-1, :]
-        if self.version == "lstm":
+        if self.version in ["lstm","gru"]:
             #mamba
             concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
+        
         elif self.version in ["encoder",'decoder','full']:
             #transformer
             concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current))
@@ -219,12 +343,24 @@ class QIKTNet(nn.Module):
             concept_h = self.concept_lstm_layer(self.four2two(emb_ca_current))  # [32, 199, 512]
             concept_h = self.concept_proj(concept_h)  # [32, 199, 256]
             concept_h = self.dropout_layer(concept_h)
-        else:
+        elif "tcn" in self.version:
+            # TCN 需要 (B, F, L) 输入
+            x_concept_tcn = emb_ca_current.permute(0, 2, 1) # (B, L, F) -> (B, F, L)
+            
+            # TCN 处理
+            concept_output_tcn = self.concept_tcn_layer(x_concept_tcn) # (B, F, L) -> (B, H, L)
+            
+            # TCN 输出恢复到 RNN 格式 (B, H, L) -> (B, L, H)
+            concept_output = concept_output_tcn.permute(0, 2, 1)
+            concept_h = self.dropout_layer(concept_output)
+        elif self.version == "mamba":
             #原版
             
             concept_h = self.concept_lstm_layer(emb_ca_current)  # [32, 199, 512]
             concept_h = self.concept_proj(concept_h)  # [32, 199, 256]
             concept_h = self.dropout_layer(concept_h)
+        else:
+            concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
         concept_outputs = get_outputs(self, emb_qc_shift, concept_h, data, add_name="", model_type="concept")
         outputs['y_concept_all'] = concept_outputs['y_concept_all']
         outputs['y_concept_next'] = concept_outputs['y_concept_next']
