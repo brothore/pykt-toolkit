@@ -93,7 +93,7 @@
         "test_file_quelevel": "test_sequences_quelevel.csv",
         "test_window_file_quelevel": "test_window_sequences_quelevel.csv",
         "test_original_file_quelevel": "test_quelevel.csv",
-        "students_num_eval": 770,
+        "students_num_eval": 3,
         "global_question_stats_file": "global_question_stats.csv",
         "global_concept_stats_file": "global_concept_stats.csv",
         "total_questions_low_interval_file": "total_questions_low_interval.csv",
@@ -376,7 +376,12 @@
         "accuracy_variance_high_interval_file": "accuracy_variance_high_interval.csv",
         "questions_range_low_interval_file": "questions_range_low_interval.csv",
         "questions_range_medium_interval_file": "questions_range_medium_interval.csv",
-        "questions_range_high_interval_file": "questions_range_high_interval.csv"
+        "questions_range_high_interval_file": "questions_range_high_interval.csv",
+        "seq_len_10000_students_num_eval": 23,
+        "seq_len_20000_students_num_eval": 38,
+        "seq_len_30000_students_num_eval": 37,
+        "seq_len_18000_students_num_eval": 16,
+        "seq_len_22000_students_num_eval": 47
     },
     "poj": {
         "dpath": "../data/poj",
@@ -427,7 +432,7 @@
             3,
             4
         ],
-        "students_num_eval": 3613,
+        "students_num_eval": 0,
         "train_valid_original_file": "train_valid.csv",
         "test_original_file": "test.csv",
         "test_file": "test_sequences.csv",
@@ -439,7 +444,12 @@
         "test_file_quelevel": "test_sequences_quelevel.csv",
         "test_window_file_quelevel": "test_window_sequences_quelevel.csv",
         "test_original_file_quelevel": "test_quelevel.csv",
-        "students_num_train": 14453
+        "students_num_train": 14453,
+        "global_question_stats_file": "global_question_stats.csv",
+        "global_concept_stats_file": "global_concept_stats.csv",
+        "seq_len_500_students_num_eval": 0,
+        "seq_len_300_students_num_eval": 0,
+        "seq_len_400_students_num_eval": 0
     },
     "ednet5w": {
         "dpath": "../data/ednet5w",

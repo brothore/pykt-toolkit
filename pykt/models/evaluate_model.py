@@ -378,8 +378,12 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             # print(f"after y: {y.shape}")
             # save predict result
             if save_path != "":
+                print(f"save_path:{save_path}")
                 result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y)
+                print("got result:{result}")
                 fout.write(result+"\n")
+            else:
+                print("save_path None!!!!!!!!!!!!")
             if model_name not in ["llm", "mpllm"]:
                 y = torch.masked_select(y, sm).detach().cpu()
             # print(f"pred_results:{y}")  

@@ -264,9 +264,9 @@ def evaluate_single_student(params, student_id,save_reult):
             data_config["num_at"] = config["data_config"]["num_at"]
             data_config["num_it"] = config["data_config"]["num_it"]
     if dataset_name not in ["peiyou"]:
-        predict_files = f"{target_file_type}_top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"{target_file_type}_top_{student_id}_student.csv"
+        predict_files = f"seq_len_{args.seq_len}_{target_file_type}_top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"seq_len_{args.seq_len}_{target_file_type}_top_{student_id}_student.csv"
     else:
-        predict_files = f"{target_file_type}_top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"{target_file_type}_top_{student_id}_student.csv"
+        predict_files = f"seq_len_{args.seq_len}_{target_file_type}_top_{student_id}_student_quelevel.csv" if model_name in que_type_models else f"seq_len_{args.seq_len}_{target_file_type}_top_{student_id}_student.csv"
     if model_name not in ["dimkt"]:
         # test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[0,1,0,0] if model_name in que_type_models else [0,0,0,1])
         test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets_multi_stu(data_config, model_name, batch_size,predict_file_type=predict_files,load_flags=[1,0,0,1] if params["save_reult"] == "" else [1,0,0,0])
@@ -393,6 +393,7 @@ def evaluate_single_student(params, student_id,save_reult):
         return dres,None
 
 def main(params):
+    seq_len = params["seq_len"]
     if params["mode"] in ["all","stu"]:   
         dataset_name = parse_dataset_name(params["save_dir"])
         print(f"解析出的数据集名称: {dataset_name}")
@@ -406,7 +407,7 @@ def main(params):
                 
                 if dataset_config:
                     # 获取学生总数
-                    total_students = dataset_config["students_num_eval"]
+                    total_students = dataset_config[f'seq_len_{seq_len}_students_num_eval']
                     print(f"从配置加载总学生数: {total_students}")
                     params['total_students'] = total_students
                     # 数据集配置存入params
@@ -656,10 +657,10 @@ def main(params):
                 data_config["num_at"] = config["data_config"]["num_at"]
                 data_config["num_it"] = config["data_config"]["num_it"]
         if model_name not in ["dimkt"]:
-            test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
+            _, test_window_loader, _, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
         else:
             diff_level = trained_params["difficult_levels"]
-            test_loader, test_window_loader, test_question_loader, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
+            _, test_window_loader, _, test_question_window_loader = init_test_datasets(data_config, model_name, batch_size)
 
         print(f"Start predicting model: {model_name}, embtype: {emb_type}, save_dir: {save_dir}, dataset_name: {dataset_name}")
         print(f"model_config: {model_config}")
@@ -801,7 +802,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--start_student", type=int, default=1, help="开始评估的学生ID")
     parser.add_argument("--save_reult", type=int, default=0, help="保存结果的路径")
-    parser.add_argument("--use_saved_result", type=int, default=1, help="是否使用已有结果")
+    parser.add_argument("--use_saved_result", type=int, default=0, help="是否使用已有结果")
     parser.add_argument("--mode", type=str, default="all", help="只对学生进行评估,all全部，auc只评测全部auc，stu只评测学生")
     parser.add_argument("--target_file_type", type=str, default="test_window_sequences",
                         help="切割哪个文件,test_question_window_sequences,test_window_sequences")

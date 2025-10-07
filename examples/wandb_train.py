@@ -25,7 +25,7 @@ def save_config(train_config, model_config, data_config, params, save_dir):
     save_path = os.path.join(save_dir, "config.json")
     with open(save_path, "w") as fout:
         json.dump(d, fout)
-@retry_decorator
+
 def run_prediction(predict_mode, save_dir):
     """
     运行预测脚本并实时显示输出
@@ -341,6 +341,23 @@ def main(params):
                     "use_saved_result": 1,  # 原脚本默认
                     "mode": "all",  # 原脚本默认
                     "target_file_type": "test_window_sequences"  # 原脚本默认
+                }
+                try:
+                    predict_main(predict_params)  # 直接调用wandb_multi_predict的main
+                    prediction_success = True
+                    print("Prediction completed successfully!")
+                    if params['use_wandb']==1:
+                        wandb.log({"prediction_status": "success"})
+                except Exception as e:
+                    prediction_success = False
+                    print(f"Prediction failed: {str(e)}")
+                    if params['use_wandb']==1:
+                        wandb.log({"prediction_status": "failed"})
+            elif predict_after_train == 2:
+                predict_params = {
+                    "bz": 16,  # 来自原cmd的--bz 16
+                    "save_dir": ckpt_path,
+                    "use_wandb": params['use_wandb'],
                 }
                 try:
                     predict_main(predict_params)  # 直接调用wandb_multi_predict的main

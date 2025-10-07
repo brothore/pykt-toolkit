@@ -10,7 +10,7 @@ from sklearn import metrics
 from torch.utils.data import DataLoader
 from .loss import Loss
 from scipy.special import softmax
-from mamba_ssm import Mamba
+# from mamba_ssm import Mamba
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -80,12 +80,8 @@ class QIKTNet(nn.Module):
                              emb_path=emb_path,pretrain_dim=pretrain_dim,num_attn_head=num_attn_head)
        
         if self.version == "lstm":
-            #原版
-            self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, batch_first=True)
-            self.concept_lstm_layer = nn.LSTM(self.emb_size*2, self.hidden_size, batch_first=True)
-            # self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
-            # self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
-
+            self.que_lstm_layer = nn.GRU(self.emb_size*4, self.hidden_size, batch_first=True)
+            self.concept_lstm_layer = nn.GRU(self.emb_size*2, self.hidden_size, batch_first=True)
         elif self.version in ["encoder",'decoder','full']:
             #transformer
             self.que_lstm_layer = TransformerBranch(emb_size_in=self.emb_size*4, emb_size_out=self.hidden_size,mode=self.version, causal=True)
