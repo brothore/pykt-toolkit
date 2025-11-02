@@ -40,6 +40,7 @@ def run_prediction(predict_mode, save_dir):
                 print(f"Warning: {script_path} not found")
                 return False
             cmd = [sys.executable, script_path, "--save_dir", save_dir,"--bz","16" ]
+            print(cmd)
             
         elif predict_mode == 2:
             script_path = "/root/autodl-tmp/pykt-toolkit/examples/wandb_predict.py"
@@ -338,9 +339,10 @@ def main(params):
                     "use_wandb": params['use_wandb'],
                     "start_student": 1,  # 原脚本默认
                     "save_reult": 0,  # 原脚本默认
+                    "seq_len":0,
                     "use_saved_result": 1,  # 原脚本默认
                     "mode": "all",  # 原脚本默认
-                    "target_file_type": "test_window_sequences"  # 原脚本默认
+                    "target_file_type": "test_question_window_sequences"  # 原脚本默认
                 }
                 try:
                     predict_main(predict_params)  # 直接调用wandb_multi_predict的main

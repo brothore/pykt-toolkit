@@ -113,12 +113,13 @@ class QIKTNet(nn.Module):
             self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, num_layers=2, batch_first=True)
             self.concept_lstm_layer = self.que_lstm_layer
         else:
-            
-            self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
-            self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
+            self.que_lstm_layer = nn.GRU(self.emb_size*4, self.hidden_size, batch_first=True)
+            self.concept_lstm_layer = nn.GRU(self.emb_size*2, self.hidden_size, batch_first=True)
+            # self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
+            # self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
 
-            self.que_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 1024 -> 256
-            self.concept_proj = nn.Linear(self.emb_size*2, self.hidden_size)  # 512 -> 256
+            # self.que_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 1024 -> 256
+            # self.concept_proj = nn.Linear(self.emb_size*2, self.hidden_size)  # 512 -> 256
         self.dropout_layer = nn.Dropout(dropout)
         
 
@@ -181,8 +182,7 @@ class QIKTNet(nn.Module):
         else:
             #原版
             
-            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current))
-            que_h = self.que_proj(que_h)
+            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
         # print(f"[DEBUG] que_h.shape: {que_h.shape} (type: {type(que_h.shape)})")
         que_outputs = get_outputs(self, emb_qc_shift, que_h, data, add_name="", model_type="question")
         outputs = que_outputs
@@ -218,9 +218,7 @@ class QIKTNet(nn.Module):
         else:
             #原版
             
-            concept_h = self.concept_lstm_layer(emb_ca_current)  # [32, 199, 512]
-            concept_h = self.concept_proj(concept_h)  # [32, 199, 256]
-            concept_h = self.dropout_layer(concept_h)
+            concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
         concept_outputs = get_outputs(self, emb_qc_shift, concept_h, data, add_name="", model_type="concept")
         outputs['y_concept_all'] = concept_outputs['y_concept_all']
         outputs['y_concept_next'] = concept_outputs['y_concept_next']
@@ -236,7 +234,15 @@ class QIKT_MAMBA(QueBaseModel):
         super().__init__(model_name=model_name,emb_type=emb_type,emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,seed=seed)
         self.model = QIKTNet(num_q=num_q,num_c=num_c,emb_size=emb_size,dropout=dropout,emb_type=emb_type,
                                emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,mlp_layer_num=mlp_layer_num,other_config=other_config,num_attn_head=num_attn_head,version=version)
+        # 新增：支持动态权重的模块
         self.version = version
+        if "auto_uncertainty" in self.version:
+            self.output_uncertainty = UncertaintyWeightedLoss(num_tasks=3)  # 3个输出：q_all, c_all, c_next
+        if "dynamic_attention" in self.version:
+            self.attention_layer = nn.MultiheadAttention(embed_dim=1, num_heads=2)  # 假设输出是1D，调整embed_dim如果需要
+        if "capsule_routing" in self.version:
+            self.routing_iters = 3  # 胶囊路由迭代次数
+            self.capsule_dim = 1  # 简化维度
         self.num_attn_head = num_attn_head
         self.model = self.model.to(device)
         self.emb_type = self.model.emb_type
@@ -367,30 +373,82 @@ class QIKT_MAMBA(QueBaseModel):
         self.eval_result = eval_result
         return eval_result
 
-    def predict_one_step(self,data,return_details=False,process=True,return_raw=False):
-        data_new = self.batch_to_device(data,process=process)
-        outputs = self.model(data_new['cq'].long(),data_new['cc'],data_new['cr'].long(),data=data_new)
-        output_c_all_lambda = self.model.other_config.get('output_c_all_lambda',1)
-        output_c_next_lambda = self.model.other_config.get('output_c_next_lambda',1)
-        output_q_all_lambda = self.model.other_config.get('output_q_all_lambda',1)
-        output_q_next_lambda = self.model.other_config.get('output_q_next_lambda',0)#not use this
-       
-        if self.model.output_mode=="an_irt":
-            def sigmoid_inverse(x,epsilon=1e-8):
-                return torch.log(x/(1-x+epsilon)+epsilon) if "no_sigmoid_inverse" not in self.version else x
-            y = sigmoid_inverse(outputs['y_question_all'])*output_q_all_lambda + sigmoid_inverse(outputs['y_concept_all'])*output_c_all_lambda + sigmoid_inverse(outputs['y_concept_next'])*output_c_next_lambda
+    def predict_one_step(self, data, return_details=False, process=True, return_raw=False):
+        data_new = self.batch_to_device(data, process=process)
+        outputs = self.model(data_new['cq'].long(), data_new['cc'], data_new['cr'].long(), data=data_new)
+        
+        # 原有固定权重
+        output_c_all_lambda = self.model.other_config.get('output_c_all_lambda', 1)
+        output_c_next_lambda = self.model.other_config.get('output_c_next_lambda', 1)
+        output_q_all_lambda = self.model.other_config.get('output_q_all_lambda', 1)
+        output_q_next_lambda = self.model.other_config.get('output_q_next_lambda', 0)  # not use this
+        
+        # 提取三个输出，便于动态加权
+        y_q_all = outputs['y_question_all']
+        y_c_all = outputs['y_concept_all']
+        y_c_next = outputs['y_concept_next']
+        
+        # 根据 self.version 使用不同动态权重方法
+        if self.version == "auto_uncertainty":
+            # 方法1: 不确定性加权 - 计算动态权重（使用 exp(-log_var) 作为权重比例）
+            log_vars = self.output_uncertainty.log_vars  # 可学习参数
+            weights = torch.exp(-log_vars)  # [3] for q_all, c_all, c_next
+            weights = weights / weights.sum()  # 归一化
+            output_q_all_lambda, output_c_all_lambda, output_c_next_lambda = weights[0], weights[1], weights[2]
+        
+        elif self.version == "dynamic_attention":
+            # 方法2: 注意力机制 - 将三个输出堆叠为序列，计算注意力权重
+            ys = torch.stack([y_q_all.unsqueeze(0), y_c_all.unsqueeze(0), y_c_next.unsqueeze(0)], dim=0)  # [3, batch, seq]
+            attn_output, attn_weights = self.attention_layer(ys, ys, ys)  # 注意: 假设embed_dim=1，需调整如果输出shape不同
+            weights = attn_weights.mean(dim=1)[0]  # 平均注意力分数作为权重 [3]
+            output_q_all_lambda, output_c_all_lambda, output_c_next_lambda = weights[0], weights[1], weights[2]
+        
+        elif self.version == "capsule_routing":
+            # 方法3: 胶囊网络动态路由 - 简化实现
+            # 假设低级胶囊 u = [y_q_all, y_c_all, y_c_next]，路由到1个高级胶囊
+            u = torch.stack([y_q_all, y_c_all, y_c_next], dim=-1)  # [batch, seq, 3]
+            b = torch.zeros_like(u)  # 初始 logits [batch, seq, 3]
+            for _ in range(self.routing_iters):
+                c = F.softmax(b, dim=-1)  # 耦合系数 [batch, seq, 3]
+                s = (c * u).sum(dim=-1, keepdim=True)  # 加权和 [batch, seq, 1]
+                v = self.squash(s)  # squash激活 [batch, seq, 1]
+                a = (u * v).sum(dim=-2, keepdim=True)  # 协议更新 [batch, 1, 3]
+                b = b + a
+            weights = F.softmax(b.mean(dim=1), dim=-1).squeeze(1)  # 最终权重 [batch, 3]，但这里简化取mean
+            output_q_all_lambda = weights[..., 0].mean()
+            output_c_all_lambda = weights[..., 1].mean()
+            output_c_next_lambda = weights[..., 2].mean()
+        
+        # else: 使用原有固定权重（不动态）
+        
+        # 应用权重到输出（兼容 an_irt 模式）
+        if self.model.output_mode == "an_irt":
+            def sigmoid_inverse(x, epsilon=1e-8):
+                return torch.log(x / (1 - x + epsilon) + epsilon) if "no_sigmoid_inverse" not in self.version else x
+            y = (sigmoid_inverse(y_q_all) * output_q_all_lambda +
+                 sigmoid_inverse(y_c_all) * output_c_all_lambda +
+                 sigmoid_inverse(y_c_next) * output_c_next_lambda)
             y = torch.sigmoid(y)
         else:
-            # output weight
-            y = outputs['y_question_all'] * output_q_all_lambda + outputs['y_concept_all'] * output_c_all_lambda + outputs['y_concept_next'] * output_c_next_lambda
-            y = y/(output_q_all_lambda + output_c_all_lambda + output_c_next_lambda)
+            y = (y_q_all * output_q_all_lambda +
+                 y_c_all * output_c_all_lambda +
+                 y_c_next * output_c_next_lambda)
+            y = y / (output_q_all_lambda + output_c_all_lambda + output_c_next_lambda + 1e-8)  # 避免除零
+        
         outputs['y'] = y
 
         if return_details:
-            return outputs,data_new
+            return outputs, data_new
         else:
             return y
 
+    # 新增辅助函数（用于胶囊路由）
+    def squash(self, x, dim=-1):
+        squared_norm = (x ** 2).sum(dim=dim, keepdim=True)
+        scale = squared_norm / (1 + squared_norm)
+        return scale * x / torch.sqrt(squared_norm + 1e-8)
+
+# UncertaintyWeightedLoss 类保持原样...
 class UncertaintyWeightedLoss(nn.Module):
     def __init__(self, num_tasks):
         super().__init__()

@@ -93,7 +93,7 @@
         "test_file_quelevel": "test_sequences_quelevel.csv",
         "test_window_file_quelevel": "test_window_sequences_quelevel.csv",
         "test_original_file_quelevel": "test_quelevel.csv",
-        "students_num_eval": 3,
+        "students_num_eval": 770,
         "global_question_stats_file": "global_question_stats.csv",
         "global_concept_stats_file": "global_concept_stats.csv",
         "total_questions_low_interval_file": "total_questions_low_interval.csv",

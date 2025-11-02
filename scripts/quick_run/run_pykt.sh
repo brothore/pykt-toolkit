@@ -1,7 +1,7 @@
 #!/bin/bash
 #运行pykt的环境配置
 # 要添加的行
-NEW_PATH='export PYTHONPATH="/root/pykt-toolkit:$PYTHONPATH"'
+NEW_PATH='export PYTHONPATH="/data/pykt-toolkit:$PYTHONPATH"'
 pip install pandas scikit-learn matplotlib seaborn wandb retrying
 # 检查是否已经存在
 if grep -qF "$NEW_PATH" ~/.zshrc; then

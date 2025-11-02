@@ -382,8 +382,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y)
                 print("got result:{result}")
                 fout.write(result+"\n")
-            else:
-                print("save_path None!!!!!!!!!!!!")
+
             if model_name not in ["llm", "mpllm"]:
                 y = torch.masked_select(y, sm).detach().cpu()
             # print(f"pred_results:{y}")  
@@ -393,7 +392,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             test_mini_index+=1
         ts = np.concatenate(y_trues, axis=0)
         ps = np.concatenate(y_scores, axis=0)
-        print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
+        # print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
         auc = safe_roc_auc(y_true=ts, y_score=ps)
 
         prelabels = [1 if p >= 0.5 else 0 for p in ps]
@@ -628,7 +627,7 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
         results_df = concat_batches(all_batches_results)
         ts = np.concatenate(y_trues, axis=0)
         ps = np.concatenate(y_scores, axis=0)
-        print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
+        # print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
         auc = safe_roc_auc(y_true=ts, y_score=ps)
 
         prelabels = [1 if p >= 0.5 else 0 for p in ps]
@@ -1020,7 +1019,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             current_batch = batch_idx + 1  # 从1开始计数
             # if current_batch > 14:  # 限制只处理前15个batch
             #     break
-            print(f"正在处理第 {current_batch}/{total_batches} 个batch")
+            # print(f"正在处理第 {current_batch}/{total_batches} 个batch")
             if model_name in ["dkt_forget", "bakt_time", "dbakt"]:
                 dcurori, dgaps, dqtest = data
             else:
@@ -1218,11 +1217,11 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         aucs, accs = dict(), dict()
         # print(f"Length of ts: {(y_trues)}, Length of ps: {(y_scores)}")  # 调试输出
         assert len(y_trues) == len(y_scores), "Mismatch in label and prediction lengths"
-        for i in range(len(y_trues)):
-            print(f"Batch {i}: y_trues shape {y_trues[i].shape}, y_scores shape {y_scores[i].shape}")
+        # for i in range(len(y_trues)):
+        #     print(f"Batch {i}: y_trues shape {y_trues[i].shape}, y_scores shape {y_scores[i].shape}")
         ts = np.concatenate(y_trues, axis=0)
         ps = np.concatenate(y_scores, axis=0)
-        print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
+        # print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
         auc = safe_roc_auc(y_true=ts, y_score=ps)
 
         

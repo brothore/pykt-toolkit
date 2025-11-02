@@ -585,5 +585,5 @@ class QueBaseModel(nn.Module):
                 y_scores.append(y.numpy())
         ts = np.concatenate(y_trues, axis=0)
         ps = np.concatenate(y_scores, axis=0)
-        print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
+        # print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
         return ps,ts
