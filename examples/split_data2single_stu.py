@@ -579,7 +579,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Process dataset parameters")
     
     # 先定义 dataset 参数
-    parser.add_argument("--dataset", type=str, default="assist2009",
+    parser.add_argument("--dataset", type=str, default="nips_task34",
                        help="Dataset name (default: %(default)s)")
     parser.add_argument("--if_quelevel", type=int, default=0,
                        help="question level")

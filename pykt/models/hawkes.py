@@ -7,8 +7,7 @@ import torch.nn as nn
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class HawkesKT(nn.Module):
-    # def __init__(self, args, corpus):
-    class HawkesKT(nn.Module):
+
     # def __init__(self, args, corpus):
     def __init__(self, n_skills, n_problems, emb_size, time_log, emb_type="qid", ablation_type="none"):
         super().__init__()

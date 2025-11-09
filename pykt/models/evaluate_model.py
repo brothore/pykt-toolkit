@@ -119,8 +119,42 @@ def process_results_to_df(result_string):
 #         print(f"[DEBUG] Parsed results: {parsed_results}")
 #         return pd.DataFrame()
 
-def    save_cur_predict_result(dres, q, r, d, t, m, sm, p):
-    # dres, q, r, qshft, rshft, m, sm, y
+# def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
+#     # dres, q, r, qshft, rshft, m, sm, y
+#     results = []
+#     for i in range(0, t.shape[0]):
+#         cps = torch.masked_select(p[i], sm[i]).detach().cpu()
+#         cts = torch.masked_select(t[i], sm[i]).detach().cpu()
+    
+#         cqs = torch.masked_select(q[i], m[i]).detach().cpu()
+#         crs = torch.masked_select(r[i], m[i]).detach().cpu()
+
+#         cds = torch.masked_select(d[i], sm[i]).detach().cpu()
+
+#         qs, rs, ts, ps, ds = [], [], [], [], []
+#         for cq, cr in zip(cqs.int(), crs.int()):
+#             qs.append(cq.item())
+#             rs.append(cr.item())
+#         for ct, cp, cd in zip(cts.int(), cps, cds.int()):
+#             ts.append(ct.item())
+#             ps.append(cp.item())
+#             ds.append(cd.item())
+#         try:
+#             auc = safe_roc_auc(
+#                 y_true=np.array(ts), y_score=np.array(ps)
+#             )
+            
+#         except Exception as e:
+#             # print(e)
+#             auc = -1
+#         prelabels = [1 if p >= 0.5 else 0 for p in ps]
+#         acc = metrics.accuracy_score(ts, prelabels)
+#         dres[len(dres)] = [qs, rs, ds, ts, ps, prelabels, auc, acc]
+#         results.append(str([qs, rs, ds, ts, ps, prelabels, auc, acc]))
+#     return "\n".join(results)
+
+def save_cur_predict_result(dres, q, r, d, t, m, sm, p, uids):
+    # dres, q, r, qshft, rshft, m, sm, y, uids
     results = []
     for i in range(0, t.shape[0]):
         cps = torch.masked_select(p[i], sm[i]).detach().cpu()
@@ -130,6 +164,9 @@ def    save_cur_predict_result(dres, q, r, d, t, m, sm, p):
         crs = torch.masked_select(r[i], m[i]).detach().cpu()
 
         cds = torch.masked_select(d[i], sm[i]).detach().cpu()
+
+        # 获取当前样本的uid
+        current_uid = uids[i].item() if hasattr(uids[i], 'item') else uids[i]
 
         qs, rs, ts, ps, ds = [], [], [], [], []
         for cq, cr in zip(cqs.int(), crs.int()):
@@ -149,11 +186,9 @@ def    save_cur_predict_result(dres, q, r, d, t, m, sm, p):
             auc = -1
         prelabels = [1 if p >= 0.5 else 0 for p in ps]
         acc = metrics.accuracy_score(ts, prelabels)
-        dres[len(dres)] = [qs, rs, ds, ts, ps, prelabels, auc, acc]
-        results.append(str([qs, rs, ds, ts, ps, prelabels, auc, acc]))
+        dres[len(dres)] = [current_uid, qs, rs, ds, ts, ps, prelabels, auc, acc]
+        results.append(str([current_uid, qs, rs, ds, ts, ps, prelabels, auc, acc]))
     return "\n".join(results)
-
-
 
 # def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
 #     # dres, q, r, qshft, rshft, m, sm, y  # Note: parameters renamed to match call, but q is c, d is cshft, t is rshft
@@ -239,12 +274,16 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
         )
     if save_path != "":
         fout = open(save_path, "w", encoding="utf8")
+        # 写入表头
+        header = "uid\tq_seq\tr_seq\td_seq\tt_seq\tp_seq\tprelabels\tauc\tacc\n"
+        fout.write(header)
     with torch.no_grad():
         y_trues = []
         y_scores = []
         dres = dict()
         test_mini_index = 0
         for data in test_loader:
+            
             # if model_name in ["dkt_forget", "lpkt"]:
             #     q, c, r, qshft, cshft, rshft, m, sm, d, dshft = data
             if model_name in ["dkt_forget", "bakt_time", "dbakt"]:
@@ -258,6 +297,11 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             else:
                 q, c, r = dcur["qseqs"], dcur["cseqs"], dcur["rseqs"] 
                 qshft, cshft, rshft= dcur["shft_qseqs"], dcur["shft_cseqs"], dcur["shft_rseqs"]
+            if "uid" in dcur:
+                uids = dcur["uid"]
+            else:
+                # 如果数据集中没有uid，创建默认值
+                uids = torch.tensor([-1] * q.shape[0]).to(device)
             m, sm = dcur["masks"], dcur["smasks"]
             q, c, r, qshft, cshft, rshft, m, sm = q.to(device), c.to(device), r.to(device), qshft.to(device), cshft.to(device), rshft.to(device), m.to(device), sm.to(device)
             if model.model_name in que_type_models and model_name not in ["lpkt", "rkt", "promptkt", "unikt"]:
@@ -366,6 +410,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 y = model(cc.long(), cq.long(), ct.long(), cr.long())#, csm.long())
                 y = y[:, 1:]
             elif model_name in que_type_models and model_name not in ["lpkt", "promptkt"]:
+                print(f"now evaluate model and save_path {save_path}")
                 y = model.predict_one_step(data)
                 c,cshft = q,qshft#question level 
             elif model_name in ["promptkt"]:
@@ -379,7 +424,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             # save predict result
             if save_path != "":
                 print(f"save_path:{save_path}")
-                result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y)
+                result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y, uids)
                 print("got result:{result}")
                 fout.write(result+"\n")
 

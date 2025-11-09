@@ -74,8 +74,10 @@ class KTQueDataset(Dataset):
         """
         dcur = dict()
         mseqs = self.dori["masks"][index]
+        if "uid" in self.dori:
+            dcur["uid"] = self.dori["uid"][index]
         for key in self.dori:
-            if key in ["masks", "smasks"]:
+            if key in ["masks", "smasks", "uid"]:
                 continue
             if len(self.dori[key]) == 0:
                 dcur[key] = self.dori[key]
@@ -118,10 +120,10 @@ class KTQueDataset(Dataset):
             - **select_masks (torch.tensor)**: is select to calculate the performance or not, 0 is not selected, 1 is selected, only available for 1~seqlen-1, shape is seqlen-1
             - **dqtest (dict)**: not null only self.qtest is True, for question level evaluation
         """
-        dori = {"qseqs": [], "cseqs": [], "rseqs": [], "tseqs": [], "utseqs": [], "smasks": []}
-
+        dori = {"qseqs": [], "cseqs": [], "rseqs": [], "tseqs": [], "utseqs": [], "smasks": [], "uid": []}
         df = pd.read_csv(sequence_path)
         df = df[df["fold"].isin(folds)].copy()#[0:1000]
+
         interaction_num = 0
         for i, row in df.iterrows():
             #use kc_id or question_id as input
@@ -138,6 +140,11 @@ class KTQueDataset(Dataset):
                 dori["cseqs"].append(row_skills)
             if "questions" in self.input_type:
                 dori["qseqs"].append([int(_) for _ in row["questions"].split(",")])
+            if "uid" in row:
+                dori["uid"].append(int(row["uid"]))
+            else:
+                # 如果某些行没有uid，可以设置默认值或报错
+                dori["uid"].append(-1)  # 或者根据您的需求处理
             if "timestamps" in row:
                 dori["tseqs"].append([int(_) for _ in row["timestamps"].split(",")])
             if "usetimes" in row:
@@ -150,9 +157,10 @@ class KTQueDataset(Dataset):
 
 
         for key in dori:
-            if key not in ["rseqs"]:#in ["smasks", "tseqs"]:
+            if key not in ["rseqs", "uid"]:#in ["smasks", "tseqs", "uid"]:
                 dori[key] = LongTensor(dori[key])
-            else:
+
+            elif key == "rseqs":
                 dori[key] = FloatTensor(dori[key])
 
         mask_seqs = (dori["rseqs"][:,:-1] != pad_val) * (dori["rseqs"][:,1:] != pad_val)
