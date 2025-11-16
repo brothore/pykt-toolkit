@@ -6,4 +6,4 @@ que_type_models += qikt_ab_models
 
 needs_uid_models = ["balance_dkt","balance_akt","long_dkt"]
 
-predict_after_train = 1
+predict_after_train = 2

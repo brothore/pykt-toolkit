@@ -15,7 +15,7 @@ from pykt.utils import debug_print,set_seed
 from pykt.datasets import init_dataset4train,init_dataset4train_local
 from pykt.config import predict_after_train
 import datetime
-
+from auc_processor import save_auc_results_from_file
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 os.environ['CUBLAS_WORKSPACE_CONFIG']=':4096:2'
@@ -26,77 +26,77 @@ def save_config(train_config, model_config, data_config, params, save_dir):
     with open(save_path, "w") as fout:
         json.dump(d, fout)
 
-def run_prediction(predict_mode, save_dir):
-    """
-    运行预测脚本并实时显示输出
-    Args:
-        predict_mode: 1 for wandb_multi_predict.py, 2 for wandb_predict.py
-        save_dir: 模型保存目录
-    """
-    try:
-        if predict_mode == 1:
-            script_path = "./wandb_multi_predict.py"
-            if not os.path.exists(script_path):
-                print(f"Warning: {script_path} not found")
-                return False
-            cmd = [sys.executable, script_path, "--save_dir", save_dir,"--bz","16" ]
-            print(cmd)
+# def run_prediction(predict_mode, save_dir):
+#     """
+#     运行预测脚本并实时显示输出
+#     Args:
+#         predict_mode: 1 for wandb_multi_predict.py, 2 for wandb_predict.py
+#         save_dir: 模型保存目录
+#     """
+#     try:
+#         if predict_mode == 1:
+#             script_path = "./wandb_multi_predict.py"
+#             if not os.path.exists(script_path):
+#                 print(f"Warning: {script_path} not found")
+#                 return False
+#             cmd = [sys.executable, script_path, "--save_dir", save_dir,"--bz","16" ]
+#             print(cmd)
             
-        elif predict_mode == 2:
-            script_path = "/root/autodl-tmp/pykt-toolkit/examples/wandb_predict.py"
-            if not os.path.exists(script_path):
-                print(f"Warning: {script_path} not found")
-                return False
-            cmd = [sys.executable, script_path, "--save_dir", save_dir]
+#         elif predict_mode == 2:
+#             script_path = "/root/autodl-tmp/pykt-toolkit/examples/wandb_predict.py"
+#             if not os.path.exists(script_path):
+#                 print(f"Warning: {script_path} not found")
+#                 return False
+#             cmd = [sys.executable, script_path, "--save_dir", save_dir]
             
-        else:
-            print(f"Invalid predict_after_train value: {predict_mode}")
-            return False
+#         else:
+#             print(f"Invalid predict_after_train value: {predict_mode}")
+#             return False
         
-        print(f"Starting prediction (mode {predict_mode}) at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"Command: {' '.join(cmd)}")
-        print(f"{'='*50} PREDICTION OUTPUT {'='*50}")
+#         print(f"Starting prediction (mode {predict_mode}) at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+#         print(f"Command: {' '.join(cmd)}")
+#         print(f"{'='*50} PREDICTION OUTPUT {'='*50}")
 
-        # 创建子进程并实时捕获输出
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,  # 合并标准输出和错误输出
-            text=True,
-            bufsize=1,  # 行缓冲模式
-            universal_newlines=True
-        )
+#         # 创建子进程并实时捕获输出
+#         process = subprocess.Popen(
+#             cmd,
+#             stdout=subprocess.PIPE,
+#             stderr=subprocess.STDOUT,  # 合并标准输出和错误输出
+#             text=True,
+#             bufsize=1,  # 行缓冲模式
+#             universal_newlines=True
+#         )
         
-        # 实时输出处理
-        try:
-            # 逐行读取输出并打印
-            for line in iter(process.stdout.readline, ''):
-                # 添加前缀便于识别预测输出
-                print(f"[Prediction] {line}", end='') 
-                sys.stdout.flush()  # 确保立即输出
+#         # 实时输出处理
+#         try:
+#             # 逐行读取输出并打印
+#             for line in iter(process.stdout.readline, ''):
+#                 # 添加前缀便于识别预测输出
+#                 print(f"[Prediction] {line}", end='') 
+#                 sys.stdout.flush()  # 确保立即输出
             
-            # 等待进程完成
-            process.wait()
+#             # 等待进程完成
+#             process.wait()
             
-        except KeyboardInterrupt:
-            print("\nCtrl-C detected! Terminating prediction process...")
-            process.terminate()
-            return False
+#         except KeyboardInterrupt:
+#             print("\nCtrl-C detected! Terminating prediction process...")
+#             process.terminate()
+#             return False
         
-        # 检查返回码
-        returncode = process.returncode
-        print(f"\n{'='*50} PREDICTION FINISHED ({returncode}) {'='*50}")
+#         # 检查返回码
+#         returncode = process.returncode
+#         print(f"\n{'='*50} PREDICTION FINISHED ({returncode}) {'='*50}")
         
-        if returncode == 0:
-            print("Prediction completed successfully!")
-            return True
-        else:
-            print(f"Prediction failed with return code: {returncode}")
-            return False
+#         if returncode == 0:
+#             print("Prediction completed successfully!")
+#             return True
+#         else:
+#             print(f"Prediction failed with return code: {returncode}")
+#             return False
             
-    except Exception as e:
-        print(f"Error running prediction: {str(e)}")
-        return False
+#     except Exception as e:
+#         print(f"Error running prediction: {str(e)}")
+#         return False
 def update_run_history(file_path, run_id, status):
     """
     更新 run_history.txt 中指定 run_id 的 Is_Completed 状态。
@@ -361,17 +361,70 @@ def main(params):
                     "save_dir": ckpt_path,
                     "use_wandb": params['use_wandb'],
                 }
+                
+                # 定义要运行的脚本的路径
+                script_path = "/data/pykt-toolkit/examples/wandb_predict.py"
+                
+                # 保存当前的 sys.argv，以便后续恢复
+                original_argv = sys.argv
+                
                 try:
-                    predict_main(predict_params)  # 直接调用wandb_multi_predict的main
+                    # 1. 构建新的 sys.argv 列表
+                    # sys.argv[0] 必须是脚本的路径
+                    new_argv = [script_path]
+                    for key, value in predict_params.items():
+                        new_argv.append(f"--{key}")
+                        new_argv.append(str(value))
+                    
+                    # 2. 临时替换 sys.argv
+                    sys.argv = new_argv
+                    
+                    print(f"--- 正在调用外部脚本 (runpy): {script_path} ---")
+                    print(f"--- 模拟参数: {' '.join(new_argv[1:])} ---")
+
+                    # 3. 使用 runpy 运行脚本
+                    # run_name="__main__" 会让脚本认为它是主程序
+                    runpy.run_path(script_path, run_name="__main__")
+                    
+                    # --- 运行成功后的原始逻辑 ---
                     prediction_success = True
                     print("Prediction completed successfully!")
                     if params['use_wandb']==1:
                         wandb.log({"prediction_status": "success"})
+
+                    # --- (你之前添加的 AUC 解析逻辑应放在这里) ---
+                    print("="*30)
+                    print("开始解析和保存详细的AUC结果...")
+                    target_suffix = "window_predictions.txt"
+                    target_file_path = None
+                    
+                    try:
+                        for filename in os.listdir(ckpt_path):
+                            if filename.endswith(target_suffix):
+                                target_file_path = os.path.join(ckpt_path, filename)
+                                print(f"✅ 已找到目标文件: {target_file_path}")
+                                break
+                    except Exception as e:
+                        print(f"❌ 在搜索文件时发生意外错误: {e}")
+                
+                    if target_file_path and os.path.exists(target_file_path):
+                        save_auc_results_from_file(target_file_path)
+                    else:
+                        print(f"❌ 错误：在目录 {ckpt_path} 中未找到结尾为 '{target_suffix}' 的文件")
+                    print("="*30)
+                    # --- AUC 解析逻辑结束 ---
+
                 except Exception as e:
+                    # 这个 except 块现在可以捕获来自 runpy 脚本内部的任何 Python 错误
                     prediction_success = False
                     print(f"Prediction failed: {str(e)}")
                     if params['use_wandb']==1:
                         wandb.log({"prediction_status": "failed"})
+                
+                finally:
+                    # 4. 无论成功还是失败，都必须恢复原始的 sys.argv
+                    sys.argv = original_argv
+                    print("--- 外部脚本执行完毕 ---")
         elif predict_after_train == 0:
             print("predict_after_train is set to 0, skipping prediction.")
         else:

@@ -153,42 +153,6 @@ def process_results_to_df(result_string):
 #         results.append(str([qs, rs, ds, ts, ps, prelabels, auc, acc]))
 #     return "\n".join(results)
 
-def save_cur_predict_result(dres, q, r, d, t, m, sm, p, uids):
-    # dres, q, r, qshft, rshft, m, sm, y, uids
-    results = []
-    for i in range(0, t.shape[0]):
-        cps = torch.masked_select(p[i], sm[i]).detach().cpu()
-        cts = torch.masked_select(t[i], sm[i]).detach().cpu()
-    
-        cqs = torch.masked_select(q[i], m[i]).detach().cpu()
-        crs = torch.masked_select(r[i], m[i]).detach().cpu()
-
-        cds = torch.masked_select(d[i], sm[i]).detach().cpu()
-
-        # 获取当前样本的uid
-        current_uid = uids[i].item() if hasattr(uids[i], 'item') else uids[i]
-
-        qs, rs, ts, ps, ds = [], [], [], [], []
-        for cq, cr in zip(cqs.int(), crs.int()):
-            qs.append(cq.item())
-            rs.append(cr.item())
-        for ct, cp, cd in zip(cts.int(), cps, cds.int()):
-            ts.append(ct.item())
-            ps.append(cp.item())
-            ds.append(cd.item())
-        try:
-            auc = safe_roc_auc(
-                y_true=np.array(ts), y_score=np.array(ps)
-            )
-            
-        except Exception as e:
-            # print(e)
-            auc = -1
-        prelabels = [1 if p >= 0.5 else 0 for p in ps]
-        acc = metrics.accuracy_score(ts, prelabels)
-        dres[len(dres)] = [current_uid, qs, rs, ds, ts, ps, prelabels, auc, acc]
-        results.append(str([current_uid, qs, rs, ds, ts, ps, prelabels, auc, acc]))
-    return "\n".join(results)
 
 # def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
 #     # dres, q, r, qshft, rshft, m, sm, y  # Note: parameters renamed to match call, but q is c, d is cshft, t is rshft
@@ -257,6 +221,117 @@ def save_cur_predict_result(dres, q, r, d, t, m, sm, p, uids):
 
 #     return results
 
+# def save_cur_predict_result(dres, q, r, d, t, m, sm, p, uids):
+#     # dres, q, r, qshft, rshft, m, sm, y, uids
+#     results = []
+#     for i in range(0, t.shape[0]):
+#         cps = torch.masked_select(p[i], sm[i]).detach().cpu()
+#         cts = torch.masked_select(t[i], sm[i]).detach().cpu()
+    
+#         cqs = torch.masked_select(q[i], m[i]).detach().cpu()
+#         crs = torch.masked_select(r[i], m[i]).detach().cpu()
+
+#         cds = torch.masked_select(d[i], sm[i]).detach().cpu()
+
+#         # 获取当前样本的uid
+#         current_uid = uids[i].item() if hasattr(uids[i], 'item') else uids[i]
+
+#         qs, rs, ts, ps, ds = [], [], [], [], []
+#         for cq, cr in zip(cqs.int(), crs.int()):
+#             qs.append(cq.item())
+#             rs.append(cr.item())
+#         for ct, cp, cd in zip(cts.int(), cps, cds.int()):
+#             ts.append(ct.item())
+#             ps.append(cp.item())
+#             ds.append(cd.item())
+#         try:
+#             auc = safe_roc_auc(
+#                 y_true=np.array(ts), y_score=np.array(ps)
+#             )
+            
+#         except Exception as e:
+#             # print(e)
+#             auc = -1
+#         prelabels = [1 if p >= 0.5 else 0 for p in ps]
+#         acc = metrics.accuracy_score(ts, prelabels)
+#         dres[len(dres)] = [current_uid, qs, rs, ds, ts, ps, prelabels, auc, acc]
+#         results.append(str([current_uid, qs, rs, ds, ts, ps, prelabels, auc, acc]))
+#     return "\n".join(results)
+# def save_cur_predict_result(dres, c,q, r, cshft,qshft, t, m, sm, p, uids):
+#     # dres, q, r, qshft, rshft, m, sm, y, uids
+#     results = []
+#     for i in range(0, t.shape[0]):
+#         cps = torch.masked_select(p[i], sm[i]).detach().cpu()
+#         cts = torch.masked_select(t[i], sm[i]).detach().cpu()
+
+#         # 获取当前样本的uid
+#         current_uid = uids[i].item() if hasattr(uids[i], 'item') else uids[i]
+        
+#         # 遍历每个时间步
+#         for time_step, (ct, cp) in enumerate(zip(cts.int(), cps)):
+#             true_val = ct.item()
+#             predict_val = cp.item()
+            
+#             # 为每个时间步生成一行数据
+#             # 格式: uid, true, predict, qidx
+#             result_line = f"{current_uid}\t{time_step}\t{true_val}\t{predict_val}"
+#             results.append(result_line)
+            
+#             # # 同时更新dres字典（如果需要的话）
+#             # # 这里我们按(uid, qidx)作为key来存储
+#             # key = (current_uid, time_step)
+#             # dres[key] = [current_uid, true_val, predict_val, time_step]
+    
+#     return "\n".join(results)
+
+def save_cur_predict_result(dres, c,q, r, cshft,qshft, t, m, sm, p, uids):
+    # dres, q, r, qshft, rshft, m, sm, y, uids
+    results = []
+    for i in range(0, t.shape[0]): # 遍历 batch中的每个样本
+        # 使用掩码(sm)来选择有效的数据点
+        cps = torch.masked_select(p[i], sm[i]).detach().cpu()
+        cts = torch.masked_select(t[i], sm[i]).detach().cpu()
+        
+        # --- 新增 ---
+        # 按照cpt的方式，同样处理 cshft 和 qshft
+        # ccs = concepts shift (我假设 cshft 对应 concepts)
+        # cqs = questions shift (我假设 qshft 对应 questions)
+        ccs = torch.masked_select(cshft[i], sm[i]).detach().cpu() 
+        cqs = torch.masked_select(qshft[i], sm[i]).detach().cpu()
+        # --- 结束 ---
+
+        # 获取当前样本的uid
+        current_uid = uids[i].item() if hasattr(uids[i], 'item') else uids[i]
+        
+        # 遍历该样本的每个有效时间步
+        # 将 cqs 和 ccs 也加入到zip中
+        # (ct: true, cp: predict, cq: question, cc: concept)
+        for time_step, (ct, cp, cq, cc) in enumerate(zip(cts.int(), cps, cqs.int(), ccs.int())):
+            true_val = ct.item()
+            predict_val = cp.item()
+            
+            # --- 新增 ---
+            # 获取 question 和 concept 的值
+            qshft_val = cq.item()
+            cshft_val = cc.item()
+            # --- 结束 ---
+            
+            # 为每个时间步生成一行数据
+            # 格式: uid, time_step, true, predict, question, concept
+            # --- 修改 ---
+            # 在 result_line 中添加 qshft_val 和 cshft_val
+            result_line = f"{current_uid}\t{time_step+1}\t{true_val}\t{predict_val}\t{qshft_val}\t{cshft_val}"
+            results.append(result_line)
+            
+            # # 同时更新dres字典（如果需要的话）
+            # # 这里我们按(uid, qidx)作为key来存储
+            # # 注意：如果取消注释，也应该更新这里
+            # key = (current_uid, time_step)
+            # dres[key] = [current_uid, true_val, predict_val, time_step, qshft_val, cshft_val]
+    
+    return "\n".join(results)
+
+
 
 def evaluate(model, test_loader, model_name, rel=None, save_path=""):
     eval_student_state_manager = None
@@ -275,7 +350,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
     if save_path != "":
         fout = open(save_path, "w", encoding="utf8")
         # 写入表头
-        header = "uid\tq_seq\tr_seq\td_seq\tt_seq\tp_seq\tprelabels\tauc\tacc\n"
+        header = "orirow\tqidx\tlate_trues\tlate_mean\tquestions\tconcepts\n"
         fout.write(header)
     with torch.no_grad():
         y_trues = []
@@ -308,7 +383,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 model.model.eval()
             elif model_name not in ["llm", "mpllm"]:
                 model.eval()
-
+            cb,cbshft = c,cshft
             # print(f"before y: {y.shape}")
             cq = torch.cat((q[:,0:1], qshft), dim=1)
             cc = torch.cat((c[:,0:1], cshft), dim=1)
@@ -410,7 +485,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 y = model(cc.long(), cq.long(), ct.long(), cr.long())#, csm.long())
                 y = y[:, 1:]
             elif model_name in que_type_models and model_name not in ["lpkt", "promptkt"]:
-                print(f"now evaluate model and save_path {save_path}")
+                # print(f"now evaluate model and save_path {save_path}")
                 y = model.predict_one_step(data)
                 c,cshft = q,qshft#question level 
             elif model_name in ["promptkt"]:
@@ -423,9 +498,12 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             # print(f"after y: {y.shape}")
             # save predict result
             if save_path != "":
-                print(f"save_path:{save_path}")
-                result = save_cur_predict_result(dres, c, r, cshft, rshft, m, sm, y, uids)
-                print("got result:{result}")
+                # print(f"save_path:{save_path}")
+                # print(f"qshft.shape{qshft.shape}")
+                # print(f"cshft.shape{cbshft.shape}")
+                print(cbshft)
+                result = save_cur_predict_result(dres, cb,q, r, cbshft,qshft, rshft, m, sm, y, uids)
+                # print("got result:{result}")
                 fout.write(result+"\n")
 
             if model_name not in ["llm", "mpllm"]:

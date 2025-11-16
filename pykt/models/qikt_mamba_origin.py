@@ -228,8 +228,7 @@ class QIKTNet(nn.Module):
 class QIKT_MAMBA(QueBaseModel):
     def __init__(self, num_q,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",num_attn_head=2,**kwargs):
         model_name = "qikt_mamba"
-        if 'inter_group_auc_lambda' not in other_config:
-            other_config['inter_group_auc_lambda'] = 0.1
+       
         debug_print(f"emb_type is {emb_type}",fuc_name="QIKT")
 
         super().__init__(model_name=model_name,emb_type=emb_type,emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,seed=seed)
@@ -273,122 +272,54 @@ class QIKT_MAMBA(QueBaseModel):
         loss_q_all_lambda = get_loss_lambda("q_all_lambda")
         loss_q_next_lambda = get_loss_lambda("q_next_lambda")
 
-        # 新增：组间AUC正则化项
-        loss_inter_group_auc = 0.0
-        inter_group_auc_lambda = self.model.other_config.get('inter_group_auc_lambda', 0.1)  # 正则化系数，可配置
-        
-        if inter_group_auc_lambda > 0:
-            loss_inter_group_auc = self.calculate_inter_group_auc(outputs['y'], data_new['rshft'], data_new['sm'], data_new['uid'])
         
         if self.model.output_mode=="an_irt":
+            
+
             if self.version == "all":
-                # 完整版本 - 所有损失项都保留，新增组间AUC正则化项
-                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next + inter_group_auc_lambda * loss_inter_group_auc
+                # 完整版本 - 所有损失项都保留
+                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next
             elif self.version == "no_kt":
                 # 消融知识迁移损失
-                loss = loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next + inter_group_auc_lambda * loss_inter_group_auc
+                loss = loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next
             elif self.version == "no_q_all":
                 # 消融所有问题损失
-                loss = loss_kt + loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next + inter_group_auc_lambda * loss_inter_group_auc
+                loss = loss_kt + loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next
             elif self.version == "no_c_all":
                 # 消融所有上下文损失
-                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_next_lambda * loss_c_next + inter_group_auc_lambda * loss_inter_group_auc
+                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_next_lambda * loss_c_next
             elif self.version == "no_c_next":
                 # 消融下一上下文损失
-                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + inter_group_auc_lambda * loss_inter_group_auc
+                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all
             elif self.version == "no_c":
-                loss = loss_kt + loss_q_all_lambda * loss_q_all + inter_group_auc_lambda * loss_inter_group_auc
+                loss = loss_kt + loss_q_all_lambda * loss_q_all
             elif self.version == "kt_only":
                 # 仅保留知识迁移损失
-                loss = loss_kt + inter_group_auc_lambda * loss_inter_group_auc
+                loss = loss_kt
             elif self.version == "q_only":
                 # 仅保留问题相关损失
-                loss = loss_q_all_lambda * loss_q_all + inter_group_auc_lambda * loss_inter_group_auc
+                loss = loss_q_all_lambda * loss_q_all
             elif self.version == "c_only":
                 # 仅保留上下文相关损失
-                loss = loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next + inter_group_auc_lambda * loss_inter_group_auc
+                loss = loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next
             elif self.version == "no_next_context":
                 # 消融下一上下文但保留当前上下文
-                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + inter_group_auc_lambda * loss_inter_group_auc
+                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all
             elif self.version == "minimal":
                 # 最小组合 - 只保留知识迁移和问题损失
-                loss = loss_kt + loss_q_all_lambda * loss_q_all + inter_group_auc_lambda * loss_inter_group_auc
+                loss = loss_kt + loss_q_all_lambda * loss_q_all
             elif self.version == "auto_uncertainty":
                 loss_func = UncertaintyWeightedLoss(num_tasks=4)
-                loss = loss_func([loss_kt, loss_q_all, loss_c_all, loss_c_next]) + inter_group_auc_lambda * loss_inter_group_auc
+                loss = loss_func([loss_kt, loss_q_all, loss_c_all, loss_c_next])
             else:
                 # 默认完整版本
-                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next + inter_group_auc_lambda * loss_inter_group_auc
+                loss = loss_kt + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda * loss_c_next
+
 
         else:
-            loss = loss_kt  + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda* loss_c_next + loss_q_next_lambda*loss_q_next + inter_group_auc_lambda * loss_inter_group_auc
-        
-        # print(f"loss={loss:.3f},loss_kt={loss_kt:.3f},loss_q_all={loss_q_all:.3f},loss_c_all={loss_c_all:.3f},loss_q_next={loss_q_next:.3f},loss_c_next={loss_c_next:.3f},inter_group_auc={loss_inter_group_auc:.3f}")
+            loss = loss_kt  + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda* loss_c_next + loss_q_next_lambda*loss_q_next
+        # print(f"loss={loss:.3f},loss_kt={loss_kt:.3f},loss_q_all={loss_q_all:.3f},loss_c_all={loss_c_all:.3f},loss_q_next={loss_q_next:.3f},loss_c_next={loss_c_next:.3f}")
         return outputs['y'],loss#y_question没用
-
-
-    # 新增：计算组间AUC正则化项的方法
-    def calculate_inter_group_auc(self, predictions, targets, mask, uids):
-        """
-        计算组间AUC正则化项
-        predictions: 预测概率 [batch_size, seq_len]
-        targets: 真实标签 [batch_size, seq_len] 
-        mask: 序列掩码 [batch_size, seq_len]
-        uids: 用户ID [batch_size, seq_len] 或 [batch_size]
-        """
-        # 确保数据在CPU上以便计算
-        predictions = predictions.detach().cpu()
-        targets = targets.detach().cpu()
-        mask = mask.detach().cpu()
-        uids = uids.detach().cpu()
-        
-        # 处理uids的维度
-        if uids.dim() == 2:
-            # 如果uids是[batch_size, seq_len]，取第一个时间步的uid作为整个序列的uid
-            uids = uids[:, 0]
-        
-        # 获取唯一的用户ID
-        unique_uids = torch.unique(uids)
-        
-        # 如果只有一个用户，无法计算组间差异，返回0
-        if len(unique_uids) <= 1:
-            return torch.tensor(0.0, device=self.device)
-        
-        group_aucs = []
-        
-        for uid in unique_uids:
-            # 获取当前用户的所有预测和标签
-            user_mask = (uids == uid)
-            user_predictions = predictions[user_mask]
-            user_targets = targets[user_mask]
-            user_seq_mask = mask[user_mask]
-            
-            # 应用序列掩码
-            user_predictions_masked = torch.masked_select(user_predictions, user_seq_mask)
-            user_targets_masked = torch.masked_select(user_targets, user_seq_mask)
-            
-            # 确保有足够的样本计算AUC
-            if len(user_predictions_masked) >= 2 and len(torch.unique(user_targets_masked)) >= 2:
-                try:
-                    # 计算当前用户的AUC
-                    auc = metrics.roc_auc_score(
-                        user_targets_masked.numpy(), 
-                        user_predictions_masked.numpy()
-                    )
-                    group_aucs.append(auc)
-                except ValueError:
-                    # 如果无法计算AUC（如所有标签相同），跳过该用户
-                    continue
-        
-        # 如果可计算的AUC数量不足，返回0
-        if len(group_aucs) < 2:
-            return torch.tensor(0.0, device=self.device)
-        
-        # 计算组间AUC的方差作为正则化项
-        group_aucs_tensor = torch.tensor(group_aucs, device=self.device)
-        auc_variance = torch.var(group_aucs_tensor)
-        
-        return auc_variance
 
 
     def predict(self,dataset,batch_size,return_ts=False,process=True):
@@ -445,7 +376,7 @@ class QIKT_MAMBA(QueBaseModel):
     def predict_one_step(self, data, return_details=False, process=True, return_raw=False):
         data_new = self.batch_to_device(data, process=process)
         outputs = self.model(data_new['cq'].long(), data_new['cc'], data_new['cr'].long(), data=data_new)
-
+        
         # 原有固定权重
         output_c_all_lambda = self.model.other_config.get('output_c_all_lambda', 1)
         output_c_next_lambda = self.model.other_config.get('output_c_next_lambda', 1)
