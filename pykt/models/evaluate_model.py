@@ -284,55 +284,127 @@ def process_results_to_df(result_string):
     
 #     return "\n".join(results)
 
-def save_cur_predict_result(dres, c,q, r, cshft,qshft, t, m, sm, p, uids):
-    # dres, q, r, qshft, rshft, m, sm, y, uids
+# def save_cur_predict_result(dres, c,q, r, cshft,qshft, t, m, sm, p, uids):
+#     # dres, q, r, qshft, rshft, m, sm, y, uids
+#     results = []
+#     for i in range(0, t.shape[0]): # 遍历 batch中的每个样本
+#         # 使用掩码(sm)来选择有效的数据点
+#         cps = torch.masked_select(p[i], sm[i]).detach().cpu()
+#         cts = torch.masked_select(t[i], sm[i]).detach().cpu()
+        
+#         # --- 新增 ---
+#         # 按照cpt的方式，同样处理 cshft 和 qshft
+#         # ccs = concepts shift (我假设 cshft 对应 concepts)
+#         # cqs = questions shift (我假设 qshft 对应 questions)
+#         ccs = torch.masked_select(cshft[i], sm[i]).detach().cpu() 
+#         cqs = torch.masked_select(qshft[i], sm[i]).detach().cpu()
+#         # --- 结束 ---
+
+#         # 获取当前样本的uid
+#         current_uid = uids[i].item() if hasattr(uids[i], 'item') else uids[i]
+        
+#         # 遍历该样本的每个有效时间步
+#         # 将 cqs 和 ccs 也加入到zip中
+#         # (ct: true, cp: predict, cq: question, cc: concept)
+#         for time_step, (ct, cp, cq, cc) in enumerate(zip(cts.int(), cps, cqs.int(), ccs.int())):
+#             true_val = ct.item()
+#             predict_val = cp.item()
+            
+#             # --- 新增 ---
+#             # 获取 question 和 concept 的值
+#             qshft_val = cq.item()
+#             cshft_val = cc.item()
+#             # --- 结束 ---
+            
+#             # 为每个时间步生成一行数据
+#             # 格式: uid, time_step, true, predict, question, concept
+#             # --- 修改 ---
+#             # 在 result_line 中添加 qshft_val 和 cshft_val
+#             result_line = f"{current_uid}\t{time_step+1}\t{true_val}\t{predict_val}\t{qshft_val}\t{cshft_val}"
+#             results.append(result_line)
+            
+#             # # 同时更新dres字典（如果需要的话）
+#             # # 这里我们按(uid, qidx)作为key来存储
+#             # # 注意：如果取消注释，也应该更新这里
+#             # key = (current_uid, time_step)
+#             # dres[key] = [current_uid, true_val, predict_val, time_step, qshft_val, cshft_val]
+    
+#     return "\n".join(results)
+
+def save_cur_predict_result(dres, c, q, r, cshft, qshft, t, m, sm, p, uids):
+    """
+    保存当前预测结果。
+    
+    qshft 形状: (batch_size, seq_len)
+    cshft 形状: (batch_size, seq_len, num_concepts)
+    sm (掩码) 形状: (batch_size, seq_len)
+    
+    新要求: cshft 列表中的 -1 应被过滤，qshft 只扩展到有效 cshft 的数量。
+    """
     results = []
     for i in range(0, t.shape[0]): # 遍历 batch中的每个样本
-        # 使用掩码(sm)来选择有效的数据点
+        # 1. 获取有效的 p (predictions) 和 t (targets)
         cps = torch.masked_select(p[i], sm[i]).detach().cpu()
         cts = torch.masked_select(t[i], sm[i]).detach().cpu()
         
-        # --- 新增 ---
-        # 按照cpt的方式，同样处理 cshft 和 qshft
-        # ccs = concepts shift (我假设 cshft 对应 concepts)
-        # cqs = questions shift (我假设 qshft 对应 questions)
-        ccs = torch.masked_select(cshft[i], sm[i]).detach().cpu() 
-        cqs = torch.masked_select(qshft[i], sm[i]).detach().cpu()
-        # --- 结束 ---
+        # 2. 处理 qshft (形状: (num_valid_steps,))
+        cqs = torch.masked_select(qshft[i], sm[i]).detach().cpu() 
+        
+        # 3. 处理 cshft (形状: (num_valid_steps, num_concepts))
+        ccs = cshft[i][sm[i]].detach().cpu() 
 
         # 获取当前样本的uid
         current_uid = uids[i].item() if hasattr(uids[i], 'item') else uids[i]
         
-        # 遍历该样本的每个有效时间步
-        # 将 cqs 和 ccs 也加入到zip中
-        # (ct: true, cp: predict, cq: question, cc: concept)
-        for time_step, (ct, cp, cq, cc) in enumerate(zip(cts.int(), cps, cqs.int(), ccs.int())):
+        # 4. 遍历该样本的每个有效时间步
+        # ct: true (标量)
+        # cp: predict (标量)
+        # cq: question (标量)
+        # cc_list_tensor: concept_list (形状为 [num_concepts] 的张量)
+        for time_step, (ct, cp, cq, cc_list_tensor) in enumerate(zip(cts.int(), cps, cqs.int(), ccs.int())):
             true_val = ct.item()
             predict_val = cp.item()
             
-            # --- 新增 ---
-            # 获取 question 和 concept 的值
-            qshft_val = cq.item()
-            cshft_val = cc.item()
+            # --- 关键修改: 过滤 -1 ---
+            
+            # 1. 获取 qshft 的单个值
+            qshft_val_single = cq.item() # 例如: 42
+            
+            # 2. 获取 cshft 的原始值列表
+            # 假设: cc_list_tensor 是 tensor([1, -1, 12, 5, -1])
+            cshft_val_list_raw = cc_list_tensor.tolist() # 例如: [1, -1, 12, 5, -1]
+            
+            # 3. *** 新增 ***: 过滤掉 -1，只保留有效值
+            valid_cshft_list = [v for v in cshft_val_list_raw if v != -1]
+            # 例如: [1, 12, 5]
+            
+            # 4. 将 *有效* cshft 列表转换为字符串
+            cshft_val_str = ",".join(map(str, valid_cshft_list))
+            # 例如: "1,12,5"
+            
+            # 5. "qshft也对应扩展为 *有效cshft* 的数量的列表"
+            num_valid_concepts = len(valid_cshft_list) # 例如: 3
+            qshft_val_list_expanded = [qshft_val_single] * num_valid_concepts
+            # 例如: [42, 42, 42]
+            
+            # 6. 将 qshft 列表也转换为字符串
+            qshft_val_str = ",".join(map(str, qshft_val_list_expanded))
+            # 例如: "42,42,42"
+            
             # --- 结束 ---
             
-            # 为每个时间步生成一行数据
-            # 格式: uid, time_step, true, predict, question, concept
-            # --- 修改 ---
-            # 在 result_line 中添加 qshft_val 和 cshft_val
-            result_line = f"{current_uid}\t{time_step+1}\t{true_val}\t{predict_val}\t{qshft_val}\t{cshft_val}"
+            # 格式: uid, time_step, true, predict, question_list_str, concept_list_str
+            # 如果 valid_cshft_list 为空, qshft_val_str 和 cshft_val_str 都会是空字符串 ""
+            result_line = f"{current_uid}\t{time_step+1}\t{true_val}\t{predict_val}\t{qshft_val_str}\t{cshft_val_str}"
             results.append(result_line)
             
-            # # 同时更新dres字典（如果需要的话）
-            # # 这里我们按(uid, qidx)作为key来存储
-            # # 注意：如果取消注释，也应该更新这里
+            # # dres 的处理 (如果需要)
             # key = (current_uid, time_step)
-            # dres[key] = [current_uid, true_val, predict_val, time_step, qshft_val, cshft_val]
-    
+            # dres[key] = [current_uid, true_val, predict_val, time_step, qshft_val_str, cshft_val_str]
+
     return "\n".join(results)
 
-
-
+    
 def evaluate(model, test_loader, model_name, rel=None, save_path=""):
     eval_student_state_manager = None
     if model_name == "long_dkt":
@@ -501,7 +573,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 # print(f"save_path:{save_path}")
                 # print(f"qshft.shape{qshft.shape}")
                 # print(f"cshft.shape{cbshft.shape}")
-                print(cbshft)
+                # print(cbshft)
                 result = save_cur_predict_result(dres, cb,q, r, cbshft,qshft, rshft, m, sm, y, uids)
                 # print("got result:{result}")
                 fout.write(result+"\n")
