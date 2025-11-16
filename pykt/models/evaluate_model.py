@@ -346,14 +346,16 @@ def save_cur_predict_result(dres, c, q, r, cshft, qshft, t, m, sm, p, uids, stud
         # 2. 处理 qshft (形状: (num_valid_steps,))
         cqs = torch.masked_select(qshft[i], sm[i]).detach().cpu() 
         
-        # 3. 处理 cshft (形状: (num_valid_steps, num_concepts))
+        # 3. 处理 cshft (形状可能为 (num_valid_steps, num_concepts) 或 (num_valid_steps,))
+        #    cshft[i] 的形状是 (seq_len-1, ...)
+        #    sm[i] 的形状是 (seq_len-1,)
+        #    ccs 的形状是 (num_valid_steps, ...)
         ccs = cshft[i][sm[i]].detach().cpu() 
 
         # 获取当前样本的uid
         current_uid = uids[i].item() if hasattr(uids[i], 'item') else uids[i]
         
         # --- 新增：获取该学生的全局起始时间步 ---
-        # .get(current_uid, 0) 表示如果找不到该uid，就从0开始
         global_time_step_offset = student_time_step_tracker.get(current_uid, 0)
         # --- 结束新增 ---
 
@@ -367,17 +369,28 @@ def save_cur_predict_result(dres, c, q, r, cshft, qshft, t, m, sm, p, uids, stud
             
             # --- 关键修改: 过滤 -1 ---
             qshft_val_single = cq.item() 
-            cshft_val_list_raw = cc_list_tensor.tolist() 
-            valid_cshft_list = [v for v in cshft_val_list_raw if v != -1]
-            cshft_val_str = ",".join(map(str, reversed(valid_cshft_list)))
+            cshft_val_list_raw = cc_list_tensor.tolist() # <--- 这里可能是 list 或 int
+            
+            # ++++++ 修复开始 ++++++
+            if isinstance(cshft_val_list_raw, list):
+                # 情况1: KTQueDataset (多知识点), cshft_val_list_raw 是 [23, 45, -1]
+                valid_cshft_list = [v for v in cshft_val_list_raw if v != -1]
+            else:
+                # 情况2: KTDataset (单知识点), cshft_val_list_raw 是 23
+                if cshft_val_list_raw != -1:
+                    valid_cshft_list = [cshft_val_list_raw] # 包装成列表
+                else:
+                    valid_cshft_list = [] # 如果这个单知识点是-1, 则为空
+            
             num_valid_concepts = len(valid_cshft_list)
+            # ++++++ 修复结束 ++++++
+
+            cshft_val_str = ",".join(map(str, reversed(valid_cshft_list)))
             qshft_val_list_expanded = [qshft_val_single] * num_valid_concepts
             qshft_val_str = ",".join(map(str, qshft_val_list_expanded))
             # --- 结束 ---
             
             # --- 修改：使用全局时间步 ---
-            # time_step 是当前batch的本地索引 (从0开始)
-            # current_global_time_step 是全局的连续索引 (从1开始)
             current_global_time_step = global_time_step_offset + time_step + 1
             result_line = f"{current_uid}\t{current_global_time_step}\t{true_val}\t{predict_val}\t{qshft_val_str}\t{cshft_val_str}"
             # --- 结束修改 ---
@@ -388,7 +401,6 @@ def save_cur_predict_result(dres, c, q, r, cshft, qshft, t, m, sm, p, uids, stud
             # ...
 
         # --- 新增：在内层循环结束后，更新该学生的全局时间步计数器 ---
-        # cts.shape[0] 是当前学生在此batch中的有效时间步数量
         num_valid_steps_in_batch = cts.shape[0]
         student_time_step_tracker[current_uid] = global_time_step_offset + num_valid_steps_in_batch
         # --- 结束新增 ---

@@ -52,7 +52,10 @@ class KTDataset(Dataset):
                 self.dori = pd.read_pickle(processed_data)
                 for key in self.dori:
                     self.dori[key] = self.dori[key]#[:100]
-        print(f"file path: {file_path}, qlen: {len(self.dori['qseqs'])}, clen: {len(self.dori['cseqs'])}, rlen: {len(self.dori['rseqs'])}")
+        
+        # <--- 修改：在打印信息时也加入uid的长度检查 (可选, 但建议)
+        uid_len = len(self.dori.get('uid', []))
+        print(f"file path: {file_path}, qlen: {len(self.dori['qseqs'])}, clen: {len(self.dori['cseqs'])}, rlen: {len(self.dori['rseqs'])}, uidlen: {uid_len}")
 
     def __len__(self):
         """return the dataset length
@@ -80,8 +83,14 @@ class KTDataset(Dataset):
         """
         dcur = dict()
         mseqs = self.dori["masks"][index]
+
+        # <--- 添加：在这里处理 uid
+        if "uid" in self.dori:
+            dcur["uid"] = self.dori["uid"][index]
+        
         for key in self.dori:
-            if key in ["masks", "smasks"]:
+            # <--- 修改：将 uid 添加到跳过列表
+            if key in ["masks", "smasks", "uid"]:
                 continue
             if len(self.dori[key]) == 0:
                 dcur[key] = self.dori[key]
@@ -118,7 +127,8 @@ class KTDataset(Dataset):
             - **select_masks (torch.tensor)**: is select to calculate the performance or not, 0 is not selected, 1 is selected, only available for 1~seqlen-1, shape is seqlen-1
             - **dqtest (dict)**: not null only self.qtest is True, for question level evaluation
         """
-        dori = {"qseqs": [], "cseqs": [], "rseqs": [], "tseqs": [], "utseqs": [], "smasks": []}
+        # <--- 修改：在 dori 中初始化 uid
+        dori = {"qseqs": [], "cseqs": [], "rseqs": [], "tseqs": [], "utseqs": [], "smasks": [], "uid": []}
 
         # seq_qids, seq_cids, seq_rights, seq_mask = [], [], [], []
         df = pd.read_csv(sequence_path)#[0:1000]
@@ -140,16 +150,25 @@ class KTDataset(Dataset):
             dori["rseqs"].append([int(_) for _ in row["responses"].split(",")])
             dori["smasks"].append([int(_) for _ in row["selectmasks"].split(",")])
 
+            # <--- 添加：从 row 中加载 uid
+            if "uid" in row:
+                dori["uid"].append(int(row["uid"]))
+            else:
+                # 如果某些行没有uid，可以设置默认值或报错
+                dori["uid"].append(-1)  # 或者根据您的需求处理
+
             interaction_num += dori["smasks"][-1].count(1)
 
             if self.qtest:
                 dqtest["qidxs"].append([int(_) for _ in row["qidxs"].split(",")])
                 dqtest["rests"].append([int(_) for _ in row["rest"].split(",")])
                 dqtest["orirow"].append([int(_) for _ in row["orirow"].split(",")])
+        
         for key in dori:
-            if key not in ["rseqs"]:#in ["smasks", "tseqs"]:
+            # <--- 修改：将 uid 添加到 tensor 转换的排除列表
+            if key not in ["rseqs", "uid"]:#in ["smasks", "tseqs"]:
                 dori[key] = LongTensor(dori[key])
-            else:
+            elif key == "rseqs": # <--- 保持和 KTQueDataset 一致的逻辑
                 dori[key] = FloatTensor(dori[key])
 
         mask_seqs = (dori["cseqs"][:,:-1] != pad_val) * (dori["cseqs"][:,1:] != pad_val)
