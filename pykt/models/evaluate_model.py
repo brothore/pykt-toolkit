@@ -15,32 +15,32 @@ from datetime import datetime
 import ast
 current_time = datetime.now().strftime('%m_%d')
 def safe_roc_auc(y_true, y_score, dummy_score_strategy='mean'):
-    """
-    计算 AUC，处理单一类别情况通过添加虚拟数据点。
-    :param y_true: 真实标签 (numpy array)
-    :param y_score: 预测概率 (numpy array)
-    :param dummy_score_strategy: 虚拟点分数策略 ('mean', 'min', 'max')
-    :return: AUC 分数
-    """
-    y_true = np.array(y_true)
-    y_score = np.array(y_score)
-    unique_labels = np.unique(y_true)
+    # """
+    # 计算 AUC，处理单一类别情况通过添加虚拟数据点。
+    # :param y_true: 真实标签 (numpy array)
+    # :param y_score: 预测概率 (numpy array)
+    # :param dummy_score_strategy: 虚拟点分数策略 ('mean', 'min', 'max')
+    # :return: AUC 分数
+    # """
+    # y_true = np.array(y_true)
+    # y_score = np.array(y_score)
+    # unique_labels = np.unique(y_true)
     
-    if len(unique_labels) < 2:
-        label = unique_labels[0]
-        dummy_label = 1 - label  # 相反类别
-        # 选择虚拟点的预测分数
-        if dummy_score_strategy == 'mean':
-            dummy_score = np.mean(y_score)
-        elif dummy_score_strategy == 'min':
-            dummy_score = np.min(y_score)
-        elif dummy_score_strategy == 'max':
-            dummy_score = np.max(y_score)
-        else:
-            raise ValueError("Invalid dummy_score_strategy")
-        # 添加虚拟数据点
-        y_true = np.append(y_true, dummy_label)
-        y_score = np.append(y_score, dummy_score)
+    # if len(unique_labels) < 2:
+    #     label = unique_labels[0]
+    #     dummy_label = 1 - label  # 相反类别
+    #     # 选择虚拟点的预测分数
+    #     if dummy_score_strategy == 'mean':
+    #         dummy_score = np.mean(y_score)
+    #     elif dummy_score_strategy == 'min':
+    #         dummy_score = np.min(y_score)
+    #     elif dummy_score_strategy == 'max':
+    #         dummy_score = np.max(y_score)
+    #     else:
+    #         raise ValueError("Invalid dummy_score_strategy")
+    #     # 添加虚拟数据点
+    #     y_true = np.append(y_true, dummy_label)
+    #     y_score = np.append(y_score, dummy_score)
     return metrics.roc_auc_score(y_true=y_true, y_score=y_score)
 
 def process_results_to_df(result_string):
@@ -331,15 +331,11 @@ def process_results_to_df(result_string):
     
 #     return "\n".join(results)
 
-def save_cur_predict_result(dres, c, q, r, cshft, qshft, t, m, sm, p, uids):
+# --- 修改：增加 student_time_step_tracker 参数 ---
+def save_cur_predict_result(dres, c, q, r, cshft, qshft, t, m, sm, p, uids, student_time_step_tracker):
     """
     保存当前预测结果。
-    
-    qshft 形状: (batch_size, seq_len)
-    cshft 形状: (batch_size, seq_len, num_concepts)
-    sm (掩码) 形状: (batch_size, seq_len)
-    
-    新要求: cshft 列表中的 -1 应被过滤，qshft 只扩展到有效 cshft 的数量。
+    ... (文档字符串不变) ...
     """
     results = []
     for i in range(0, t.shape[0]): # 遍历 batch中的每个样本
@@ -356,55 +352,50 @@ def save_cur_predict_result(dres, c, q, r, cshft, qshft, t, m, sm, p, uids):
         # 获取当前样本的uid
         current_uid = uids[i].item() if hasattr(uids[i], 'item') else uids[i]
         
+        # --- 新增：获取该学生的全局起始时间步 ---
+        # .get(current_uid, 0) 表示如果找不到该uid，就从0开始
+        global_time_step_offset = student_time_step_tracker.get(current_uid, 0)
+        # --- 结束新增 ---
+
         # 4. 遍历该样本的每个有效时间步
-        # ct: true (标量)
-        # cp: predict (标量)
-        # cq: question (标量)
-        # cc_list_tensor: concept_list (形状为 [num_concepts] 的张量)
+        # ... (zip 循环) ...
         for time_step, (ct, cp, cq, cc_list_tensor) in enumerate(zip(cts.int(), cps, cqs.int(), ccs.int())):
             true_val = ct.item()
             predict_val = cp.item()
             
+            # ... (中间的 cshft 和 qshft 过滤逻辑不变) ...
+            
             # --- 关键修改: 过滤 -1 ---
-            
-            # 1. 获取 qshft 的单个值
-            qshft_val_single = cq.item() # 例如: 42
-            
-            # 2. 获取 cshft 的原始值列表
-            # 假设: cc_list_tensor 是 tensor([1, -1, 12, 5, -1])
-            cshft_val_list_raw = cc_list_tensor.tolist() # 例如: [1, -1, 12, 5, -1]
-            
-            # 3. *** 新增 ***: 过滤掉 -1，只保留有效值
+            qshft_val_single = cq.item() 
+            cshft_val_list_raw = cc_list_tensor.tolist() 
             valid_cshft_list = [v for v in cshft_val_list_raw if v != -1]
-            # 例如: [1, 12, 5]
-            
-            # 4. 将 *有效* cshft 列表转换为字符串
-            cshft_val_str = ",".join(map(str, valid_cshft_list))
-            # 例如: "1,12,5"
-            
-            # 5. "qshft也对应扩展为 *有效cshft* 的数量的列表"
-            num_valid_concepts = len(valid_cshft_list) # 例如: 3
+            cshft_val_str = ",".join(map(str, reversed(valid_cshft_list)))
+            num_valid_concepts = len(valid_cshft_list)
             qshft_val_list_expanded = [qshft_val_single] * num_valid_concepts
-            # 例如: [42, 42, 42]
-            
-            # 6. 将 qshft 列表也转换为字符串
             qshft_val_str = ",".join(map(str, qshft_val_list_expanded))
-            # 例如: "42,42,42"
-            
             # --- 结束 ---
             
-            # 格式: uid, time_step, true, predict, question_list_str, concept_list_str
-            # 如果 valid_cshft_list 为空, qshft_val_str 和 cshft_val_str 都会是空字符串 ""
-            result_line = f"{current_uid}\t{time_step+1}\t{true_val}\t{predict_val}\t{qshft_val_str}\t{cshft_val_str}"
+            # --- 修改：使用全局时间步 ---
+            # time_step 是当前batch的本地索引 (从0开始)
+            # current_global_time_step 是全局的连续索引 (从1开始)
+            current_global_time_step = global_time_step_offset + time_step + 1
+            result_line = f"{current_uid}\t{current_global_time_step}\t{true_val}\t{predict_val}\t{qshft_val_str}\t{cshft_val_str}"
+            # --- 结束修改 ---
+            
             results.append(result_line)
             
             # # dres 的处理 (如果需要)
-            # key = (current_uid, time_step)
-            # dres[key] = [current_uid, true_val, predict_val, time_step, qshft_val_str, cshft_val_str]
+            # ...
+
+        # --- 新增：在内层循环结束后，更新该学生的全局时间步计数器 ---
+        # cts.shape[0] 是当前学生在此batch中的有效时间步数量
+        num_valid_steps_in_batch = cts.shape[0]
+        student_time_step_tracker[current_uid] = global_time_step_offset + num_valid_steps_in_batch
+        # --- 结束新增 ---
 
     return "\n".join(results)
 
-    
+
 def evaluate(model, test_loader, model_name, rel=None, save_path=""):
     eval_student_state_manager = None
     if model_name == "long_dkt":
@@ -424,6 +415,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
         # 写入表头
         header = "orirow\tqidx\tlate_trues\tlate_mean\tquestions\tconcepts\n"
         fout.write(header)
+    student_time_step_tracker = {}
     with torch.no_grad():
         y_trues = []
         y_scores = []
@@ -574,7 +566,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 # print(f"qshft.shape{qshft.shape}")
                 # print(f"cshft.shape{cbshft.shape}")
                 # print(cbshft)
-                result = save_cur_predict_result(dres, cb,q, r, cbshft,qshft, rshft, m, sm, y, uids)
+                result = save_cur_predict_result(dres, cb,q, r, cbshft,qshft, rshft, m, sm, y, uids, student_time_step_tracker)
                 # print("got result:{result}")
                 fout.write(result+"\n")
 
