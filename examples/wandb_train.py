@@ -15,7 +15,8 @@ from pykt.utils import debug_print,set_seed
 from pykt.datasets import init_dataset4train,init_dataset4train_local
 from pykt.config import predict_after_train
 import datetime
-from auc_processor import save_auc_results_from_file
+import runpy
+# from auc_processor import save_auc_results_from_file
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 os.environ['CUBLAS_WORKSPACE_CONFIG']=':4096:2'
@@ -393,26 +394,26 @@ def main(params):
                         wandb.log({"prediction_status": "success"})
 
                     # --- (你之前添加的 AUC 解析逻辑应放在这里) ---
-                    print("="*30)
-                    print("开始解析和保存详细的AUC结果...")
-                    target_suffix = "window_predictions.txt"
-                    target_file_path = None
+                    # print("="*30)
+                    # print("开始解析和保存详细的AUC结果...")
+                    # target_suffix = "window_predictions.txt"
+                    # target_file_path = None
                     
-                    try:
-                        for filename in os.listdir(ckpt_path):
-                            if filename.endswith(target_suffix):
-                                target_file_path = os.path.join(ckpt_path, filename)
-                                print(f"✅ 已找到目标文件: {target_file_path}")
-                                break
-                    except Exception as e:
-                        print(f"❌ 在搜索文件时发生意外错误: {e}")
+                    # try:
+                    #     for filename in os.listdir(ckpt_path):
+                    #         if filename.endswith(target_suffix):
+                    #             target_file_path = os.path.join(ckpt_path, filename)
+                    #             print(f"✅ 已找到目标文件: {target_file_path}")
+                    #             break
+                    # except Exception as e:
+                    #     print(f"❌ 在搜索文件时发生意外错误: {e}")
                 
-                    if target_file_path and os.path.exists(target_file_path):
-                        save_auc_results_from_file(target_file_path)
-                    else:
-                        print(f"❌ 错误：在目录 {ckpt_path} 中未找到结尾为 '{target_suffix}' 的文件")
-                    print("="*30)
-                    # --- AUC 解析逻辑结束 ---
+                    # if target_file_path and os.path.exists(target_file_path):
+                    #     # save_auc_results_from_file(target_file_path)
+                    # else:
+                    #     print(f"❌ 错误：在目录 {ckpt_path} 中未找到结尾为 '{target_suffix}' 的文件")
+                    # print("="*30)
+                    # # --- AUC 解析逻辑结束 ---
 
                 except Exception as e:
                     # 这个 except 块现在可以捕获来自 runpy 脚本内部的任何 Python 错误

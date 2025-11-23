@@ -211,6 +211,7 @@ class LPKTDataset(Dataset):
 
         # seq_qids, seq_cids, seq_rights, seq_mask = [], [], [], []
         df = pd.read_csv(sequence_path)#[0:1000]
+        print(f"readed{sequence_path}")
         df = df[df["fold"].isin(folds)]
         interaction_num = 0
         # seq_qidxs, seq_rests = [], []

@@ -64,6 +64,13 @@ class LPKT(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, e_data, a_data, it_data=None, at_data=None, qtest=False):
+        e_data = e_data.to(device)
+        a_data = a_data.to(device)
+        if it_data is not None:
+            it_data = it_data.to(device)
+        if at_data is not None:
+            at_data = at_data.to(device)
+
         emb_type = self.emb_type
         batch_size, seq_len = e_data.size(0), e_data.size(1)
         e_embed_data = self.e_embed(e_data)
