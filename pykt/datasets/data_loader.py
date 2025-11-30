@@ -127,7 +127,7 @@ class KTDataset(Dataset):
             - **select_masks (torch.tensor)**: is select to calculate the performance or not, 0 is not selected, 1 is selected, only available for 1~seqlen-1, shape is seqlen-1
             - **dqtest (dict)**: not null only self.qtest is True, for question level evaluation
         """
-        # <--- 修改：在 dori 中初始化 uid
+
         dori = {"qseqs": [], "cseqs": [], "rseqs": [], "tseqs": [], "utseqs": [], "smasks": [], "uid": []}
 
         # seq_qids, seq_cids, seq_rights, seq_mask = [], [], [], []

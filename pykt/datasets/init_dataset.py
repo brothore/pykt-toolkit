@@ -408,10 +408,10 @@ def init_dataset4train(dataset_name, model_name, data_config, i, batch_size, dif
         else:
             curvalid = KTQueDataset(os.path.join(data_config["dpath"], data_config["train_valid_file_quelevel"]),
                             input_type=data_config["input_type"], folds={i}, 
-                            concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
+                            concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'],mode='train')
             curtrain = KTQueDataset(os.path.join(data_config["dpath"], data_config["train_valid_file_quelevel"]),
                             input_type=data_config["input_type"], folds=all_folds - {i}, 
-                            concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
+                            concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'],mode='train')
     elif model_name in ["atdkt"]:
         curvalid = ATDKTDataset(os.path.join(data_config["dpath"], data_config["train_valid_file"]), data_config["input_type"], {i})
         curtrain = ATDKTDataset(os.path.join(data_config["dpath"], data_config["train_valid_file"]), data_config["input_type"], all_folds - {i})
@@ -533,10 +533,10 @@ def init_dataset4train_local(dataset_name, model_name, data_config, i, batch_siz
         else:
             curvalid = KTQueDataset(os.path.join("/root/pykt-toolkit/local_data", data_config["train_valid_file_quelevel"]),
                             input_type=data_config["input_type"], folds={i}, 
-                            concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
+                            concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'],mode='train')
             curtrain = KTQueDataset(os.path.join("/root/pykt-toolkit/local_data", data_config["train_valid_file_quelevel"]),
                             input_type=data_config["input_type"], folds=all_folds - {i}, 
-                            concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'])
+                            concept_num=data_config['num_c'], max_concepts=data_config['max_concepts'],mode='train')
     elif model_name in ["atdkt"]:
         curvalid = ATDKTDataset(os.path.join("/root/pykt-toolkit/local_data", data_config["train_valid_file"]), data_config["input_type"], {i})
         curtrain = ATDKTDataset(os.path.join("/root/pykt-toolkit/local_data", data_config["train_valid_file"]), data_config["input_type"], all_folds - {i})
