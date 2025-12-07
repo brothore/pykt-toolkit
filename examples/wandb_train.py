@@ -131,6 +131,17 @@ def update_run_history(file_path, run_id, status):
 
 def main(params):
     try:
+        
+        aug_probs = {
+            'reverse': params.get("random_rev", 0),
+            'truncate': params.get("random_trunc", 0),
+            'duplicate': params.get("random_dup", 0),
+            'shuffle': params.get("random_shuf", 0),   # 随机乱序概率
+            # 补齐参数：如果没有在 params 定义，默认复制序列长度的 15%
+            'copy_ratio': params.get("copy_ratio", 0), 
+            # 补齐参数：如果没有在 params 定义，离散截断时默认丢弃 10%
+            'drop_ratio': params.get("drop_ratio", 0)   
+        }
         # **开始记录运行历史**
         save_dir = params.get('save_dir', 'saved_model')
         os.makedirs(save_dir, exist_ok=True)
@@ -162,7 +173,7 @@ def main(params):
         # print(f"\n\n\n\n\nuse_trained!!!!!!!!!!!\n\n\n\n\n: {use_trained}")
         if "use_wandb" not in params:
             params['use_wandb'] = 0
-            params['use_wandb'] = 0
+        
         aug_type = params.get('aug_type', None)
         mode = params.get('mode', "train")
         random_rev = params.get('random_rev', None)
@@ -228,10 +239,10 @@ def main(params):
         
         debug_print(text="init_dataset",fuc_name="main")
         if model_name not in ["dimkt"]:
-            train_loader, valid_loader, *_ = init_dataset4train(dataset_name, model_name, data_config, fold, batch_size,aug_type=aug_type,mode=mode,random_rev=random_rev)
+            train_loader, valid_loader, *_ = init_dataset4train(dataset_name, model_name, data_config, fold, batch_size,aug_probs=aug_probs)
         else:
             diff_level = params["difficult_levels"]
-            train_loader, valid_loader, *_ = init_dataset4train(dataset_name, model_name, data_config, fold, batch_size, diff_level=diff_level,aug_type=aug_type,mode=mode,random_rev=random_rev)
+            train_loader, valid_loader, *_ = init_dataset4train(dataset_name, model_name, data_config, fold, batch_size,aug_probs=aug_probs)
 
         params_str = "_".join([str(v) for k,v in params.items() if not k in ['other_config']])
 

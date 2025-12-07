@@ -12,8 +12,14 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=3407)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--num_epochs", type=int, default=200)
+    
+    parser.add_argument("--random_rev", type=float, default=0.0, help="Probability of label reversal (poisoning)")
+    parser.add_argument("--random_trunc", type=float, default=0.0, help="Probability of random sequence truncation")
+    parser.add_argument("--random_dup", type=float, default=0.0, help="Probability of random sequence duplication")
+    parser.add_argument("--random_shuf", type=float, default=0.0, help="Probability of random sequence shuffling")
+    parser.add_argument("--copy_ratio", type=float, default=0, help="Ratio of steps to duplicate when random_dup is triggered")
+    parser.add_argument("--drop_ratio", type=float, default=0, help="Ratio of steps to drop when discrete truncation is triggered")    #log config & save config
 
-    #log config & save config
     parser.add_argument("--use_wandb", type=int, default=1)
     parser.add_argument("--add_uuid", type=int, default=1)
     parser.add_argument("--save_dir", type=str, default="saved_model")
