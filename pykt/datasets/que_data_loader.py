@@ -60,11 +60,11 @@ class KTQueDataset(Dataset):
         processed_data = file_path + folds_str + aug_suffix + "_aug_qlevel.pkl"
 
         if not os.path.exists(processed_data):
-            print(f"Start preprocessing {file_path} fold: {folds_str} mode: {self.mode}...")
+            print(f"Start preprocessing {file_path} fold: {folds_str} aug{aug_suffix} mode: {self.mode}...")
             self.dori = self.__load_data__(sequence_path, folds)
             pd.to_pickle(self.dori, processed_data)
         else:
-            print(f"Read data from processed file: {processed_data}")
+            print(f"Read data from processed file: {processed_data} aug{aug_suffix}")
             self.dori = pd.read_pickle(processed_data)
             
         print(f"file path: {file_path}, mode: {self.mode}, qlen: {len(self.dori['qseqs'])}, rlen: {len(self.dori['rseqs'])}")

@@ -12,6 +12,189 @@ if torch.cuda.is_available():
 else:
     from torch import FloatTensor, LongTensor
 
+# class KTDataset(Dataset):
+
+#     """Dataset for KT
+#         can use to init dataset for: (for models except dkt_forget)
+#             train data, valid data
+#             common test data(concept level evaluation), real educational scenario test data(question level evaluation).
+#     Args:
+#         file_path (str): train_valid/test file path
+#         input_type (list[str]): the input type of the dataset, values are in ["questions", "concepts"]
+#         folds (set(int)): the folds used to generate dataset, -1 for test data
+#         qtest (bool, optional): is question evaluation or not. Defaults to False.
+#     """
+#     def __init__(self, file_path, input_type, folds, qtest=False):
+#         super(KTDataset, self).__init__()
+#         sequence_path = file_path
+#         self.input_type = input_type
+#         self.qtest = qtest
+#         folds = sorted(list(folds))
+#         folds_str = "_" + "_".join([str(_) for _ in folds])
+#         if self.qtest:
+#             processed_data = file_path + folds_str + "_qtest.pkl"
+#         else:
+#             processed_data = file_path + folds_str + ".pkl"
+
+#         if not os.path.exists(processed_data):
+#             print(f"Start preprocessing {file_path} fold: {folds_str}...")
+#             if self.qtest:
+#                 self.dori, self.dqtest = self.__load_data__(sequence_path, folds)
+#                 save_data = [self.dori, self.dqtest]
+#             else:
+#                 self.dori = self.__load_data__(sequence_path, folds)
+#                 save_data = self.dori
+#             pd.to_pickle(save_data, processed_data)
+#         else:
+#             print(f"Read data from processed file: {processed_data}")
+#             if self.qtest:
+#                 self.dori, self.dqtest = pd.read_pickle(processed_data)
+#             else:
+#                 self.dori = pd.read_pickle(processed_data)
+#                 for key in self.dori:
+#                     self.dori[key] = self.dori[key]#[:100]
+        
+#         # <--- 修改：在打印信息时也加入uid的长度检查 (可选, 但建议)
+#         uid_len = len(self.dori.get('uid', []))
+#         print(f"file path: {file_path}, qlen: {len(self.dori['qseqs'])}, clen: {len(self.dori['cseqs'])}, rlen: {len(self.dori['rseqs'])}, uidlen: {uid_len}")
+
+#     def __len__(self):
+#         """return the dataset length
+#         Returns:
+#             int: the length of the dataset
+#         """
+#         return len(self.dori["rseqs"])
+
+#     def __getitem__(self, index):
+#         """
+#         Args:
+#             index (int): the index of the data want to get
+#         Returns:
+#             (tuple): tuple containing:
+            
+#             - **q_seqs (torch.tensor)**: question id sequence of the 0~seqlen-2 interactions
+#             - **c_seqs (torch.tensor)**: knowledge concept id sequence of the 0~seqlen-2 interactions
+#             - **r_seqs (torch.tensor)**: response id sequence of the 0~seqlen-2 interactions
+#             - **qshft_seqs (torch.tensor)**: question id sequence of the 1~seqlen-1 interactions
+#             - **cshft_seqs (torch.tensor)**: knowledge concept id sequence of the 1~seqlen-1 interactions
+#             - **rshft_seqs (torch.tensor)**: response id sequence of the 1~seqlen-1 interactions
+#             - **mask_seqs (torch.tensor)**: masked value sequence, shape is seqlen-1
+#             - **select_masks (torch.tensor)**: is select to calculate the performance or not, 0 is not selected, 1 is selected, only available for 1~seqlen-1, shape is seqlen-1
+#             - **dcur (dict)**: used only self.qtest is True, for question level evaluation
+#         """
+#         dcur = dict()
+#         mseqs = self.dori["masks"][index]
+
+#         # <--- 添加：在这里处理 uid
+#         if "uid" in self.dori:
+#             dcur["uid"] = self.dori["uid"][index]
+        
+#         for key in self.dori:
+#             # <--- 修改：将 uid 添加到跳过列表
+#             if key in ["masks", "smasks", "uid"]:
+#                 continue
+#             if len(self.dori[key]) == 0:
+#                 dcur[key] = self.dori[key]
+#                 dcur["shft_"+key] = self.dori[key]
+#                 continue
+#             # print(f"key: {key}, len: {len(self.dori[key])}")
+#             seqs = self.dori[key][index][:-1] * mseqs
+#             shft_seqs = self.dori[key][index][1:] * mseqs
+#             dcur[key] = seqs
+#             dcur["shft_"+key] = shft_seqs
+#         dcur["masks"] = mseqs
+#         dcur["smasks"] = self.dori["smasks"][index]
+#         # print("tseqs", dcur["tseqs"])
+#         if not self.qtest:
+#             return dcur
+#         else:
+#             dqtest = dict()
+#             for key in self.dqtest:
+#                 dqtest[key] = self.dqtest[key][index]
+#             return dcur, dqtest
+
+#     def __load_data__(self, sequence_path, folds, pad_val=-1):
+#         """
+#         Args:
+#             sequence_path (str): file path of the sequences
+#             folds (list[int]): 
+#             pad_val (int, optional): pad value. Defaults to -1.
+#         Returns: 
+#             (tuple): tuple containing
+#             - **q_seqs (torch.tensor)**: question id sequence of the 0~seqlen-1 interactions
+#             - **c_seqs (torch.tensor)**: knowledge concept id sequence of the 0~seqlen-1 interactions
+#             - **r_seqs (torch.tensor)**: response id sequence of the 0~seqlen-1 interactions
+#             - **mask_seqs (torch.tensor)**: masked value sequence, shape is seqlen-1
+#             - **select_masks (torch.tensor)**: is select to calculate the performance or not, 0 is not selected, 1 is selected, only available for 1~seqlen-1, shape is seqlen-1
+#             - **dqtest (dict)**: not null only self.qtest is True, for question level evaluation
+#         """
+
+#         dori = {"qseqs": [], "cseqs": [], "rseqs": [], "tseqs": [], "utseqs": [], "smasks": [], "uid": []}
+
+#         # seq_qids, seq_cids, seq_rights, seq_mask = [], [], [], []
+#         df = pd.read_csv(sequence_path)#[0:1000]
+#         df = df[df["fold"].isin(folds)]
+#         interaction_num = 0
+#         # seq_qidxs, seq_rests = [], []
+#         dqtest = {"qidxs": [], "rests":[], "orirow":[]}
+#         for i, row in df.iterrows():
+#             #use kc_id or question_id as input
+#             if "concepts" in self.input_type:
+#                 dori["cseqs"].append([int(_) for _ in row["concepts"].split(",")])
+#             if "questions" in self.input_type:
+#                 dori["qseqs"].append([int(_) for _ in row["questions"].split(",")])
+#             if "timestamps" in row:
+#                 dori["tseqs"].append([int(_) for _ in row["timestamps"].split(",")])
+#             if "usetimes" in row:
+#                 dori["utseqs"].append([int(_) for _ in row["usetimes"].split(",")])
+                
+#             dori["rseqs"].append([int(_) for _ in row["responses"].split(",")])
+#             dori["smasks"].append([int(_) for _ in row["selectmasks"].split(",")])
+
+#             # <--- 添加：从 row 中加载 uid
+#             if "uid" in row:
+#                 dori["uid"].append(int(row["uid"]))
+#             else:
+#                 # 如果某些行没有uid，可以设置默认值或报错
+#                 dori["uid"].append(-1)  # 或者根据您的需求处理
+
+#             interaction_num += dori["smasks"][-1].count(1)
+
+#             if self.qtest:
+#                 dqtest["qidxs"].append([int(_) for _ in row["qidxs"].split(",")])
+#                 dqtest["rests"].append([int(_) for _ in row["rest"].split(",")])
+#                 dqtest["orirow"].append([int(_) for _ in row["orirow"].split(",")])
+        
+#         for key in dori:
+#             # <--- 修改：将 uid 添加到 tensor 转换的排除列表
+#             if key not in ["rseqs", "uid"]:#in ["smasks", "tseqs"]:
+#                 dori[key] = LongTensor(dori[key])
+#             elif key == "rseqs": # <--- 保持和 KTQueDataset 一致的逻辑
+#                 dori[key] = FloatTensor(dori[key])
+
+#         mask_seqs = (dori["cseqs"][:,:-1] != pad_val) * (dori["cseqs"][:,1:] != pad_val)
+#         dori["masks"] = mask_seqs
+
+#         dori["smasks"] = (dori["smasks"][:, 1:] != pad_val)
+#         print(f"interaction_num: {interaction_num}")
+#         # print("load data tseqs: ", dori["tseqs"])
+
+#         if self.qtest:
+#             for key in dqtest:
+#                 dqtest[key] = LongTensor(dqtest[key])[:, 1:]
+            
+#             return dori, dqtest
+#         return dori
+
+
+
+import os
+import pandas as pd
+import torch
+from torch.utils.data import Dataset
+from torch import FloatTensor, LongTensor
+import numpy as np
+
 class KTDataset(Dataset):
     """Dataset for KT
         can use to init dataset for: (for models except dkt_forget)
@@ -22,21 +205,34 @@ class KTDataset(Dataset):
         input_type (list[str]): the input type of the dataset, values are in ["questions", "concepts"]
         folds (set(int)): the folds used to generate dataset, -1 for test data
         qtest (bool, optional): is question evaluation or not. Defaults to False.
+        mode (str, optional): "train", "valid" or "test". Defaults to "test". <--- 新增
+        aug_probs (dict, optional): Augmentation config. Defaults to None. <--- 新增
     """
-    def __init__(self, file_path, input_type, folds, qtest=False):
+    def __init__(self, file_path, input_type, folds, qtest=False, mode="test", aug_probs=None):
         super(KTDataset, self).__init__()
         sequence_path = file_path
         self.input_type = input_type
         self.qtest = qtest
+        self.mode = mode # <--- 记录模式
+        
+        # <--- 1. 配置增强参数
+        self.aug_probs = aug_probs if aug_probs is not None else {}
+        self.random_rev = self.aug_probs.get('random_rev', 0.0)
+        
         folds = sorted(list(folds))
         folds_str = "_" + "_".join([str(_) for _ in folds])
+        
+        # <--- 2. 修改文件名生成逻辑，加入 _td 标记
+        # 只有在有翻转概率时才加后缀，保证无增强时读取原缓存
+        aug_suffix = f"_td{self.random_rev}" if self.random_rev > 0 else ""
+        
         if self.qtest:
-            processed_data = file_path + folds_str + "_qtest.pkl"
+            processed_data = file_path + folds_str + aug_suffix + "_qtest.pkl"
         else:
-            processed_data = file_path + folds_str + ".pkl"
+            processed_data = file_path + folds_str + aug_suffix + ".pkl"
 
         if not os.path.exists(processed_data):
-            print(f"Start preprocessing {file_path} fold: {folds_str}...")
+            print(f"Start preprocessing {file_path} fold: {folds_str} mode: {self.mode} with rev: {self.random_rev}...")
             if self.qtest:
                 self.dori, self.dqtest = self.__load_data__(sequence_path, folds)
                 save_data = [self.dori, self.dqtest]
@@ -50,60 +246,71 @@ class KTDataset(Dataset):
                 self.dori, self.dqtest = pd.read_pickle(processed_data)
             else:
                 self.dori = pd.read_pickle(processed_data)
-                for key in self.dori:
-                    self.dori[key] = self.dori[key]#[:100]
+                # for key in self.dori:
+                #     self.dori[key] = self.dori[key]#[:100]
         
-        # <--- 修改：在打印信息时也加入uid的长度检查 (可选, 但建议)
         uid_len = len(self.dori.get('uid', []))
         print(f"file path: {file_path}, qlen: {len(self.dori['qseqs'])}, clen: {len(self.dori['cseqs'])}, rlen: {len(self.dori['rseqs'])}, uidlen: {uid_len}")
 
     def __len__(self):
-        """return the dataset length
-        Returns:
-            int: the length of the dataset
-        """
+        """return the dataset length"""
         return len(self.dori["rseqs"])
 
     def __getitem__(self, index):
         """
-        Args:
-            index (int): the index of the data want to get
-        Returns:
-            (tuple): tuple containing:
-            
-            - **q_seqs (torch.tensor)**: question id sequence of the 0~seqlen-2 interactions
-            - **c_seqs (torch.tensor)**: knowledge concept id sequence of the 0~seqlen-2 interactions
-            - **r_seqs (torch.tensor)**: response id sequence of the 0~seqlen-2 interactions
-            - **qshft_seqs (torch.tensor)**: question id sequence of the 1~seqlen-1 interactions
-            - **cshft_seqs (torch.tensor)**: knowledge concept id sequence of the 1~seqlen-1 interactions
-            - **rshft_seqs (torch.tensor)**: response id sequence of the 1~seqlen-1 interactions
-            - **mask_seqs (torch.tensor)**: masked value sequence, shape is seqlen-1
-            - **select_masks (torch.tensor)**: is select to calculate the performance or not, 0 is not selected, 1 is selected, only available for 1~seqlen-1, shape is seqlen-1
-            - **dcur (dict)**: used only self.qtest is True, for question level evaluation
+        Returns tuple with augmented rseqs if configured.
         """
         dcur = dict()
         mseqs = self.dori["masks"][index]
 
-        # <--- 添加：在这里处理 uid
         if "uid" in self.dori:
             dcur["uid"] = self.dori["uid"][index]
         
         for key in self.dori:
-            # <--- 修改：将 uid 添加到跳过列表
             if key in ["masks", "smasks", "uid"]:
                 continue
             if len(self.dori[key]) == 0:
                 dcur[key] = self.dori[key]
                 dcur["shft_"+key] = self.dori[key]
                 continue
-            # print(f"key: {key}, len: {len(self.dori[key])}")
-            seqs = self.dori[key][index][:-1] * mseqs
-            shft_seqs = self.dori[key][index][1:] * mseqs
+            
+            # 获取原始序列数据
+            raw_data = self.dori[key][index]
+            
+            # <--- 3. 核心增强逻辑移植
+            # 仅在 rseqs、训练模式、且设置了 random_rev 时触发
+            if key == "rseqs" and self.mode == "train" and self.random_rev > 0:
+                noisy_data = raw_data.clone()
+                # 生成随机概率矩阵
+                probs = torch.rand(noisy_data.shape)
+                # 确保不翻转 padding 部分 (假设 padding 是 -1，虽然 float tensor 可能是 -1.0)
+                valid_mask = (noisy_data != -1) 
+                
+                # 生成翻转掩码
+                flip_mask = (probs < self.random_rev) & valid_mask
+                
+                # 执行翻转 (0->1, 1->0)
+                noisy_data[flip_mask] = 1.0 - noisy_data[flip_mask]
+                
+                # 应用 Mask 切片
+                # 注意：参考 KTQueDataset 逻辑：
+                # Input (seqs) 使用 噪声数据
+                # Label (shft_seqs) 使用 原始干净数据 (raw_data)
+                seqs = noisy_data[:-1] * mseqs
+                shft_seqs = raw_data[1:] * mseqs
+                shft_seqs_noisy = noisy_data[1:] * mseqs
+                dcur["shft_rseqs"] = shft_seqs_noisy
+            else:
+                # 原有逻辑：无增强
+                seqs = raw_data[:-1] * mseqs
+                shft_seqs = raw_data[1:] * mseqs
+            
             dcur[key] = seqs
             dcur["shft_"+key] = shft_seqs
+            
         dcur["masks"] = mseqs
         dcur["smasks"] = self.dori["smasks"][index]
-        # print("tseqs", dcur["tseqs"])
+
         if not self.qtest:
             return dcur
         else:
@@ -118,26 +325,15 @@ class KTDataset(Dataset):
             sequence_path (str): file path of the sequences
             folds (list[int]): 
             pad_val (int, optional): pad value. Defaults to -1.
-        Returns: 
-            (tuple): tuple containing
-            - **q_seqs (torch.tensor)**: question id sequence of the 0~seqlen-1 interactions
-            - **c_seqs (torch.tensor)**: knowledge concept id sequence of the 0~seqlen-1 interactions
-            - **r_seqs (torch.tensor)**: response id sequence of the 0~seqlen-1 interactions
-            - **mask_seqs (torch.tensor)**: masked value sequence, shape is seqlen-1
-            - **select_masks (torch.tensor)**: is select to calculate the performance or not, 0 is not selected, 1 is selected, only available for 1~seqlen-1, shape is seqlen-1
-            - **dqtest (dict)**: not null only self.qtest is True, for question level evaluation
         """
-
         dori = {"qseqs": [], "cseqs": [], "rseqs": [], "tseqs": [], "utseqs": [], "smasks": [], "uid": []}
 
-        # seq_qids, seq_cids, seq_rights, seq_mask = [], [], [], []
-        df = pd.read_csv(sequence_path)#[0:1000]
+        df = pd.read_csv(sequence_path)
         df = df[df["fold"].isin(folds)]
         interaction_num = 0
-        # seq_qidxs, seq_rests = [], []
         dqtest = {"qidxs": [], "rests":[], "orirow":[]}
+        
         for i, row in df.iterrows():
-            #use kc_id or question_id as input
             if "concepts" in self.input_type:
                 dori["cseqs"].append([int(_) for _ in row["concepts"].split(",")])
             if "questions" in self.input_type:
@@ -150,12 +346,10 @@ class KTDataset(Dataset):
             dori["rseqs"].append([int(_) for _ in row["responses"].split(",")])
             dori["smasks"].append([int(_) for _ in row["selectmasks"].split(",")])
 
-            # <--- 添加：从 row 中加载 uid
             if "uid" in row:
                 dori["uid"].append(int(row["uid"]))
             else:
-                # 如果某些行没有uid，可以设置默认值或报错
-                dori["uid"].append(-1)  # 或者根据您的需求处理
+                dori["uid"].append(-1)
 
             interaction_num += dori["smasks"][-1].count(1)
 
@@ -165,10 +359,9 @@ class KTDataset(Dataset):
                 dqtest["orirow"].append([int(_) for _ in row["orirow"].split(",")])
         
         for key in dori:
-            # <--- 修改：将 uid 添加到 tensor 转换的排除列表
-            if key not in ["rseqs", "uid"]:#in ["smasks", "tseqs"]:
+            if key not in ["rseqs", "uid"]:
                 dori[key] = LongTensor(dori[key])
-            elif key == "rseqs": # <--- 保持和 KTQueDataset 一致的逻辑
+            elif key == "rseqs":
                 dori[key] = FloatTensor(dori[key])
 
         mask_seqs = (dori["cseqs"][:,:-1] != pad_val) * (dori["cseqs"][:,1:] != pad_val)
@@ -176,7 +369,6 @@ class KTDataset(Dataset):
 
         dori["smasks"] = (dori["smasks"][:, 1:] != pad_val)
         print(f"interaction_num: {interaction_num}")
-        # print("load data tseqs: ", dori["tseqs"])
 
         if self.qtest:
             for key in dqtest:

@@ -12,7 +12,7 @@ import copy
 from wandb_multi_predict import main as predict_main
 from pykt.models import train_model,evaluate,init_model
 from pykt.utils import debug_print,set_seed
-from pykt.datasets import init_dataset4train,init_dataset4train_local
+from pykt.datasets import init_dataset4train
 from pykt.config import predict_after_train
 import datetime
 # from auc_processor import save_auc_results_from_file
@@ -133,14 +133,16 @@ def main(params):
     try:
         
         aug_probs = {
-            'reverse': params.get("random_rev", 0),
-            'truncate': params.get("random_trunc", 0),
-            'duplicate': params.get("random_dup", 0),
-            'shuffle': params.get("random_shuf", 0),   # 随机乱序概率
-            # 补齐参数：如果没有在 params 定义，默认复制序列长度的 15%
-            'copy_ratio': params.get("copy_ratio", 0), 
-            # 补齐参数：如果没有在 params 定义，离散截断时默认丢弃 10%
-            'drop_ratio': params.get("drop_ratio", 0)   
+            'truncate': params.pop("random_trunc", 0),
+            'duplicate': params.pop("random_dup", 0),
+            'shuffle': params.pop("random_shuf", 0),   # 随机乱序概率
+            
+            # 补齐参数：如果没有在 params 定义，默认复制序列长度的 15% (这里示例给的是0)
+            'copy_ratio': params.pop("copy_ratio", 0), 
+            
+            # 补齐参数：如果没有在 params 定义，离散截断时默认丢弃 10% (这里示例给的是0)
+            'drop_ratio': params.pop("drop_ratio", 0),
+            'random_rev': params.pop('random_rev', 0)  
         }
         # **开始记录运行历史**
         save_dir = params.get('save_dir', 'saved_model')
@@ -167,16 +169,15 @@ def main(params):
 
         start_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         if "use_trained" not in params:
-            params['use_trained'] = 1
+            params['use_trained'] = 0
         use_trained = params['use_trained']
         # print(f"\n\n\n\n\nuse_trained!!!!!!!!!!!\n\n\n\n\n: {use_trained}")
         # print(f"\n\n\n\n\nuse_trained!!!!!!!!!!!\n\n\n\n\n: {use_trained}")
         if "use_wandb" not in params:
             params['use_wandb'] = 0
-        
-        aug_type = params.get('aug_type', None)
+
         mode = params.get('mode', "train")
-        random_rev = params.get('random_rev', None)
+
         if params['use_wandb']==1:
             import wandb
             wandb.init()
