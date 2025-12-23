@@ -14,90 +14,7 @@ from scipy.special import softmax
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-class DIMKTLayer(nn.Module):
-    def __init__(self, input_size, diff_size, emb_size, dropout=0.1):
-        """
-        Args:
-            input_size: 对应公式(2)中拼接后的输入维度 (如 Q+C+Diffs) [cite: 267]
-            diff_size:  用于KSU门的难度维度 (Question分支可能是 QS+KC, Concept分支只有 KC) 
-            emb_size:   隐藏层维度 d_k (Knowledge State)
-        """
-        super().__init__()
-        self.emb_size = emb_size
-        self.sigmoid = nn.Sigmoid()
-        self.tanh = nn.Tanh()
-        self.dropout = nn.Dropout(dropout)
 
-        # 1. Input Fusion (对应论文 Eq.2: x_t = W[q,k,qs,kc] + b)
-        # 将原始输入特征映射为 difficulty-enhanced question embedding
-        self.feature_fusion = nn.Linear(input_size, emb_size)
-
-        # 2. SDF: Subjective Difficulty Feeling (对应论文 Eq.3) [cite: 285]
-        self.linear_sdf_gate = nn.Linear(emb_size, emb_size) 
-        self.linear_sdf_val  = nn.Linear(emb_size, emb_size) 
-        
-        # 3. PKA: Personalized Knowledge Acquisition (对应论文 Eq.4) [cite: 294]
-        # 输入是 SDF(emb_size) + Answer(emb_size)
-        self.linear_pka_gate = nn.Linear(2 * emb_size, emb_size) 
-        self.linear_pka_val  = nn.Linear(2 * emb_size, emb_size) 
-        
-        # 4. KSU: Knowledge State Updating (对应论文 Eq.5) 
-        # 输入是 h_{t-1}(emb) + a_t(emb) + Diffs(diff_size)
-        self.linear_ksu = nn.Linear(2 * emb_size + diff_size, emb_size)
-
-    def forward(self, input_emb, diff_emb, a_emb, init_h=None):
-        """
-        Args:
-            input_emb: 拼接好的输入特征 [batch, seq, input_size]
-            diff_emb:  用于更新门的难度特征 [batch, seq, diff_size]
-            a_emb:     回答嵌入 [batch, seq, emb_size]
-        """
-        batch_size, seq_len, _ = input_emb.size()
-        
-        # 初始化知识状态 h_0
-        if init_h is None:
-            # 原论文使用 Xavier 初始化或者零初始化
-            h_t = torch.zeros(batch_size, self.emb_size).to(input_emb.device)
-        else:
-            h_t = init_h
-
-        h_list = []
-        
-        # 预先计算 x_t (Difficulty-enhanced embedding) [cite: 264]
-        # 这样比在循环里计算更高效
-        x_seq = self.feature_fusion(input_emb) # [batch, seq, emb_size]
-
-        for t in range(seq_len):
-            # 取出当前时刻特征
-            x_t = x_seq[:, t, :]
-            d_t = diff_emb[:, t, :] # 具体的难度值(embedding)
-            a_t = a_emb[:, t, :]
-
-            # --- 1. SDF Module  ---
-            # 比较题目难度增强向量 x_t 与 当前知识状态 h_{t-1} 的差异
-            qq = h_t - x_t 
-            
-            gate_sdf = self.sigmoid(self.linear_sdf_gate(qq))
-            val_sdf = self.dropout(self.tanh(self.linear_sdf_val(qq)))
-            sdf_t = gate_sdf * val_sdf
-            
-            # --- 2. PKA Module  ---
-            # 结合主观难度感受 SDF 和 实际作答 a_t
-            cat_pka = torch.cat([sdf_t, a_t], dim=-1)
-            gate_pka = self.sigmoid(self.linear_pka_gate(cat_pka))
-            val_pka = self.tanh(self.linear_pka_val(cat_pka))
-            pka_t = gate_pka * val_pka
-            
-            # --- 3. KSU Module [cite: 341] ---
-            # 更新知识状态: h_{t-1}, a_t, 和 显式的难度特征 d_t
-            cat_ksu = torch.cat([h_t, a_t, d_t], dim=-1)
-            gate_ksu = self.sigmoid(self.linear_ksu(cat_ksu))
-            
-            # Update h_t
-            h_t = gate_ksu * h_t + (1 - gate_ksu) * pka_t
-            h_list.append(h_t.unsqueeze(1))
-            
-        return torch.cat(h_list, dim=1), h_t
 class MLP(nn.Module):
     '''
     classifier decoder implemented with mlp
@@ -157,7 +74,7 @@ class QIKTNet(nn.Module):
 
         self.version = version
         self.emb_type = emb_type
-
+      
 
         self.que_emb = QueEmb(num_q=num_q,num_c=num_c,emb_size=emb_size,emb_type=self.emb_type,model_name=self.model_name,device=device,
                              emb_path=emb_path,pretrain_dim=pretrain_dim,num_attn_head=num_attn_head)
@@ -195,29 +112,6 @@ class QIKTNet(nn.Module):
             self.four2two = nn.Linear(self.emb_size*2, self.emb_size*4)
             self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, num_layers=2, batch_first=True)
             self.concept_lstm_layer = self.que_lstm_layer
-        elif self.version == "dimkt":
-            # 1. Question Branch DIMKT Layer
-            # 输入构成: emb_q_in (包含 Q, C, SD, QD)
-            # 在 QueEmb 中, 通常返回的 emb_q_in 已经是拼接好的维度 (例如 emb_size * 4)
-            # 这里的 diff_size 我们传入 emb_sd + emb_qd 的维度 (emb_size * 2)
-            self.que_dimkt_layer = DIMKTLayer(
-                input_size=self.emb_size * 4,  # Q + C + SD + QD
-                diff_size=self.emb_size * 2,   # KSU Gate 使用 SD + QD
-                emb_size=self.hidden_size, 
-                dropout=dropout
-            )
-            
-            # 2. Concept Branch DIMKT Layer
-            # 输入构成: Concept + SD (emb_c_in 通常是 C 的 embedding，这里我们需要手动拼接 SD)
-            # 所以 input_size = emb_size (C) + emb_size (SD) = emb_size * 2
-            # diff_size = emb_size (SD)
-            self.concept_dimkt_layer = DIMKTLayer(
-                input_size=self.emb_size * 2,  # C + SD
-                diff_size=self.emb_size,       # KSU Gate 使用 SD
-                emb_size=self.hidden_size, 
-                dropout=dropout
-            )
-
         else:
             self.que_lstm_layer = nn.GRU(self.emb_size*4, self.hidden_size, batch_first=True)
             self.concept_lstm_layer = nn.GRU(self.emb_size*2, self.hidden_size, batch_first=True)
@@ -226,7 +120,6 @@ class QIKTNet(nn.Module):
 
             # self.que_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 1024 -> 256
             # self.concept_proj = nn.Linear(self.emb_size*2, self.hidden_size)  # 512 -> 256
-        
         self.dropout_layer = nn.Dropout(dropout)
         
 
@@ -261,36 +154,10 @@ class QIKTNet(nn.Module):
         if data is not None:
             data = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in data.items()}
 
-        if self.emb_type == 'diff':
-            # diff 模式返回 6 个值
-            emb_q_in, emb_c_in, emb_sd, emb_qd, emb_a, emb_qc = self.que_emb(q, c, r, data=data)
-        else:
-            # 其他模式 (如 iekt) 可能返回 5 个值，且顺序不同，这里需要注意兼容性
-            # 如果你只跑 diff 模式，暂时可以只关注上面的 if
-            # 下面是针对 iekt 的一种可能的解包兜底（视具体情况而定）
-            ret = self.que_emb(q, c, r, data=data)
-            emb_q_in, emb_c_in, emb_sd, emb_qd, emb_a = ret[0], ret[1], ret[2], ret[3], ret[4]
-            # 注意：非 diff 模式下 emb_qc 可能需要另外处理，或者 ret[2] 就是 emb_qc (iekt模式下)
-            if self.emb_type == 'iekt':
-                 emb_qc = ret[2] # iekt 返回: xemb, emb_qca, emb_qc, emb_q, emb_c  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
-        # 2. 准备序列切片 (Slicing)
-        # 输入给 DIMKT Layer 的序列 (t=0 到 t=N-1) 用于更新状态
-        if self.emb_type == 'diff':
-            emb_sd_seq = emb_sd[:, :-1, :]
-            emb_qd_seq = emb_qd[:, :-1, :]
-        else:
-            emb_qca_current = emb_qca[:, :-1, :]
-
-        emb_q_seq  = emb_q_in[:, :-1, :]
-        emb_c_seq  = emb_c_in[:, :-1, :]
-        emb_a_seq  = emb_a[:, :-1, :]
-
-        # 用于预测的 Shift 序列 (t=1 到 t=N) 用于计算 Loss
-        # 注意：Question分支和Concept分支的 Shift 输入是不同的
-        emb_q_shift = emb_q_in[:, 1:, :] 
-        emb_c_shift = emb_c_in[:, 1:, :]
+        _, emb_qca, emb_qc, _, emb_c = self.que_emb(q, c, r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
         
         emb_qc_shift = emb_qc[:, 1:, :]
+        emb_qca_current = emb_qca[:, :-1, :]
         # question model
         if self.version == "lstm":
 
@@ -312,19 +179,6 @@ class QIKTNet(nn.Module):
 
             que_h = self.dropout_layer(self.que_lstm_layer((emb_qca_current)))
             que_h = self.que_proj(que_h)
-        elif self.version == "dimkt":
-            # 构造 Question 分支的输入
-            # input_emb: 直接使用 emb_q_seq (包含 Q, C, SD, QD) -> 对应 feature_fusion 输入
-            # diff_emb: 拼接 SD 和 QD -> 对应 KSU Gate 显式输入
-            diff_q_branch = torch.cat([emb_sd_seq, emb_qd_seq], dim=-1)
-            
-            que_h, _ = self.que_dimkt_layer(
-                input_emb=emb_q_seq,     # [batch, seq, 4*emb]
-                diff_emb=diff_q_branch,  # [batch, seq, 2*emb]
-                a_emb=emb_a_seq
-            )
-            que_h = self.dropout_layer(que_h)
-
         else:
             #原版
             
@@ -332,14 +186,14 @@ class QIKTNet(nn.Module):
         # print(f"[DEBUG] que_h.shape: {que_h.shape} (type: {type(que_h.shape)})")
         que_outputs = get_outputs(self, emb_qc_shift, que_h, data, add_name="", model_type="question")
         outputs = que_outputs
-        if self.emb_type != 'diff':
-            # concept model
-            emb_ca = torch.cat([
-                emb_c.mul((1 - r).unsqueeze(-1).repeat(1, 1, self.emb_size)),
-                emb_c.mul(r.unsqueeze(-1).repeat(1, 1, self.emb_size))
-            ], dim=-1)
-            
-            emb_ca_current = emb_ca[:, :-1, :]
+
+        # concept model
+        emb_ca = torch.cat([
+            emb_c.mul((1 - r).unsqueeze(-1).repeat(1, 1, self.emb_size)),
+            emb_c.mul(r.unsqueeze(-1).repeat(1, 1, self.emb_size))
+        ], dim=-1)
+        
+        emb_ca_current = emb_ca[:, :-1, :]
         if self.version == "lstm":
             #mamba
             concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
@@ -360,20 +214,6 @@ class QIKTNet(nn.Module):
             #共用mamba
             concept_h = self.concept_lstm_layer(self.four2two(emb_ca_current))  # [32, 199, 512]
             concept_h = self.concept_proj(concept_h)  # [32, 199, 256]
-            concept_h = self.dropout_layer(concept_h)
-        elif self.version == "dimkt":
-            # 构造 Concept 分支的输入
-            # 输入: Concept + Concept Difficulty
-            input_c_branch = torch.cat([emb_c_seq, emb_sd_seq], dim=-1) # [batch, seq, 2*emb]
-            
-            # KSU Gate 只使用 Concept Difficulty
-            diff_c_branch = emb_sd_seq # [batch, seq, emb]
-
-            concept_h, _ = self.concept_dimkt_layer(
-                input_emb=input_c_branch, # [batch, seq, 2*emb]
-                diff_emb=diff_c_branch,   # [batch, seq, emb]
-                a_emb=emb_a_seq
-            )
             concept_h = self.dropout_layer(concept_h)
         else:
             #原版

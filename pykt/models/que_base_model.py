@@ -75,7 +75,7 @@ class QueEmb(nn.Module):
             self.que_emb = nn.Embedding(self.num_q, self.emb_size).to(device)
             self.concept_emb = nn.Parameter(torch.randn(self.num_c, self.emb_size).to(device), requires_grad=True)
             self.que_c_linear = nn.Linear(2 * self.emb_size, self.emb_size).to(device)
-        if emb_type == "attn":
+        if emb_type in ["attn", "diff"]:
             self.que_emb = nn.Embedding(self.num_q, self.emb_size).to(device)
             self.concept_emb = nn.Parameter(torch.randn(self.num_c, self.emb_size).to(device), requires_grad=True)
             self.que_c_linear = nn.Linear(2 * self.emb_size, self.emb_size).to(device)
@@ -98,7 +98,16 @@ class QueEmb(nn.Module):
             # nn.init.xavier_uniform_(self.att_key_proj.weight)
             # nn.init.xavier_uniform_(self.att_value_proj.weight)
             # nn.init.xavier_uniform_(self.att_out_proj.weight)
-
+        if emb_type == "diff":
+            # 难度嵌入 (Padding index 0)
+            # 假设 Dataset 中有效值是 1~101 (0是padding)，则 size 需覆盖最大值
+            self.sd_emb = nn.Embedding(100 + 2, self.emb_size, padding_idx=0).to(device) # 这里的100需对应你的 self.difficult_levels
+            self.qd_emb = nn.Embedding(100 + 2, self.emb_size, padding_idx=0).to(device)
+            self.a_emb = nn.Embedding(2, self.emb_size).to(device)
+            
+            # 【重要修正1】: 这里不需要 que_c_linear 了，因为我们决定返回原始拼接特征给 QIKTNet
+            # 如果你非要在 QueEmb 里做融合，维度必须是 4 * emb_size -> emb_size
+            # self.que_c_linear = nn.Linear(4 * self.emb_size, self.emb_size).to(device)
 
         self.output_emb_dim = emb_size
     
@@ -170,7 +179,7 @@ class QueEmb(nn.Module):
         concept_avg = (concept_emb_sum / concept_num)
         return concept_avg
 
-    def forward(self, q, c, r=None):
+    def forward(self, q, c, r=None, data=None):
         # 确保所有输入张量在同一设备上
         q = q.to(self.device)
         c = c.to(self.device)
@@ -236,6 +245,74 @@ class QueEmb(nn.Module):
                 emb_qc.mul(r.unsqueeze(-1).repeat(1, 1, self.emb_size * 2))
             ], dim=-1)
             return xemb, emb_qca, emb_qc, emb_q, emb_c
+        elif self.emb_type == "diff":
+            # [cite_start]1. 基础特征 [cite: 264]
+            # 使用 Attention 获取当前 Question 对应的 Concept 融合特征
+            # q 的 shape 应该已经是 [B, 200] (因为是 cq)
+            emb_c = self.get_att_skill_emb(q, c) # [B, S, E]
+            emb_q = self.que_emb(q)              # [B, S, E]
+            
+            # 2. 获取难度数据 (优先使用对齐后的 csd/cqd)
+            # data['csd'] 是我们在 batch_to_device 中修正生成的
+            if data is not None and 'csd' in data:
+                sd = data['csd'].to(self.device).long()
+            else:
+                sd = data['sdseqs'].to(self.device).long() # [B, S_raw, K]
+
+            if data is not None and 'cqd' in data:
+                qd = data['cqd'].to(self.device).long()
+            else:
+                qd = data['qdseqs'].to(self.device).long() # [B, S_raw]
+            
+            # --- 强制对齐 (安全兜底) ---
+            # 如果 sd 的长度与 q 不一致，进行切片或填充
+            target_len = q.shape[1]
+            if sd.shape[1] > target_len:
+                sd = sd[:, :target_len]
+            elif sd.shape[1] < target_len:
+                # 填充 0 (padding)
+                pad_len = target_len - sd.shape[1]
+                pad = torch.zeros((sd.shape[0], pad_len, sd.shape[2]), device=self.device, dtype=sd.dtype)
+                sd = torch.cat([sd, pad], dim=1)
+                
+            if qd.shape[1] > target_len:
+                qd = qd[:, :target_len]
+            elif qd.shape[1] < target_len:
+                pad_len = target_len - qd.shape[1]
+                pad = torch.zeros((qd.shape[0], pad_len), device=self.device, dtype=qd.dtype)
+                qd = torch.cat([qd, pad], dim=1)
+            # ------------------------
+
+            # 3. 处理题目难度 (QD)
+            qd_input = torch.where(qd == -1, torch.tensor(0).to(self.device), qd)
+            emb_qd = self.qd_emb(qd_input) # [B, S, E]
+
+            # 4. 处理知识点难度 (SD) - 聚合
+            sd_input = torch.where(sd == -1, torch.tensor(0).to(self.device), sd)
+            raw_emb_sd = self.sd_emb(sd_input) # [B, S, K, E]
+            
+            # Mask & Pooling
+            mask = (sd != -1).unsqueeze(-1).float() 
+            sum_emb_sd = (raw_emb_sd * mask).sum(dim=2) # Sum pooling
+            
+            valid_count = mask.sum(dim=2)
+            valid_count = torch.where(valid_count == 0, torch.tensor(1.0).to(self.device), valid_count)
+            emb_sd = sum_emb_sd / valid_count # [B, S, E] (Mean pooling)
+
+            # Concept 分支输入: 拼接 Concept + SD => [B, S, 2*E]
+            # 这里的 emb_c 和 emb_sd 现在长度严格一致
+            emb_c_input = emb_c
+            
+            # Question 分支输入: [B, S, 4*E]
+            emb_q_input = torch.cat([emb_q, emb_c, emb_qd, emb_sd], dim=-1)
+            
+            # 【新增】预测层专用特征: Q + C => [B, S, 2*E]
+            emb_qc = torch.cat([emb_q, emb_c], dim=-1)
+            
+            # 返回值增加 emb_qc (变成6个返回值)
+            return emb_q_input, emb_c_input, emb_sd, emb_qd, self.a_emb(r), emb_qc
+
+
         return xemb
 
 from pykt.utils import set_seed
@@ -320,16 +397,36 @@ class QueBaseModel(nn.Module):
         for key in data:
             if isinstance(data[key], torch.Tensor):
                 data_new[key] = data[key].to(self.device)
-                # 如果是整数类型的张量（如 qseqs, cseqs, rseqs），确保是 long 类型
-                if key in ['qseqs', 'cseqs', 'rseqs', 'shft_qseqs', 'shft_cseqs', 'shft_rseqs']:
+                # 确保索引类数据是 long 类型
+                if key in ['qseqs', 'cseqs', 'rseqs', 'shft_qseqs', 'shft_cseqs', 'shft_rseqs', 'sdseqs', 'qdseqs']:
                     data_new[key] = data_new[key].long()
             else:
                 data_new[key] = data[key]
         
+        # 基础序列构建
         data_new['cq'] = torch.cat((data_new["qseqs"][:, 0:1], data_new["shft_qseqs"]), dim=1)
         data_new['cc'] = torch.cat((data_new["cseqs"][:, 0:1], data_new["shft_cseqs"]), dim=1)
         data_new['cr'] = torch.cat((data_new["rseqs"][:, 0:1], data_new["shft_rseqs"]), dim=1)
         data_new['ct'] = torch.cat((data_new["tseqs"][:, 0:1], data_new["shft_tseqs"]), dim=1)
+
+        # --- 修复开始：处理难度序列的对齐 ---
+        # 如果存在难度数据，需要构建与 cq 长度一致的 csd (Context SD) 和 cqd (Context QD)
+        # 逻辑：构造 shft_sdseqs (左移一位，末尾补0)，然后拼接头部
+        
+        if 'sdseqs' in data_new:
+            # 假设 0 是 padding idx
+            pad_val = torch.zeros_like(data_new['sdseqs'][:, 0:1]) 
+            # 构造 shft_sdseqs: [sd_1, sd_2, ..., sd_N, 0]
+            shft_sd = torch.cat([data_new['sdseqs'][:, 1:], pad_val], dim=1)
+            # 构造 csd: [sd_0, sd_1, ..., sd_N] (长度与 cq 一致)
+            data_new['csd'] = torch.cat((data_new['sdseqs'][:, 0:1], shft_sd), dim=1)
+
+        if 'qdseqs' in data_new:
+            pad_val = torch.zeros_like(data_new['qdseqs'][:, 0:1])
+            shft_qd = torch.cat([data_new['qdseqs'][:, 1:], pad_val], dim=1)
+            data_new['cqd'] = torch.cat((data_new['qdseqs'][:, 0:1], shft_qd), dim=1)
+        # --- 修复结束 ---
+
         data_new['q'] = data_new["qseqs"]
         data_new['c'] = data_new["cseqs"]
         data_new['r'] = data_new["rseqs"]
