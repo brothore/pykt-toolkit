@@ -1,0 +1,1 @@
+WANDB_API_KEY=b2fd3c192e86f37e55450d3c8894511ff8bce88d wandb sweep all_wandbs/assist2009_qikt_mamba_qid_0.yaml -p kt_toolkits_assist2009_qikt_mamba_v1
