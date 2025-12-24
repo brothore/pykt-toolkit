@@ -1,364 +1,171 @@
 #!/bin/bash
 
-# ==============================================================================
-#                             用户配置区域
-# ==============================================================================
+# ==========================================
+# 0. 全局环境与指令解析
+# ==========================================
 
-# 1. 基础配置
-export WANDB_API_KEY="b2fd3c192e86f37e55450d3c8894511ff8bce88d"
-BASE_PROJECT_NAME="kt_toolkits"    # 基础项目名 (用于过滤 status-all)
-TAG="v1"                           # 自定义字符串标记
+COMMAND=$1
 
-# 2. 数据与模型
-DATASETS="nips_task34"
-MODELS="qikt_mamba" 
-FOLDS="0"
-GPU_IDS="0"
-
-# 3. 高级参数
-BATCH_SIZE=128
-EMB_TYPE="qid"
-SWEEP_START_ID=0
-SWEEP_END_ID=5
-LOG_ROOT="run_logs"                # [新增] 所有日志文件的根目录
-
-# ==============================================================================
-#                       动态路径与命名逻辑
-# ==============================================================================
-
-SAFE_DATASETS=$(echo $DATASETS | tr ',' '-')
-SAFE_MODELS=$(echo $MODELS | tr ',' '-')
-PROJECT_NAME="${BASE_PROJECT_NAME}_${SAFE_DATASETS}_${SAFE_MODELS}_${TAG}"
-
-# [新增] 创建专属项目文件夹
-PROJECT_LOG_DIR="$LOG_ROOT/$PROJECT_NAME"
-if [[ ! -d "$PROJECT_LOG_DIR" ]]; then
-    mkdir -p "$PROJECT_LOG_DIR"
-fi
-
-# [修改] 所有文件路径都指向该文件夹
-LAUNCH_FILE_TRAIN="$PROJECT_LOG_DIR/launch_train.sh"
-TRAIN_LOG="$PROJECT_LOG_DIR/log_train.log"
-
-LAUNCH_FILE_PRED="$PROJECT_LOG_DIR/launch_pred.sh"
-PRED_LOG="$PROJECT_LOG_DIR/log_pred.log"
-
-# ==============================================================================
-#                                   脚本逻辑
-# ==============================================================================
-
-MODE=$1
-# 支持多参数传递
-ARGS=("${@:2}")
-
-if [[ -z "$MODE" ]]; then
-    echo "❌ 错误: 请指定运行模式。"
-    echo "用法:"
-    echo "  1. 训练/评估: bash pipeline.sh [train | eval]"
-    echo "  2. 当前状态:  bash pipeline.sh status"
-    echo "  3. 全局状态:  bash pipeline.sh status-all  <-- [新功能]"
-    echo "  4. 管理任务:  bash pipeline.sh [pause | resume | stop] <ID>"
+# 检查参数
+if [ -z "$COMMAND" ]; then
+    echo "Usage: $0 {train|status|pause|stop|resume} [project_name_1] [project_name_2] ..."
+    echo "  train  : Generate configs and start training agents."
+    echo "  status : Check the status of all WandB projects."
+    echo "  pause  : Pause cloud sweeps for specified project(s)."
+    echo "  stop   : KILL local agents and Stop cloud sweeps for specified project(s)."
+    echo "  resume : Resume cloud sweeps for specified project(s)."
+    echo ""
+    echo "Example: $0 stop assist2009_dkt_v1 assist2015_dkt_v1"
     exit 1
 fi
 
-echo "========================================================"
-echo "   PyKT 动态流水线 -> [ $MODE ]"
-echo "   📂 工作目录: $PROJECT_LOG_DIR"
-if [[ "$MODE" == "status-all" ]]; then
-    echo "   🔍 扫描范围: $BASE_PROJECT_NAME*"
-else
-    echo "   🎯 当前项目: $PROJECT_NAME"
-fi
-echo "========================================================"
+# [核心修改] 移除第一个参数(COMMAND)，剩下的 $@ 就是项目列表
+shift 
 
-# ------------------------------------------------------------------------------
-#  Python 管理脚本生成器 (支持 status-all 和 文件归档)
-# ------------------------------------------------------------------------------
-generate_manage_script() {
-    cat <<EOF > auto_manage_wandb.py
-import sys
-import os
-import warnings
-import subprocess
+# WandB API Key (全局生效)
+export WANDB_API_KEY="b2fd3c192e86f37e55450d3c8894511ff8bce88d"
 
-warnings.filterwarnings("ignore")
+# ==========================================
+# 1. 参数与变量配置区域 (仅对 train 模式必须)
+# ==========================================
 
-try:
-    import wandb
-except ImportError:
-    print("❌ 错误: 找不到 wandb 库")
-    sys.exit(1)
+# --- 基础配置 ---
+DATASET_NAME="assist2009"   
+MODEL_NAME="dkt"            
+EMB_TYPE="qid"              
+FOLDS="0"           
 
-# 配置
-api_key = "$WANDB_API_KEY"
-curr_project = "$PROJECT_NAME"
-base_project_pattern = "$BASE_PROJECT_NAME"
-entity = None 
+# --- 版本标注 (Mark) ---
+MARK="v1_test_fix" 
 
-# 获取 Entity
-try:
-    api = wandb.Api() # 不指定 project 以便能获取所有 project
-    if hasattr(api, 'default_entity') and api.default_entity:
-        entity = api.default_entity
-    else:
-        try:
-            entity = api.viewer.entity
-        except:
-            entity = api.viewer().entity
-except:
-    pass
+# --- 默认 Project Name ---
+DEFAULT_PROJECT_NAME="${DATASET_NAME}_${MODEL_NAME}_${MARK}"
 
-mode = sys.argv[1] 
-ids = sys.argv[2:]
+# --- 其他配置 ---
+GPU_IDS="0"                 
+BATCH_SIZE=128
+SWEEP_START_ID=0            
+SWEEP_END_ID=100            
+EXECUTE_AGENTS=true         
 
-# --- 打印表格的辅助函数 ---
-def print_sweeps(sweeps, proj_name=""):
-    # 定义列宽
-    W_ID = 12
-    W_STATE = 12
-    W_RUNS = 8
-    W_DATE = 12
-    W_PROJ = 35 # 项目名列宽
-    
-    # 如果是 status-all，多显示一列 Project
-    header_fmt = f"{'Sweep ID':<{W_ID}} | {'State':<{W_STATE}} | {'Runs':<{W_RUNS}} | {'Created':<{W_DATE}} | "
-    if proj_name == "ALL":
-        header_fmt += f"{'Project':<{W_PROJ}} | "
-    header_fmt += "Name/Config"
-    
-    print("-" * 120)
-    print(header_fmt)
-    print("-" * 120)
-    
-    found = False
-    for sweep in sweeps:
-        found = True
-        state = sweep.state
-        
-        try:
-            run_count = sweep.run_count if hasattr(sweep, 'run_count') else len(list(sweep.runs))
-        except:
-            run_count = "?"
+# ==========================================
+# 2. 功能函数定义
+# ==========================================
 
-        created = sweep.created_at[:10] if hasattr(sweep, 'created_at') else "N/A"
-        cfg_name = sweep.config.get('name', 'N/A')
-        
-        # 状态颜色
-        state_padded = f"{state:<{W_STATE}}"
-        if state in ["RUNNING", "FINISHED"]: state_disp = f"\033[92m{state_padded}\033[0m"
-        elif state == "PAUSED": state_disp = f"\033[93m{state_padded}\033[0m"
-        elif state in ["CANCELED", "KILLED", "STOPPED"]: state_disp = f"\033[91m{state_padded}\033[0m"
-        else: state_disp = state_padded
-
-        row_fmt = f"{sweep.id:<{W_ID}} | {state_disp} | {str(run_count):<{W_RUNS}} | {created:<{W_DATE}} | "
-        if proj_name == "ALL":
-            # 截断过长的项目名
-            p_name = sweep.project
-            if len(p_name) > W_PROJ - 1: p_name = p_name[:W_PROJ-3] + "..."
-            row_fmt += f"{p_name:<{W_PROJ}} | "
-        
-        row_fmt += f"{cfg_name}"
-        print(row_fmt)
-    
-    if not found:
-        print("   (没有找到 Sweep)")
-    print("-" * 120)
-
-
-# ==========================
-#  模式: STATUS (当前项目)
-# ==========================
-if mode == "status":
-    print(f"\n📊 项目 [{curr_project}] 的状态:")
-    try:
-        sweeps = api.project(curr_project, entity=entity).sweeps()
-        print_sweeps(sweeps)
-    except Exception as e:
-        print(f"❌ 获取失败: {e}")
-
-# ==========================
-#  模式: STATUS-ALL (所有项目)
-# ==========================
-elif mode == "status-all":
-    print(f"\n🌍 全局扫描: Entity [{entity}] 下以 [{base_project_pattern}] 开头的项目")
-    try:
-        # 1. 获取所有项目
-        projects = api.projects(entity=entity)
-        
-        target_projects = []
-        for p in projects:
-            if p.name.startswith(base_project_pattern):
-                target_projects.append(p)
-        
-        if not target_projects:
-            print("❌ 未找到匹配的项目。")
-        else:
-            # 2. 遍历项目获取 Sweep
-            all_sweeps = []
-            print(f"   -> 发现 {len(target_projects)} 个匹配项目，正在获取数据...")
-            for p in target_projects:
-                try:
-                    # 仅获取最近的 Sweep，避免太慢
-                    proj_sweeps = list(p.sweeps())
-                    all_sweeps.extend(proj_sweeps)
-                except:
-                    pass
-            
-            # 3. 打印 (按时间倒序)
-            # 简单的排序，如果 created_at 格式不对可能报错，这里简单 try一下
-            try:
-                all_sweeps.sort(key=lambda x: x.created_at, reverse=True)
-            except:
-                pass
-
-            print_sweeps(all_sweeps, proj_name="ALL")
-
-    except Exception as e:
-        print(f"❌ 全局扫描失败: {e}")
-
-# ==========================
-#  模式: ACTION (CLI)
-# ==========================
-elif mode in ["pause", "resume", "stop"]:
-    if not ids:
-        print("❌ Error: 缺少 Sweep ID")
-        sys.exit(1)
-    
-    action_map = {"pause": "--pause", "resume": "--resume", "stop": "--stop"}
-    flag = action_map[mode]
-
-    for sweep_id in ids:
-        # 注意：这里我们优先尝试在当前 project 下操作
-        # 如果是全局模式下看到的其他 project 的 ID，CLI 可能需要 user/proj/id 完整路径
-        # 这里尝试简单处理：先用当前 project 上下文，失败则提示用户
-        
-        full_id = f"{entity}/{curr_project}/{sweep_id}" if entity else f"{curr_project}/{sweep_id}"
-        print(f"🔄 尝试操作: {flag} {full_id}")
-        
-        exit_code = os.system(f"wandb sweep {flag} {full_id}")
-        
-        if exit_code != 0:
-            print(f"⚠️  当前项目下失败，尝试直接操作 ID (适用于 wandb 自动推断): {sweep_id}")
-            os.system(f"wandb sweep {flag} {sweep_id}")
-
-EOF
-}
-
-# ------------------------------------------------------------------------------
-#  逻辑分支
-# ------------------------------------------------------------------------------
-
-# 1. Status / Status-All / Control
-if [[ "$MODE" == "status" || "$MODE" == "status-all" ]]; then
-    generate_manage_script
-    python auto_manage_wandb.py "$MODE"
-    rm auto_manage_wandb.py
-
-elif [[ "$MODE" == "pause" || "$MODE" == "resume" || "$MODE" == "stop" ]]; then
-    if [[ -z "${ARGS[0]}" ]]; then
-        echo "❌ 请提供 Sweep ID"
+run_status() {
+    if [ ! -f "check_project_status.py" ]; then
+        echo "[Error] check_project_status.py not found!"
         exit 1
     fi
-    generate_manage_script
-    python auto_manage_wandb.py "$MODE" "${ARGS[@]}"
-    rm auto_manage_wandb.py
+    WANDB_SILENT=true python check_project_status.py
+}
 
-elif [[ "$MODE" == "kill-local" ]]; then
-    # 注意：kill-local 仍然只杀当前 PROJECT_NAME 的进程，避免误杀其他实验
-    echo "⚠️  准备杀死项目 [$PROJECT_NAME] 的本地进程..."
-    PIDS=$(pgrep -f "wandb agent.*$PROJECT_NAME")
-    if [[ -z "$PIDS" ]]; then
-        echo "✅ 无相关进程。"
-    else
-        echo $PIDS | xargs kill -9
-        echo "☠️  已杀死: $PIDS"
+run_manage() {
+    ACTION=$1
+    CURRENT_PROJ=$2 # [修改] 接收具体的项目名作为参数
+
+    echo "======================================================="
+    echo "Executing: $ACTION on Project: $CURRENT_PROJ"
+    echo "======================================================="
+
+    if [ ! -f "manage_project.py" ]; then
+        echo "[Error] manage_project.py not found!"
+        exit 1
     fi
 
-# ------------------------------------------------------------------------------
-#  2. Train
-# ------------------------------------------------------------------------------
-elif [[ "$MODE" == "train" ]]; then
-    echo "[Step 1] 生成配置 (保存至 $PROJECT_LOG_DIR)..."
+    # 调用 Python 脚本管理状态
+    python manage_project.py --project "$CURRENT_PROJ" --action "$ACTION"
+    echo "" # 打印空行分隔输出
+}
+
+run_train() {
+    # Train 模式通常只针对当前脚本配置的一个项目，不建议批量 Train
+    # 如果需要批量 Train，建议写个外部脚本循环调用
+    
+    # 使用配置中的默认项目名
+    ACTUAL_PROJ="$DEFAULT_PROJECT_NAME"
+    
+    # 定义工作目录
+    WORK_DIR="./run_logs/${ACTUAL_PROJ}"
+
+    if [ ! -d "$WORK_DIR" ]; then
+        mkdir -p "$WORK_DIR"
+    fi
+
+    INIT_SWEEP_SCRIPT="${WORK_DIR}/1_init_sweeps.sh"  
+    INIT_LOG_FILE="${WORK_DIR}/2_sweep_submission.log" 
+    AGENT_RUN_SCRIPT="${WORK_DIR}/3_start_agents.sh"   
+
+    echo "======================================================="
+    echo "Pipeline Start: TRAINING"
+    echo "Project Name : $ACTUAL_PROJ"
+    echo "Work Dir     : $WORK_DIR"
+    echo "======================================================="
+
+    # --- Step 1 ---
+    echo "[Step 1] Generating WandB sweep configurations..."
     python generate_wandb.py \
-        --project_name "$PROJECT_NAME" \
-        --dataset_names "$DATASETS" \
-        --model_names "$MODELS" \
-        --emb_type "$EMB_TYPE" \
+        --project_name "$ACTUAL_PROJ" \
+        --dataset_names "$DATASET_NAME" \
+        --model_names "$MODEL_NAME" \
+        --emb_types "$EMB_TYPE" \
         --folds "$FOLDS" \
-        --batch_size "$BATCH_SIZE" \
-        --launch_file "$LAUNCH_FILE_TRAIN" \
-        --save_dir_suffix "" 
-    
-    if [[ $? -ne 0 ]]; then echo "❌ 配置生成失败"; exit 1; fi
+        --batch_size $BATCH_SIZE \
+        --launch_file "$INIT_SWEEP_SCRIPT" \
+        --save_dir_suffix "_$MARK" 
 
-    echo "[Step 2] 注册 Sweep..."
-    # 关键：WandB 会在当前目录找 .yaml，所以我们在当前目录执行命令
-    # 但日志重定向到文件夹中
-    sh "$LAUNCH_FILE_TRAIN" > "$TRAIN_LOG" 2>&1
-    
-    echo "[Step 3] 生成 Agent 脚本..."
-    sh run_all.sh "$TRAIN_LOG" "$SWEEP_START_ID" "$SWEEP_END_ID" "$DATASETS" "$MODELS" "$GPU_IDS" "$PROJECT_NAME"
-    
-    # [新增] 移动生成的 agent 脚本到日志目录
-    RAW_AGENT_SCRIPT="start_sweep_${SWEEP_START_ID}_${SWEEP_END_ID}.sh"
-    FINAL_AGENT_SCRIPT="$PROJECT_LOG_DIR/agent_train.sh"
-    
-    if [[ -f "$RAW_AGENT_SCRIPT" ]]; then
-        mv "$RAW_AGENT_SCRIPT" "$FINAL_AGENT_SCRIPT"
-        chmod +x "$FINAL_AGENT_SCRIPT"
-        
-        echo "[Step 4] 启动 Agent ($FINAL_AGENT_SCRIPT)..."
-        # 启动时，将nohup日志也放入文件夹
-        nohup sh "$FINAL_AGENT_SCRIPT" > "$PROJECT_LOG_DIR/nohup_train.out" 2>&1 &
-        echo "🎉 训练已启动！日志: $PROJECT_LOG_DIR/nohup_train.out"
+    if [ $? -ne 0 ]; then exit 1; fi
+
+    # --- Step 2 ---
+    echo "[Step 2] Submitting sweeps to WandB..."
+    sh "$INIT_SWEEP_SCRIPT" > "$INIT_LOG_FILE" 2>&1
+    if [ $? -ne 0 ]; then exit 1; fi
+
+    # --- Step 3 ---
+    echo "[Step 3] Parsing logs..."
+    python all_start.py \
+        "$INIT_LOG_FILE" "$AGENT_RUN_SCRIPT" "$SWEEP_START_ID" "$SWEEP_END_ID" \
+        "$DATASET_NAME" "$MODEL_NAME" "$GPU_IDS" "$ACTUAL_PROJ" "$WORK_DIR"
+
+    if [ $? -ne 0 ]; then exit 1; fi
+
+    # --- Step 4 ---
+    if [ "$EXECUTE_AGENTS" = true ]; then
+        echo "[Step 4] Auto-starting agents..."
+        chmod +x "$AGENT_RUN_SCRIPT"
+        sh "$AGENT_RUN_SCRIPT"
+        echo "[Success] Agents started."
     else
-        echo "❌ Agent 脚本未生成，请检查 $TRAIN_LOG"
+        echo "[Finished] Run manually: sh $AGENT_RUN_SCRIPT"
     fi
+}
 
-# ------------------------------------------------------------------------------
-#  3. Eval
-# ------------------------------------------------------------------------------
-elif [[ "$MODE" == "eval" ]]; then
-    echo "[Step 1] 提取最佳模型..."
-    cat <<EOF > auto_extract_best.py
-import sys, os, warnings
-warnings.filterwarnings("ignore")
-try:
-    from examples.wandb_train import wandb_api 
-except ImportError:
-    import wandb_api 
+# ==========================================
+# 3. 主逻辑分支
+# ==========================================
 
-# 强制环境变量
-os.environ["WANDB_PROJECT"] = "$PROJECT_NAME"
-
-try:
-    df = wandb_api.get_best_run(dataset_name="$DATASETS", model_name="$MODELS")
-    wandb_api.extract_best_models(df, "$DATASETS", "$MODELS", 
-                                  fpath="./seedwandb/predict.yaml", 
-                                  wandb_key="$WANDB_API_KEY",
-                                  launch_file="$LAUNCH_FILE_PRED")
-except Exception as e:
-    sys.exit(1)
-EOF
-    python auto_extract_best.py
-    if [[ $? -ne 0 ]]; then echo "❌ 提取失败"; rm auto_extract_best.py; exit 1; fi
-    rm auto_extract_best.py
-
-    echo "[Step 2] 注册预测任务..."
-    sh "$LAUNCH_FILE_PRED" > "$PRED_LOG" 2>&1
-
-    echo "[Step 3] 生成 Agent..."
-    sh run_all.sh "$PRED_LOG" "$SWEEP_START_ID" "$SWEEP_END_ID" "$DATASETS" "$MODELS" "$GPU_IDS" "$PROJECT_NAME"
-
-    # [新增] 移动脚本
-    RAW_AGENT_SCRIPT="start_sweep_${SWEEP_START_ID}_${SWEEP_END_ID}.sh"
-    FINAL_AGENT_SCRIPT="$PROJECT_LOG_DIR/agent_pred.sh"
-
-    if [[ -f "$RAW_AGENT_SCRIPT" ]]; then
-        mv "$RAW_AGENT_SCRIPT" "$FINAL_AGENT_SCRIPT"
-        chmod +x "$FINAL_AGENT_SCRIPT"
-        echo "[Step 4] 启动预测 Agent..."
-        nohup sh "$FINAL_AGENT_SCRIPT" > "$PROJECT_LOG_DIR/nohup_pred.out" 2>&1 &
-        echo "🎉 预测已启动！日志: $PROJECT_LOG_DIR/nohup_pred.out"
-    fi
-fi
+case "$COMMAND" in
+    train)
+        run_train
+        ;;
+    status)
+        run_status
+        ;;
+    stop|pause|resume)
+        # [核心逻辑] 判断是否有后续参数
+        if [ $# -eq 0 ]; then
+            # 如果没有参数，使用默认项目
+            run_manage "$COMMAND" "$DEFAULT_PROJECT_NAME"
+        else
+            # 如果有参数，循环处理每一个项目
+            for PROJ in "$@"; do
+                run_manage "$COMMAND" "$PROJ"
+            done
+        fi
+        ;;
+    *)
+        echo "Invalid command: $COMMAND"
+        echo "Usage: $0 {train|status|pause|stop|resume} [project1] [project2] ..."
+        exit 1
+        ;;
+esac

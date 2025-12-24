@@ -78,3 +78,4 @@ data
 configs/data_config.json
 examples/seq
 examples/saved_models.zip
+run_logs/
