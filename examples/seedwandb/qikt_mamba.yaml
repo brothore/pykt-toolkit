@@ -13,7 +13,7 @@ parameters:
     dataset_name:
         values: ["xes"]            # 脚本会将 "xes" 替换为具体数据集名 (如 assist2009)
     emb_type:
-        values: ["attn"]            # 脚本会将 "qid" 替换为 "diff" (如果你在命令行指定了)
+        values: ["diff"]            # 脚本会将 "qid" 替换为 "diff" (如果你在命令行指定了)
     save_dir:
         values: ["models/xdkt_tiaocan"] # 脚本会处理后缀
     fold:

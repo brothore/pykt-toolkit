@@ -30,9 +30,9 @@ export WANDB_API_KEY="b2fd3c192e86f37e55450d3c8894511ff8bce88d"
 # ==========================================
 
 # --- 基础配置 ---
-DATASET_NAME="assist2009"   
-MODEL_NAME="dkt"            
-EMB_TYPE="qid"              
+DATASET_NAME="bridge2algebra2006"   
+MODEL_NAME="qikt_mamba"            
+            
 FOLDS="0"           
 
 # --- 版本标注 (Mark) ---
@@ -43,7 +43,7 @@ DEFAULT_PROJECT_NAME="${DATASET_NAME}_${MODEL_NAME}_${MARK}"
 
 # --- 其他配置 ---
 GPU_IDS="0"                 
-BATCH_SIZE=128
+BATCH_SIZE=256
 SWEEP_START_ID=0            
 SWEEP_END_ID=100            
 EXECUTE_AGENTS=true         
@@ -77,69 +77,84 @@ run_manage() {
     python manage_project.py --project "$CURRENT_PROJ" --action "$ACTION"
     echo "" # 打印空行分隔输出
 }
-
 run_train() {
-    # Train 模式通常只针对当前脚本配置的一个项目，不建议批量 Train
-    # 如果需要批量 Train，建议写个外部脚本循环调用
-    
-    # 使用配置中的默认项目名
-    ACTUAL_PROJ="$DEFAULT_PROJECT_NAME"
-    
-    # 定义工作目录
-    WORK_DIR="./run_logs/${ACTUAL_PROJ}"
+    # 1. 将逗号分隔的 DATASET_NAME 替换为空格分隔，以便进行 for 循环
+    # 例如 "assist2009,assist2015" -> "assist2009 assist2015"
+    DATASET_LIST=${DATASET_NAME//,/ }
 
-    if [ ! -d "$WORK_DIR" ]; then
-        mkdir -p "$WORK_DIR"
-    fi
+    # 2. 开始循环：针对每一个数据集单独执行一套流程
+    for CURRENT_DATASET in $DATASET_LIST; do
+        
+        # 动态生成当前数据集对应的 Project Name
+        ACTUAL_PROJ="${CURRENT_DATASET}_${MODEL_NAME}_${MARK}"
+        
+        # 定义工作目录
+        WORK_DIR="./run_logs/${ACTUAL_PROJ}"
 
-    INIT_SWEEP_SCRIPT="${WORK_DIR}/1_init_sweeps.sh"  
-    INIT_LOG_FILE="${WORK_DIR}/2_sweep_submission.log" 
-    AGENT_RUN_SCRIPT="${WORK_DIR}/3_start_agents.sh"   
+        if [ ! -d "$WORK_DIR" ]; then
+            mkdir -p "$WORK_DIR"
+        fi
 
-    echo "======================================================="
-    echo "Pipeline Start: TRAINING"
-    echo "Project Name : $ACTUAL_PROJ"
-    echo "Work Dir     : $WORK_DIR"
-    echo "======================================================="
+        INIT_SWEEP_SCRIPT="${WORK_DIR}/1_init_sweeps.sh"  
+        INIT_LOG_FILE="${WORK_DIR}/2_sweep_submission.log" 
+        AGENT_RUN_SCRIPT="${WORK_DIR}/3_start_agents.sh"   
 
-    # --- Step 1 ---
-    echo "[Step 1] Generating WandB sweep configurations..."
-    python generate_wandb.py \
-        --project_name "$ACTUAL_PROJ" \
-        --dataset_names "$DATASET_NAME" \
-        --model_names "$MODEL_NAME" \
-        --emb_types "$EMB_TYPE" \
-        --folds "$FOLDS" \
-        --batch_size $BATCH_SIZE \
-        --launch_file "$INIT_SWEEP_SCRIPT" \
-        --save_dir_suffix "_$MARK" 
+        echo "======================================================="
+        echo "Pipeline Start: TRAINING"
+        echo "Dataset      : $CURRENT_DATASET"
+        echo "Project Name : $ACTUAL_PROJ"
+        echo "Work Dir     : $WORK_DIR"
+        echo "======================================================="
 
-    if [ $? -ne 0 ]; then exit 1; fi
+        # --- Step 1: Generate Configs ---
+        # 注意：这里传给 generate_wandb.py 的 dataset_names 变成了单一的 CURRENT_DATASET
+        echo "[Step 1] Generating WandB sweep configurations..."
+        python generate_wandb.py \
+            --project_name "$ACTUAL_PROJ" \
+            --dataset_names "$CURRENT_DATASET" \
+            --model_names "$MODEL_NAME" \
+            --folds "$FOLDS" \
+            --batch_size $BATCH_SIZE \
+            --launch_file "$INIT_SWEEP_SCRIPT" \
+            --save_dir_suffix "_$MARK" 
 
-    # --- Step 2 ---
-    echo "[Step 2] Submitting sweeps to WandB..."
-    sh "$INIT_SWEEP_SCRIPT" > "$INIT_LOG_FILE" 2>&1
-    if [ $? -ne 0 ]; then exit 1; fi
+        if [ $? -ne 0 ]; then 
+            echo "[Error] Failed at Step 1 for $CURRENT_DATASET"
+            exit 1
+        fi
 
-    # --- Step 3 ---
-    echo "[Step 3] Parsing logs..."
-    python all_start.py \
-        "$INIT_LOG_FILE" "$AGENT_RUN_SCRIPT" "$SWEEP_START_ID" "$SWEEP_END_ID" \
-        "$DATASET_NAME" "$MODEL_NAME" "$GPU_IDS" "$ACTUAL_PROJ" "$WORK_DIR"
+        # --- Step 2: Submit Sweeps ---
+        echo "[Step 2] Submitting sweeps to WandB..."
+        sh "$INIT_SWEEP_SCRIPT" > "$INIT_LOG_FILE" 2>&1
+        if [ $? -ne 0 ]; then 
+            echo "[Error] Failed at Step 2 for $CURRENT_DATASET"
+            exit 1
+        fi
 
-    if [ $? -ne 0 ]; then exit 1; fi
+        # --- Step 3: Parse Logs ---
+        echo "[Step 3] Parsing logs..."
+        python all_start.py \
+            "$INIT_LOG_FILE" "$AGENT_RUN_SCRIPT" "$SWEEP_START_ID" "$SWEEP_END_ID" \
+            "$CURRENT_DATASET" "$MODEL_NAME" "$GPU_IDS" "$ACTUAL_PROJ" "$WORK_DIR"
 
-    # --- Step 4 ---
-    if [ "$EXECUTE_AGENTS" = true ]; then
-        echo "[Step 4] Auto-starting agents..."
-        chmod +x "$AGENT_RUN_SCRIPT"
-        sh "$AGENT_RUN_SCRIPT"
-        echo "[Success] Agents started."
-    else
-        echo "[Finished] Run manually: sh $AGENT_RUN_SCRIPT"
-    fi
+        if [ $? -ne 0 ]; then 
+            echo "[Error] Failed at Step 3 for $CURRENT_DATASET"
+            exit 1
+        fi
+
+        # --- Step 4: Start Agents ---
+        if [ "$EXECUTE_AGENTS" = true ]; then
+            echo "[Step 4] Auto-starting agents..."
+            chmod +x "$AGENT_RUN_SCRIPT"
+            sh "$AGENT_RUN_SCRIPT"
+            echo "[Success] Agents started for $ACTUAL_PROJ."
+        else
+            echo "[Finished] Run manually: sh $AGENT_RUN_SCRIPT"
+        fi
+        
+        echo "" # 空行分隔不同数据集的日志
+    done
 }
-
 # ==========================================
 # 3. 主逻辑分支
 # ==========================================
