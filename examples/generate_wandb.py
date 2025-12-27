@@ -57,8 +57,9 @@ def main(params):
                             print(f"⚠️  Skipping: {fpath} not found")
                             continue
 
-                        type_str = _type.replace("linear", "")
-                        fname = f"{dataset_name}_{m}_{type_str}_{fold}.yaml"
+                        # type_str = _type.replace("linear", "")
+                        # fname = f"{dataset_name}_{m}_{type_str}_{fold}.yaml"
+                        fname = f"{dataset_name}_{m}_{fold}.yaml"
                         ftarget = os.path.join(all_dir, fname)
                         
                         print(f"🔄 Processing: {fname} | Batch Size -> {target_batch_size}")
@@ -75,8 +76,8 @@ def main(params):
                         raw_data = raw_data.replace("tiaocan", f"tiaocan_{dataset_name}{save_dir_suffix}")
                         
                         # 替换 Embedding (原有逻辑)
-                        if '["qid"]' in raw_data:
-                            raw_data = raw_data.replace('["qid"]', f"['{_type}']")
+                        # if '["qid"]' in raw_data:
+                        #     raw_data = raw_data.replace('["qid"]', f"['{_type}']")
                         
                         # 替换 Fold
                         raw_data = raw_data.replace("[0, 1, 2, 3, 4]", str([int(fold)]))

@@ -416,7 +416,7 @@ class QIKTNet(nn.Module):
 
 class QIKT_LPKT(QueBaseModel):
     def __init__(self, num_q,n_it,q_matrix,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",num_attn_head=2,**kwargs):
-        model_name = "qikt_mamba"
+        model_name = "qikt_lpkt"
         if 'inter_group_auc_lambda' not in other_config:
             other_config['inter_group_auc_lambda'] = 0.1
         debug_print(f"emb_type is {emb_type}",fuc_name="QIKT")

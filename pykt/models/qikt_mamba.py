@@ -145,7 +145,7 @@ def get_outputs(self, emb_qc_shift, h, data, add_name="", model_type='question')
 class QIKTNet(nn.Module):
     def __init__(self, num_q,num_c,emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',mlp_layer_num=1,other_config={},num_attn_head=2,version="v0"):
         super().__init__()
-        self.model_name = "qikt_mamba"
+        self.model_name = "qikt_lpkt"
         self.num_q = num_q
         self.num_c = num_c
         self.emb_size = emb_size
@@ -265,30 +265,24 @@ class QIKTNet(nn.Module):
             # diff 模式返回 6 个值
             emb_q_in, emb_c_in, emb_sd, emb_qd, emb_a, emb_qc = self.que_emb(q, c, r, data=data)
         else:
-            # 其他模式 (如 iekt) 可能返回 5 个值，且顺序不同，这里需要注意兼容性
-            # 如果你只跑 diff 模式，暂时可以只关注上面的 if
-            # 下面是针对 iekt 的一种可能的解包兜底（视具体情况而定）
-            ret = self.que_emb(q, c, r, data=data)
-            emb_q_in, emb_c_in, emb_sd, emb_qd, emb_a = ret[0], ret[1], ret[2], ret[3], ret[4]
-            # 注意：非 diff 模式下 emb_qc 可能需要另外处理，或者 ret[2] 就是 emb_qc (iekt模式下)
-            if self.emb_type == 'iekt':
-                 emb_qc = ret[2] # iekt 返回: xemb, emb_qca, emb_qc, emb_q, emb_c  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
+            _, emb_qca, emb_qc, _, emb_c = self.que_emb(q, c, r)
         # 2. 准备序列切片 (Slicing)
         # 输入给 DIMKT Layer 的序列 (t=0 到 t=N-1) 用于更新状态
         if self.emb_type == 'diff':
             emb_sd_seq = emb_sd[:, :-1, :]
             emb_qd_seq = emb_qd[:, :-1, :]
+            emb_q_seq  = emb_q_in[:, :-1, :]
+            emb_c_seq  = emb_c_in[:, :-1, :]
+            emb_a_seq  = emb_a[:, :-1, :]
+            emb_q_shift = emb_q_in[:, 1:, :] 
+            emb_c_shift = emb_c_in[:, 1:, :]
         else:
             emb_qca_current = emb_qca[:, :-1, :]
 
-        emb_q_seq  = emb_q_in[:, :-1, :]
-        emb_c_seq  = emb_c_in[:, :-1, :]
-        emb_a_seq  = emb_a[:, :-1, :]
+        
 
         # 用于预测的 Shift 序列 (t=1 到 t=N) 用于计算 Loss
         # 注意：Question分支和Concept分支的 Shift 输入是不同的
-        emb_q_shift = emb_q_in[:, 1:, :] 
-        emb_c_shift = emb_c_in[:, 1:, :]
         
         emb_qc_shift = emb_qc[:, 1:, :]
         # question model

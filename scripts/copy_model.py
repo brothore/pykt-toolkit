@@ -13,7 +13,44 @@ import shutil
 import argparse
 import json
 from datetime import datetime
+def copy_and_update_seedwandb_yaml(script_dir, base_model, new_model):
+    """
+    复制 examples/seedwandb 下的 yaml 配置并修改 model_name
+    """
+    src_yaml = os.path.join(script_dir, "examples", "seedwandb", f"{base_model}.yaml")
+    dst_yaml = os.path.join(script_dir, "examples", "seedwandb", f"{new_model}.yaml")
 
+    if not os.path.exists(src_yaml):
+        print(f"⚠️ 源 YAML 文件 {src_yaml} 不存在，跳过")
+        return False, None
+
+    if os.path.exists(dst_yaml):
+        print(f"⚠️ 目标 YAML 文件 {dst_yaml} 已存在，跳过")
+        return False, None
+
+    # 1. 复制文件
+    shutil.copy2(src_yaml, dst_yaml)
+    
+    # 2. 读取并修改内容
+    with open(dst_yaml, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    # 使用正则匹配 model_name 下面的 values 列表
+    # 匹配结构: model_name: (换行) (缩进) values: ["旧名字"]
+    # 捕获组1: model_name header + values前缀
+    # 捕获组2: 列表的中括号结尾
+    pattern = r'(model_name:\s*\n\s+values:\s*\[)(?:["\'].*?["\'])(])'
+    
+    # 替换为新模型名字
+    new_content = re.sub(pattern, f'\\1"{new_model}"\\2', content)
+
+    if content != new_content:
+        with open(dst_yaml, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        return True, dst_yaml
+    else:
+        print(f"⚠️ 在 {dst_yaml} 中未匹配到 model_name 配置结构，仅完成了复制")
+        return True, dst_yaml
 def search_and_add_to_string_lists(line, base_model, new_model):
     """
     函数A：在传入行中检索是否存在字符串列表，并在字符串列表中检索基底模型是否存在，
@@ -231,7 +268,12 @@ def undo_operations(base_model, new_model):
             os.remove(dst_train)
             operations.append(f"删除文件: {dst_train}")
             print(f"✓ 删除 {dst_train}")
-        
+        # === 【新增】删除 seedwandb yaml 文件 ===
+        dst_yaml = os.path.join(script_dir, "examples", "seedwandb", f"{new_model}.yaml")
+        if os.path.exists(dst_yaml):
+            os.remove(dst_yaml)
+            operations.append(f"删除文件: {dst_yaml}")
+            print(f"✓ 删除 {dst_yaml}")
         # 2. 删除复制的模型文件
         dst_model = os.path.join(script_dir, "pykt", "models", f"{new_model}.py")
         if os.path.exists(dst_model):
@@ -397,9 +439,14 @@ def main():
                 print(f"✓ 更新 {config_file} 中的模型列表")
         else:
             print(f"⚠️  文件 {config_file} 不存在，跳过更新")
+        # 9. 复制并修改 seedwandb YAML ===
+        success, yaml_path = copy_and_update_seedwandb_yaml(script_dir, base_model, new_model)
+        if success and yaml_path:
+            operations.append(f"复制并配置 YAML: {yaml_path}")
+            print(f"✓ 复制并配置 YAML: {yaml_path}")
+        # ==========================================
 
-
-        # 9. 保存操作记录
+        # 10. 保存操作记录
         if operations:
             record_file = save_operation_record(base_model, new_model, operations)
         

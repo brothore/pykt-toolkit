@@ -14,7 +14,90 @@ from scipy.special import softmax
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+class DIMKTLayer(nn.Module):
+    def __init__(self, input_size, diff_size, emb_size, dropout=0.1):
+        """
+        Args:
+            input_size: 对应公式(2)中拼接后的输入维度 (如 Q+C+Diffs) [cite: 267]
+            diff_size:  用于KSU门的难度维度 (Question分支可能是 QS+KC, Concept分支只有 KC) 
+            emb_size:   隐藏层维度 d_k (Knowledge State)
+        """
+        super().__init__()
+        self.emb_size = emb_size
+        self.sigmoid = nn.Sigmoid()
+        self.tanh = nn.Tanh()
+        self.dropout = nn.Dropout(dropout)
 
+        # 1. Input Fusion (对应论文 Eq.2: x_t = W[q,k,qs,kc] + b)
+        # 将原始输入特征映射为 difficulty-enhanced question embedding
+        self.feature_fusion = nn.Linear(input_size, emb_size)
+
+        # 2. SDF: Subjective Difficulty Feeling (对应论文 Eq.3) [cite: 285]
+        self.linear_sdf_gate = nn.Linear(emb_size, emb_size) 
+        self.linear_sdf_val  = nn.Linear(emb_size, emb_size) 
+        
+        # 3. PKA: Personalized Knowledge Acquisition (对应论文 Eq.4) [cite: 294]
+        # 输入是 SDF(emb_size) + Answer(emb_size)
+        self.linear_pka_gate = nn.Linear(2 * emb_size, emb_size) 
+        self.linear_pka_val  = nn.Linear(2 * emb_size, emb_size) 
+        
+        # 4. KSU: Knowledge State Updating (对应论文 Eq.5) 
+        # 输入是 h_{t-1}(emb) + a_t(emb) + Diffs(diff_size)
+        self.linear_ksu = nn.Linear(2 * emb_size + diff_size, emb_size)
+
+    def forward(self, input_emb, diff_emb, a_emb, init_h=None):
+        """
+        Args:
+            input_emb: 拼接好的输入特征 [batch, seq, input_size]
+            diff_emb:  用于更新门的难度特征 [batch, seq, diff_size]
+            a_emb:     回答嵌入 [batch, seq, emb_size]
+        """
+        batch_size, seq_len, _ = input_emb.size()
+        
+        # 初始化知识状态 h_0
+        if init_h is None:
+            # 原论文使用 Xavier 初始化或者零初始化
+            h_t = torch.zeros(batch_size, self.emb_size).to(input_emb.device)
+        else:
+            h_t = init_h
+
+        h_list = []
+        
+        # 预先计算 x_t (Difficulty-enhanced embedding) [cite: 264]
+        # 这样比在循环里计算更高效
+        x_seq = self.feature_fusion(input_emb) # [batch, seq, emb_size]
+
+        for t in range(seq_len):
+            # 取出当前时刻特征
+            x_t = x_seq[:, t, :]
+            d_t = diff_emb[:, t, :] # 具体的难度值(embedding)
+            a_t = a_emb[:, t, :]
+
+            # --- 1. SDF Module  ---
+            # 比较题目难度增强向量 x_t 与 当前知识状态 h_{t-1} 的差异
+            qq = h_t - x_t 
+            
+            gate_sdf = self.sigmoid(self.linear_sdf_gate(qq))
+            val_sdf = self.dropout(self.tanh(self.linear_sdf_val(qq)))
+            sdf_t = gate_sdf * val_sdf
+            
+            # --- 2. PKA Module  ---
+            # 结合主观难度感受 SDF 和 实际作答 a_t
+            cat_pka = torch.cat([sdf_t, a_t], dim=-1)
+            gate_pka = self.sigmoid(self.linear_pka_gate(cat_pka))
+            val_pka = self.tanh(self.linear_pka_val(cat_pka))
+            pka_t = gate_pka * val_pka
+            
+            # --- 3. KSU Module [cite: 341] ---
+            # 更新知识状态: h_{t-1}, a_t, 和 显式的难度特征 d_t
+            cat_ksu = torch.cat([h_t, a_t, d_t], dim=-1)
+            gate_ksu = self.sigmoid(self.linear_ksu(cat_ksu))
+            
+            # Update h_t
+            h_t = gate_ksu * h_t + (1 - gate_ksu) * pka_t
+            h_list.append(h_t.unsqueeze(1))
+            
+        return torch.cat(h_list, dim=1), h_t
 class MLP(nn.Module):
     '''
     classifier decoder implemented with mlp
@@ -58,156 +141,11 @@ def get_outputs(self, emb_qc_shift, h, data, add_name="", model_type='question')
         outputs["y_concept_all" + add_name] = self.get_avg_fusion_concepts(y_concept_all, cshft)
 
     return outputs
-class LpktRnnBackbone(nn.Module):
-    """
-    一个实现了 LPKT 逻辑的自定义 RNN 主干。
-    它在 forward 中内置了循环，并返回一个与 LSTM 兼容的隐藏状态序列。
-    
-    [魔改版]: 此版本保留 it_data 输入参数，但在计算中将其移除。
-    """
-    def __init__(self, input_dim, hidden_size, num_q, num_c, q_matrix, 
-                 n_it, dropout, device):
-        super().__init__()
-        self.device = device
-        self.hidden_size = hidden_size # LPKT 中的 d_k
-        self.num_c = num_c             # LPKT 中的 n_question
-        
-        # 1. Q 矩阵
-        # (假设 q_matrix 已经是 tensor 或 ndarray)
-        if isinstance(q_matrix, torch.Tensor):
-            q_matrix = q_matrix.float().to(device)
-        else:
-            q_matrix = torch.from_numpy(q_matrix).float().to(device)
-        
-        q_matrix[q_matrix==0] = 0.03 # gamma (来自 LPKT 论文)
-        self.q_matrix = q_matrix
 
-        # 2. 嵌入层 (it_embed 仍然被定义，但其输出在 forward 中不会被使用)
-        self.it_embed = nn.Embedding(n_it + 10, hidden_size).to(device)
-        torch.nn.init.xavier_uniform_(self.it_embed.weight)
-        
-        # 3. 输入投影
-        # 将 QIKT 的输入 (emb_qca/emb_ca) 投影为 LPKT 的 "学习单元" l_t
-        self.learning_cell_projector = nn.Linear(input_dim, hidden_size).to(device)
-
-        # 4. LPKT 门控线性层 (已移除 it_t 的维度)
-        d_k = hidden_size
-        
-        # 学习增益 g_t (l_{t-1}, l_t, h_tilde_{t-1})
-        # 原: 4 * d_k (包含 it) -> 现: 3 * d_k
-        self.linear_lg = nn.Linear(3 * d_k, d_k).to(device) 
-        
-        # 学习门 gamma_l (l_{t-1}, l_t, h_tilde_{t-1})
-        # 原: 4 * d_k (包含 it) -> 现: 3 * d_k
-        self.linear_learning_gate = nn.Linear(3 * d_k, d_k).to(device)
-        
-        # 遗忘门 gamma_f (h_{t-1}, LG_t)
-        # 原: 3 * d_k (包含 it) -> 现: 2 * d_k
-        self.linear_forget_gate = nn.Linear(2 * d_k, d_k).to(device)
-
-        # 5. 激活函数
-        self.tanh = nn.Tanh()
-        self.sig = nn.Sigmoid()
-        self.dropout = nn.Dropout(dropout)
-        
-    def forward(self, input_seq, q_data, it_data):
-        """
-        核心循环逻辑。
-        - input_seq: (bs, sl, input_dim)，来自 QIKT 的 emb_qca_current 或 emb_ca_current
-        - q_data: (bs, sl)，习题ID序列，用于索引 Q 矩阵
-        - it_data: (bs, sl)，间隔时间ID序列 (此参数被接收但*不*用于计算)
-        """
-        batch_size, seq_len, _ = input_seq.size()
-        d_k = self.hidden_size
-
-        # 1. 预计算所有输入
-        # (bs, sl, d_k)
-        all_learning = self.learning_cell_projector(input_seq)
-        
-        # (bs, sl, d_k)
-        # 我们执行嵌入操作以 "使用" it_data，但结果 `it_embed_data` 不会参与后续计算
-        # 这确保了 `it_data` 参数不是完全“未使用”
-        # it_embed_data = self.it_embed(it_data) 
-        
-        # 2. 初始化状态
-        # (bs, n_concepts, d_k)
-        h_pre = nn.init.xavier_uniform_(
-            torch.zeros(self.num_c + 1, d_k)
-        ).repeat(batch_size, 1, 1).to(self.device)
-        
-        # (bs, d_k)
-        learning_pre = torch.zeros(batch_size, d_k).to(self.device)
-        
-        # (bs, d_k)
-        h_tilde_pre_loop = torch.zeros(batch_size, d_k).to(self.device)
-        
-        # 3. 准备输出序列
-        # (bs, sl, hidden_size)
-        output_h_tilde_seq = torch.zeros(batch_size, seq_len, d_k).to(self.device)
-
-        # 4. 循环遍历序列
-        for t in range(0, seq_len):
-            # --- (A) 准备当前步 t 的输入 ---
-            e = q_data[:, t] # (bs)
-            # (bs, 1, n_concepts)
-            q_e = self.q_matrix[e].view(batch_size, 1, -1)
-            
-            # (bs, d_k)
-            # it = it_embed_data[:, t] # <--- 获取 `it` 但不使用
-            
-            learning = all_learning[:, t] # (bs, d_k)
-
-            # --- (B) 学习模块 (Learning Module) ---
-            # 论文公式 (3) -- 已移除 `it`
-            lg_concat = torch.cat((learning_pre, learning, h_tilde_pre_loop), 1)
-            learning_gain = self.tanh(self.linear_lg(lg_concat))
-            
-            # 论文公式 (4) -- 已移除 `it`
-            gamma_l = self.sig(self.linear_learning_gate(lg_concat))
-            
-            # 论文公式 (5)
-            LG = gamma_l * ((learning_gain + 1) / 2) # (bs, d_k)
-            LG_tilde = self.dropout(
-                q_e.transpose(1, 2).bmm(LG.view(batch_size, 1, -1))
-            ) # (bs, n_concepts, d_k)
-
-            # --- (C) 遗忘模块 (Forgetting Module) ---
-            n_skill = self.num_c + 1
-            
-            # (bs, n_concepts, d_k)
-            LG_repeat = LG.repeat(1, n_skill).view(batch_size, -1, d_k)
-            
-            # it_repeat = it.repeat(1, n_skill).view(batch_size, -1, d_k) # <--- 不再需要
-
-            # 论文公式 (6) -- 已移除 `it_repeat`
-            gamma_f = self.sig(self.linear_forget_gate(
-                torch.cat((h_pre, LG_repeat), 2)
-            )) # (bs, n_concepts, d_k)
-            
-            # 论文公式 (7): 更新知识状态 h_t
-            h = LG_tilde + gamma_f * h_pre # (bs, n_concepts, d_k)
-
-            # --- (D) 计算当前步的输出 h_tilde_t ---
-            # 这就是 QIKT 原始 LSTM 的输出 h，代表更新 *后* 的相关知识
-            # 论文公式 (2)
-            c_tilde = torch.unsqueeze(torch.sum(torch.squeeze(q_e,dim=1), 1),-1) + 1e-8
-            # (bs, d_k)
-            h_tilde = q_e.bmm(h).view(batch_size, d_k) / c_tilde
-            
-            # 存储到输出序列中
-            output_h_tilde_seq[:, t, :] = h_tilde
-
-            # --- (E) 准备下一个循环 ---
-            learning_pre = learning
-            h_pre = h
-            h_tilde_pre_loop = h_tilde
-        
-        # 返回与 LSTM/Mamba 兼容的输出 (第一个是序列，第二个是最终状态)
-        return output_h_tilde_seq, h_pre
 class QIKTNet(nn.Module):
-    def __init__(self, num_q,n_it,q_matrix,num_c,emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',mlp_layer_num=1,other_config={},num_attn_head=2,version="v0"):
+    def __init__(self, num_q,num_c,emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',mlp_layer_num=1,other_config={},num_attn_head=2,version="v0"):
         super().__init__()
-        self.model_name = "qikt_mamba"
+        self.model_name = "qikt_lpkt"
         self.num_q = num_q
         self.num_c = num_c
         self.emb_size = emb_size
@@ -219,7 +157,7 @@ class QIKTNet(nn.Module):
 
         self.version = version
         self.emb_type = emb_type
-      
+
 
         self.que_emb = QueEmb(num_q=num_q,num_c=num_c,emb_size=emb_size,emb_type=self.emb_type,model_name=self.model_name,device=device,
                              emb_path=emb_path,pretrain_dim=pretrain_dim,num_attn_head=num_attn_head)
@@ -257,49 +195,29 @@ class QIKTNet(nn.Module):
             self.four2two = nn.Linear(self.emb_size*2, self.emb_size*4)
             self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, num_layers=2, batch_first=True)
             self.concept_lstm_layer = self.que_lstm_layer
-        
-        elif self.version == "lpkt":
-            print("Using LPKT-RNN Backbone")
-            # 从 config 获取 LPKT 必需的参数
-            # q_matrix = self.other_config.get('q_matrix')
-            # n_it = self.other_config.get('n_it', 301) # 默认 301 个桶
+        elif self.version == "dimkt":
+            # 1. Question Branch DIMKT Layer
+            # 输入构成: emb_q_in (包含 Q, C, SD, QD)
+            # 在 QueEmb 中, 通常返回的 emb_q_in 已经是拼接好的维度 (例如 emb_size * 4)
+            # 这里的 diff_size 我们传入 emb_sd + emb_qd 的维度 (emb_size * 2)
+            self.que_dimkt_layer = DIMKTLayer(
+                input_size=self.emb_size * 4,  # Q + C + SD + QD
+                diff_size=self.emb_size * 2,   # KSU Gate 使用 SD + QD
+                emb_size=self.hidden_size, 
+                dropout=dropout
+            )
             
-            if q_matrix is None:
-                raise ValueError("public_lpkt version requires 'q_matrix' in other_config")
+            # 2. Concept Branch DIMKT Layer
+            # 输入构成: Concept + SD (emb_c_in 通常是 C 的 embedding，这里我们需要手动拼接 SD)
+            # 所以 input_size = emb_size (C) + emb_size (SD) = emb_size * 2
+            # diff_size = emb_size (SD)
+            self.concept_dimkt_layer = DIMKTLayer(
+                input_size=self.emb_size * 2,  # C + SD
+                diff_size=self.emb_size,       # KSU Gate 使用 SD
+                emb_size=self.hidden_size, 
+                dropout=dropout
+            )
 
-            # 1. 实例化 LPKT-RNN 核心
-            
-            
-            # 2. QIKT 的两个分支 (que 和 concept) 共用这一个核心
-            #    (这模仿了 public_mamba 的设计)
-            self.que_lstm_layer = LpktRnnBackbone(
-                input_dim=self.emb_size * 4, # 接收 emb_qca 的维度
-                hidden_size=self.hidden_size,
-                num_q=self.num_q,
-                num_c=self.num_c,
-                q_matrix=q_matrix,
-                n_it=n_it,
-                dropout=dropout,
-                device=device
-            )
-            self.concept_lstm_layer = LpktRnnBackbone(
-                input_dim=self.emb_size * 4, # 接收 emb_qca 的维度
-                hidden_size=self.hidden_size,
-                num_q=self.num_q,
-                num_c=self.num_c,
-                q_matrix=q_matrix,
-                n_it=n_it,
-                dropout=dropout,
-                device=device
-            )
-            
-            # 3. 添加投影层，以匹配 LPKT 核心的输入维度
-            # concept 分支 (emb_size*2) -> LPKT 核心 (emb_size*4)
-            self.four2two = nn.Linear(self.emb_size*2, self.emb_size*4)
-            # que 分支 (emb_size*4) -> LPKT 核心 (emb_size*4) (保持维度)
-            self.que_proj = nn.Identity() 
-            # concept 分支输出 (hidden_size) -> (hidden_size) (保持维度)
-            self.concept_proj = nn.Identity()
         else:
             self.que_lstm_layer = nn.GRU(self.emb_size*4, self.hidden_size, batch_first=True)
             self.concept_lstm_layer = nn.GRU(self.emb_size*2, self.hidden_size, batch_first=True)
@@ -308,6 +226,7 @@ class QIKTNet(nn.Module):
 
             # self.que_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 1024 -> 256
             # self.concept_proj = nn.Linear(self.emb_size*2, self.hidden_size)  # 512 -> 256
+        
         self.dropout_layer = nn.Dropout(dropout)
         
 
@@ -334,7 +253,7 @@ class QIKTNet(nn.Module):
         y_concept = concept_sum.sum(-1)/torch.where(concept_mask.sum(-1)!=0,concept_mask.sum(-1),1)
         return y_concept
 
-    def forward(self, q, c, r,it=None, data=None):
+    def forward(self, q, c, r, data=None):
         # 确保输入张量在 self.device 上
         q = q.to(self.device).long()
         c = c.to(self.device).long()
@@ -342,10 +261,30 @@ class QIKTNet(nn.Module):
         if data is not None:
             data = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in data.items()}
 
-        _, emb_qca, emb_qc, _, emb_c = self.que_emb(q, c, r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
+        if self.emb_type == 'diff':
+            # diff 模式返回 6 个值
+            emb_q_in, emb_c_in, emb_sd, emb_qd, emb_a, emb_qc = self.que_emb(q, c, r, data=data)
+        else:
+            _, emb_qca, emb_qc, _, emb_c = self.que_emb(q, c, r)
+        # 2. 准备序列切片 (Slicing)
+        # 输入给 DIMKT Layer 的序列 (t=0 到 t=N-1) 用于更新状态
+        if self.emb_type == 'diff':
+            emb_sd_seq = emb_sd[:, :-1, :]
+            emb_qd_seq = emb_qd[:, :-1, :]
+            emb_q_seq  = emb_q_in[:, :-1, :]
+            emb_c_seq  = emb_c_in[:, :-1, :]
+            emb_a_seq  = emb_a[:, :-1, :]
+            emb_q_shift = emb_q_in[:, 1:, :] 
+            emb_c_shift = emb_c_in[:, 1:, :]
+        else:
+            emb_qca_current = emb_qca[:, :-1, :]
+
+        
+
+        # 用于预测的 Shift 序列 (t=1 到 t=N) 用于计算 Loss
+        # 注意：Question分支和Concept分支的 Shift 输入是不同的
         
         emb_qc_shift = emb_qc[:, 1:, :]
-        emb_qca_current = emb_qca[:, :-1, :]
         # question model
         if self.version == "lstm":
 
@@ -367,21 +306,34 @@ class QIKTNet(nn.Module):
 
             que_h = self.dropout_layer(self.que_lstm_layer((emb_qca_current)))
             que_h = self.que_proj(que_h)
+        elif self.version == "dimkt":
+            # 构造 Question 分支的输入
+            # input_emb: 直接使用 emb_q_seq (包含 Q, C, SD, QD) -> 对应 feature_fusion 输入
+            # diff_emb: 拼接 SD 和 QD -> 对应 KSU Gate 显式输入
+            diff_q_branch = torch.cat([emb_sd_seq, emb_qd_seq], dim=-1)
+            
+            que_h, _ = self.que_dimkt_layer(
+                input_emb=emb_q_seq,     # [batch, seq, 4*emb]
+                diff_emb=diff_q_branch,  # [batch, seq, 2*emb]
+                a_emb=emb_a_seq
+            )
+            que_h = self.dropout_layer(que_h)
+
         else:
             #原版
             
-            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current,q,it)[0])
+            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
         # print(f"[DEBUG] que_h.shape: {que_h.shape} (type: {type(que_h.shape)})")
         que_outputs = get_outputs(self, emb_qc_shift, que_h, data, add_name="", model_type="question")
         outputs = que_outputs
-
-        # concept model
-        emb_ca = torch.cat([
-            emb_c.mul((1 - r).unsqueeze(-1).repeat(1, 1, self.emb_size)),
-            emb_c.mul(r.unsqueeze(-1).repeat(1, 1, self.emb_size))
-        ], dim=-1)
-        
-        emb_ca_current = emb_ca[:, :-1, :]
+        if self.emb_type != 'diff':
+            # concept model
+            emb_ca = torch.cat([
+                emb_c.mul((1 - r).unsqueeze(-1).repeat(1, 1, self.emb_size)),
+                emb_c.mul(r.unsqueeze(-1).repeat(1, 1, self.emb_size))
+            ], dim=-1)
+            
+            emb_ca_current = emb_ca[:, :-1, :]
         if self.version == "lstm":
             #mamba
             concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
@@ -403,11 +355,24 @@ class QIKTNet(nn.Module):
             concept_h = self.concept_lstm_layer(self.four2two(emb_ca_current))  # [32, 199, 512]
             concept_h = self.concept_proj(concept_h)  # [32, 199, 256]
             concept_h = self.dropout_layer(concept_h)
+        elif self.version == "dimkt":
+            # 构造 Concept 分支的输入
+            # 输入: Concept + Concept Difficulty
+            input_c_branch = torch.cat([emb_c_seq, emb_sd_seq], dim=-1) # [batch, seq, 2*emb]
+            
+            # KSU Gate 只使用 Concept Difficulty
+            diff_c_branch = emb_sd_seq # [batch, seq, emb]
+
+            concept_h, _ = self.concept_dimkt_layer(
+                input_emb=input_c_branch, # [batch, seq, 2*emb]
+                diff_emb=diff_c_branch,   # [batch, seq, emb]
+                a_emb=emb_a_seq
+            )
+            concept_h = self.dropout_layer(concept_h)
         else:
             #原版
             
-            projected_emb_ca = self.four2two(emb_ca_current)
-            concept_h = self.dropout_layer(self.concept_lstm_layer(projected_emb_ca,q,it)[0])
+            concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
         concept_outputs = get_outputs(self, emb_qc_shift, concept_h, data, add_name="", model_type="concept")
         outputs['y_concept_all'] = concept_outputs['y_concept_all']
         outputs['y_concept_next'] = concept_outputs['y_concept_next']
@@ -415,14 +380,14 @@ class QIKTNet(nn.Module):
         return outputs
 
 class QIKT_LPKT(QueBaseModel):
-    def __init__(self, num_q,n_it,q_matrix,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",num_attn_head=2,**kwargs):
+    def __init__(self, num_q,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",num_attn_head=2,**kwargs):
         model_name = "qikt_mamba"
         if 'inter_group_auc_lambda' not in other_config:
             other_config['inter_group_auc_lambda'] = 0.1
         debug_print(f"emb_type is {emb_type}",fuc_name="QIKT")
 
         super().__init__(model_name=model_name,emb_type=emb_type,emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,seed=seed)
-        self.model = QIKTNet(num_q=num_q,n_it=n_it,q_matrix=q_matrix,num_c=num_c,emb_size=emb_size,dropout=dropout,emb_type=emb_type,
+        self.model = QIKTNet(num_q=num_q,num_c=num_c,emb_size=emb_size,dropout=dropout,emb_type=emb_type,
                                emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,mlp_layer_num=mlp_layer_num,other_config=other_config,num_attn_head=num_attn_head,version=version)
         # 新增：支持动态权重的模块
         self.version = version
@@ -633,8 +598,8 @@ class QIKT_LPKT(QueBaseModel):
 
     def predict_one_step(self, data, return_details=False, process=True, return_raw=False):
         data_new = self.batch_to_device(data, process=process)
-        # cit = torch.cat((data_new["itseqs"][:,0:1], data_new["shft_itseqs"]), dim=1)
-        outputs = self.model(data_new['cq'].long(), data_new['cc'], data_new['cr'].long(),it=None, data=data_new)
+        outputs = self.model(data_new['cq'].long(), data_new['cc'], data_new['cr'].long(), data=data_new)
+
         # 原有固定权重
         output_c_all_lambda = self.model.other_config.get('output_c_all_lambda', 1)
         output_c_next_lambda = self.model.other_config.get('output_c_next_lambda', 1)
