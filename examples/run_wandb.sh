@@ -42,7 +42,7 @@ DEFAULT_PROJECT_NAME="${DATASET_NAME}_${MODEL_NAME}_${MARK}"
 
 # --- 其他配置 ---
 GPU_IDS="0"                 
-BATCH_SIZE=128
+BATCH_SIZE=64
 SWEEP_START_ID=0            
 SWEEP_END_ID=100            
 EXECUTE_AGENTS=true         

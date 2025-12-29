@@ -1,11 +1,11 @@
-program: wandb_qikt_lpkt_train.py
+program: wandb_qikt_dimkt_train.py
 method: bayes
 metric:
     goal: maximize
     name: validauc
 parameters:
     model_name:
-        values: ["qikt_lpkt"]
+        values: ["qikt_dimkt"]
         
     # ==========================================
     # ⚠️ 脚本占位符 (请勿修改，用于generate_wandb.py替换)
@@ -13,7 +13,7 @@ parameters:
     dataset_name:
         values: ["xes"]            # 脚本会将 "xes" 替换为具体数据集名 (如 assist2009)
     emb_type:
-        values: ["iekt","attn"]            # 脚本会将 "qid" 替换为 "diff" (如果你在命令行指定了)
+        values: ["diff"]            # 脚本会将 "qid" 替换为 "diff" (如果你在命令行指定了)
     save_dir:
         values: ["models/xdkt_tiaocan"] # 脚本会处理后缀
     fold:
@@ -27,9 +27,9 @@ parameters:
     batch_size:
         values: [32]
     output_mode:
-        values: ['an_irt']         # 命令中修改为 'an_irt'
+        values: ["an_irt"]         # 命令中修改为 'an_irt'
     version:
-        values: ["lpkt"]          # 新增: 命令中使用的版本
+        values: ["dimkt"]          # 新增: 命令中使用的版本
 
     # ==========================================
     # 🔍 搜索/调优空间 (根据命令中的变化值设定)
@@ -51,3 +51,5 @@ parameters:
 
     output_mode:
         values: ['OUTPUT_MODEL']
+    batch_size:
+        values: [32]

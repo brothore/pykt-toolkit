@@ -229,13 +229,21 @@ def parse_and_calculate_aucs_from_file(file_path):
         max_auc = valid_aucs.max()
         min_auc = valid_aucs.min()
         range_auc = max_auc - min_auc
+        denominator = std_auc * range_auc
         
+        if denominator == 0:
+            # 如果标准差或极差为0 (说明所有学生AUC完全一致)，避免除以零报错
+            custom_ratio = 0.0 
+            print("警告: 标准差或极差为0，自定义指标设为 0.0")
+        else:
+            custom_ratio = mean_auc / denominator
         stats = {
             'mean': mean_auc, 
             'std': std_auc, 
             'max': max_auc, 
             'min': min_auc, 
-            'range': range_auc
+            'range': range_auc,
+            'epi': custom_ratio
         }
         # === 新增：在返回前计算基尼系数和 EAWI ===
         valid_aucs_list = valid_aucs.tolist()  # 用于计算财富不平等指标

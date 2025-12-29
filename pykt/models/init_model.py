@@ -160,6 +160,14 @@ def init_model(model_name, model_config, data_config, emb_type):
         from .qikt_mamba import QIKT_MAMBA
         model = QIKT_MAMBA(num_q=data_config['num_q'], num_c=data_config['num_c'],
                      max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
+    elif model_name == "qikt_iekt":
+        from .qikt_iekt import QIKT_IEKT
+        model = QIKT_IEKT(num_q=data_config['num_q'], num_c=data_config['num_c'],
+                     max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
+    elif model_name == "qikt_dimkt":
+        from .qikt_dimkt import QIKT_DIMKT
+        model = QIKT_DIMKT(num_q=data_config['num_q'], num_c=data_config['num_c'],
+                     max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
     elif model_name == "qikt_lpkt":
         from .qikt_lpkt import QIKT_LPKT
         qmatrix_path = os.path.join(data_config["dpath"], "qmatrix.npz")

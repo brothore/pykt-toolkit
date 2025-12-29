@@ -15,7 +15,7 @@ import json
 from datetime import datetime
 def copy_and_update_seedwandb_yaml(script_dir, base_model, new_model):
     """
-    复制 examples/seedwandb 下的 yaml 配置并修改 model_name
+    复制 examples/seedwandb 下的 yaml 配置并修改 model_name 和 program
     """
     src_yaml = os.path.join(script_dir, "examples", "seedwandb", f"{base_model}.yaml")
     dst_yaml = os.path.join(script_dir, "examples", "seedwandb", f"{new_model}.yaml")
@@ -34,22 +34,33 @@ def copy_and_update_seedwandb_yaml(script_dir, base_model, new_model):
     # 2. 读取并修改内容
     with open(dst_yaml, 'r', encoding='utf-8') as f:
         content = f.read()
-
-    # 使用正则匹配 model_name 下面的 values 列表
-    # 匹配结构: model_name: (换行) (缩进) values: ["旧名字"]
-    # 捕获组1: model_name header + values前缀
-    # 捕获组2: 列表的中括号结尾
-    pattern = r'(model_name:\s*\n\s+values:\s*\[)(?:["\'].*?["\'])(])'
     
-    # 替换为新模型名字
-    new_content = re.sub(pattern, f'\\1"{new_model}"\\2', content)
+    original_content = content
 
-    if content != new_content:
+    # --- 修改 1: 替换 program 文件名 ---
+    # 目标: 将 program: xxxx/xxxx.py 替换为 program: xxxx/wandb_{new_model}_train.py
+    # 逻辑: 保留路径前缀（如果有），只替换文件名部分
+    # 正则解释: 
+    # (program:\s+(?:.*[/\\])?) -> 捕获组1: 匹配 "program: " 加上可能存在的目录路径
+    # [^/\\\s]+\.py -> 匹配旧的 .py 文件名（不包含路径）
+    content = re.sub(
+        r'(program:\s+(?:.*[/\\])?)[^/\\\s]+\.py', 
+        f'\\1wandb_{new_model}_train.py', 
+        content
+    )
+
+    # --- 修改 2: 替换 model_name ---
+    # 匹配结构: model_name: (换行) (缩进) values: ["旧名字"]
+    pattern_model = r'(model_name:\s*\n\s+values:\s*\[)(?:["\'].*?["\'])(])'
+    content = re.sub(pattern_model, f'\\1"{new_model}"\\2', content)
+
+    # 3. 写入文件（如果内容发生了变化）
+    if content != original_content:
         with open(dst_yaml, 'w', encoding='utf-8') as f:
-            f.write(new_content)
+            f.write(content)
         return True, dst_yaml
     else:
-        print(f"⚠️ 在 {dst_yaml} 中未匹配到 model_name 配置结构，仅完成了复制")
+        print(f"⚠️ 在 {dst_yaml} 中未匹配到需修改的字段，仅完成了复制")
         return True, dst_yaml
 def search_and_add_to_string_lists(line, base_model, new_model):
     """

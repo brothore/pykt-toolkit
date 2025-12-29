@@ -213,7 +213,7 @@ def main(params):
                 train_config["batch_size"] = 64 ## because of OOM
             if model_name in ["gkt"]:
                 train_config["batch_size"] = 16 
-            if model_name in ["qdkt","qikt", "qikt_mamba", "qikt_lpkt"] and dataset_name in ['algebra2005','bridge2algebra2006', "qikt_mamba", "qikt_lpkt"]:
+            if model_name in ["qdkt","qikt", "qikt_mamba", "qikt_lpkt", "qikt_dimkt", "qikt_iekt"] and dataset_name in ['algebra2005','bridge2algebra2006', "qikt_mamba", "qikt_lpkt", "qikt_dimkt", "qikt_iekt"]:
                 train_config["batch_size"] = 32 
             if model_name in ["dtransformer"]:
                 train_config["batch_size"] = 16 ## because of OOM
