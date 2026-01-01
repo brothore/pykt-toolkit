@@ -123,6 +123,10 @@ def main(params):
     # print(f"question_testauc: {question_testauc}, question_testacc: {question_testacc}, question_window_testauc: {question_window_testauc}, question_window_testacc: {question_window_testacc}")
     
     print(dres)
+    dres_save_path = os.path.join(save_dir, "all_results.json")
+    with open(dres_save_path, 'w') as f:
+        json.dump(dres, f, indent=4)
+    print(f"dres saved to {dres_save_path}")
     raw_config = json.load(open(os.path.join(save_dir,"config.json")))
     dres.update(raw_config['params'])
 

@@ -164,6 +164,22 @@ def init_model(model_name, model_config, data_config, emb_type):
         from .qikt_iekt import QIKT_IEKT
         model = QIKT_IEKT(num_q=data_config['num_q'], num_c=data_config['num_c'],
                      max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
+    elif model_name == "qikt_iekt_train":
+        from .qikt_iekt_train import QIKT_IEKT_TRAIN
+        model = QIKT_IEKT_TRAIN(num_q=data_config['num_q'], num_c=data_config['num_c'],
+                     max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
+    elif model_name == "qikt_iekt_low_dropout":
+        from .qikt_iekt_low_dropout import QIKT_IEKT_LOW_DROPOUT
+        model = QIKT_IEKT_LOW_DROPOUT(num_q=data_config['num_q'], num_c=data_config['num_c'],
+                     max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
+    elif model_name == "qikt_iekt_dual":
+        from .qikt_iekt_dual import QIKT_IEKT_DUAL
+        model = QIKT_IEKT_DUAL(num_q=data_config['num_q'], num_c=data_config['num_c'],
+                     max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
+    elif model_name == "qikt_iekt_mask":
+        from .qikt_iekt_mask import QIKT_IEKT_MASK
+        model = QIKT_IEKT_MASK(num_q=data_config['num_q'], num_c=data_config['num_c'],
+                     max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
     elif model_name == "qikt_dimkt":
         from .qikt_dimkt import QIKT_DIMKT
         model = QIKT_DIMKT(num_q=data_config['num_q'], num_c=data_config['num_c'],

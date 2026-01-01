@@ -62,7 +62,7 @@ def get_outputs(self, emb_qc_shift, h, data, add_name="", model_type='question')
 class QIKTNet(nn.Module):
     def __init__(self, num_q,num_c,emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',mlp_layer_num=1,other_config={},num_attn_head=2,version="v0",acq_levels = 10):
         super().__init__()
-        self.model_name = "qikt_iekt"
+        self.model_name = "qikt_iekt_train"
         self.num_q = num_q
         self.num_c = num_c
         self.emb_size = emb_size
@@ -199,47 +199,47 @@ class QIKTNet(nn.Module):
 
             que_h = self.dropout_layer(self.que_lstm_layer((emb_qca_current)))
             que_h = self.que_proj(que_h)
-        elif self.version == "iekt":
+        elif self.version == "iekt": # 假设你给这个版本起了个名字
             seq_len = emb_qca_current.size(1) 
-            que_h_seq = [] 
-            
-            # 【Ablation Study 模式：屏蔽 RL，验证串行骨干】
+            que_h_seq = [] # 收集每一步的 h
+            # 【核心循环：串行处理】
             for t in range(seq_len):
                 # A. 获取当前时刻输入 [Batch, 4*Emb]
+                # 这就是你说的 "将 emb_qca 看作 out_x"
                 xt = emb_qca_current[:, t, :] 
                 
-                # --- [修改开始] ---
+                # B. 策略网络采样 (Sampling Mastery)
+                # 计算概率
+                policy_input = torch.cat([xt, h_que], dim=1)
+                policy_logits = self.policy_net(policy_input) # [Batch, 10]
+                probs = F.softmax(policy_logits, dim=-1)
                 
-                # 1. 强制 Mastery Vector 为全 0
-                # 这样 GRUCell 看到的只是原始题目特征，没有任何随机噪声
-                mastery_vec = torch.zeros(batch_size, self.emb_size).to(self.device)
+                # 采样动作
+                m = Categorical(probs)
+                if self.training:
+                    action = m.sample() # 训练时探索
+                else:
+                    action = torch.argmax(probs, dim=-1)
                 
-                # 2. 生成假数据 (Dummy Data) 填充 rl_data
-                # 必须填充！否则 train_one_step 里的 torch.stack 会报错
-                # 生成均匀概率 [0.1, 0.1, ...]
-                dummy_probs = torch.ones(batch_size, self.acq_levels).to(self.device) / self.acq_levels
-                # 生成全 0 动作
-                dummy_action = torch.zeros(batch_size).long().to(self.device)
+                # 查表获取掌握度向量 [Batch, Emb]
+                mastery_vec = self.acq_matrix[action]
                 
-                # 3. 记录假数据
-                # 这样 train_one_step 可以正常运行，虽然算出来的 RL Loss 没意义，
-                # 但只要你设置 lambda_rl 比较小，或者主要观察 AUC 即可。
-                self.rl_data["probs"].append(dummy_probs)
-                self.rl_data["actions"].append(dummy_action)
+                # 记录数据用于 RL Loss
+                self.rl_data["probs"].append(probs)
+                self.rl_data["actions"].append(action)
                 
-                # --- [修改结束] ---
-                
-                # C. 拼接输入
-                # GRU 输入 = 原始输入(4*emb) + 全0向量(1*emb)
+                # C. 拼接输入 (Input Fusion)
+                # GRU 输入 = 原始输入(4*emb) + 掌握度向量(1*emb)
                 gru_input = torch.cat([xt, mastery_vec], dim=1) # [Batch, 5*Emb]
                 
-                # D. GRU 单元更新
+                # D. GRU 单元更新 (State Update)
+                # h_que 更新为下一次的 ht
                 h_que = self.que_lstm_cell(gru_input, h_que)
                 
                 # E. 收集状态
                 que_h_seq.append(h_que)
             
-            # 堆叠回序列张量
+            # 堆叠回序列张量 [Batch, Seq-1, Hidden]
             que_h = torch.stack(que_h_seq, dim=1)
             que_h = self.dropout_layer(que_h)
         else:
@@ -288,7 +288,7 @@ class QIKTNet(nn.Module):
         
         return outputs
 
-class QIKT_IEKT(QueBaseModel):
+class QIKT_IEKT_TRAIN(QueBaseModel):
     def __init__(self, num_q,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",num_attn_head=2,gamma=0.93,lambda_rl=0.1,acq_levels=10,**kwargs):
         model_name = "qikt_iekt"
         self.gamma = gamma

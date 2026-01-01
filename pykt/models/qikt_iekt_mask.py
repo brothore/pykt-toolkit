@@ -62,7 +62,7 @@ def get_outputs(self, emb_qc_shift, h, data, add_name="", model_type='question')
 class QIKTNet(nn.Module):
     def __init__(self, num_q,num_c,emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',mlp_layer_num=1,other_config={},num_attn_head=2,version="v0",acq_levels = 10):
         super().__init__()
-        self.model_name = "qikt_iekt"
+        self.model_name = "qikt_iekt_mask"
         self.num_q = num_q
         self.num_c = num_c
         self.emb_size = emb_size
@@ -199,47 +199,44 @@ class QIKTNet(nn.Module):
 
             que_h = self.dropout_layer(self.que_lstm_layer((emb_qca_current)))
             que_h = self.que_proj(que_h)
-        elif self.version == "iekt":
+        elif self.version == "iekt": # 假设你给这个版本起了个名字
             seq_len = emb_qca_current.size(1) 
-            que_h_seq = [] 
-            
-            # 【Ablation Study 模式：屏蔽 RL，验证串行骨干】
+            que_h_seq = [] # 收集每一步的 h
+            # 【核心循环：串行处理】
             for t in range(seq_len):
                 # A. 获取当前时刻输入 [Batch, 4*Emb]
+                # 这就是你说的 "将 emb_qca 看作 out_x"
                 xt = emb_qca_current[:, t, :] 
                 
-                # --- [修改开始] ---
+                # B. 策略网络采样 (Sampling Mastery)
+                # 计算概率
+                policy_input = torch.cat([xt, h_que], dim=1)
+                policy_logits = self.policy_net(policy_input) # [Batch, 10]
+                probs = F.softmax(policy_logits, dim=-1)
                 
-                # 1. 强制 Mastery Vector 为全 0
-                # 这样 GRUCell 看到的只是原始题目特征，没有任何随机噪声
-                mastery_vec = torch.zeros(batch_size, self.emb_size).to(self.device)
+                # 采样动作
+                m = Categorical(probs)
+                action = m.sample() # [Batch]
                 
-                # 2. 生成假数据 (Dummy Data) 填充 rl_data
-                # 必须填充！否则 train_one_step 里的 torch.stack 会报错
-                # 生成均匀概率 [0.1, 0.1, ...]
-                dummy_probs = torch.ones(batch_size, self.acq_levels).to(self.device) / self.acq_levels
-                # 生成全 0 动作
-                dummy_action = torch.zeros(batch_size).long().to(self.device)
+                # 查表获取掌握度向量 [Batch, Emb]
+                mastery_vec = self.acq_matrix[action]
                 
-                # 3. 记录假数据
-                # 这样 train_one_step 可以正常运行，虽然算出来的 RL Loss 没意义，
-                # 但只要你设置 lambda_rl 比较小，或者主要观察 AUC 即可。
-                self.rl_data["probs"].append(dummy_probs)
-                self.rl_data["actions"].append(dummy_action)
+                # 记录数据用于 RL Loss
+                self.rl_data["probs"].append(probs)
+                self.rl_data["actions"].append(action)
                 
-                # --- [修改结束] ---
-                
-                # C. 拼接输入
-                # GRU 输入 = 原始输入(4*emb) + 全0向量(1*emb)
+                # C. 拼接输入 (Input Fusion)
+                # GRU 输入 = 原始输入(4*emb) + 掌握度向量(1*emb)
                 gru_input = torch.cat([xt, mastery_vec], dim=1) # [Batch, 5*Emb]
                 
-                # D. GRU 单元更新
+                # D. GRU 单元更新 (State Update)
+                # h_que 更新为下一次的 ht
                 h_que = self.que_lstm_cell(gru_input, h_que)
                 
                 # E. 收集状态
                 que_h_seq.append(h_que)
             
-            # 堆叠回序列张量
+            # 堆叠回序列张量 [Batch, Seq-1, Hidden]
             que_h = torch.stack(que_h_seq, dim=1)
             que_h = self.dropout_layer(que_h)
         else:
@@ -288,7 +285,7 @@ class QIKTNet(nn.Module):
         
         return outputs
 
-class QIKT_IEKT(QueBaseModel):
+class QIKT_IEKT_MASK(QueBaseModel):
     def __init__(self, num_q,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",num_attn_head=2,gamma=0.93,lambda_rl=0.1,acq_levels=10,**kwargs):
         model_name = "qikt_iekt"
         self.gamma = gamma
@@ -390,30 +387,53 @@ class QIKT_IEKT(QueBaseModel):
 
         
         if self.version == "iekt":
-            probs_seq = torch.stack(self.model.rl_data["probs"], dim=1) # [B, T, K]
-            actions_seq = torch.stack(self.model.rl_data["actions"], dim=1) # [B, T]
-            y_pred = outputs['y']
-            current_seq_len = y_pred.shape[1]
-            preds = (outputs['y'] > 0.5).long()
-            targets = data_new['rshft'][:, :current_seq_len] # 注意序列长度对齐
+            # 1. 获取模型输出的预测结果
+            y_pred = outputs['y'] # Shape: [Batch, Seq_Len_Model] (例如 199)
+            
+            # 2. 【修复关键点】动态获取序列长度，确保对齐
+            # 不要硬编码 [:, :-1]，而是根据模型输出长度来截取标签
+            current_seq_len = y_pred.shape[1] 
+            
+            # 3. 对齐标签
+            # rshft 通常是 [Batch, 200]，我们需要截取前 current_seq_len 个
+            targets = data_new['rshft'][:, :current_seq_len] # Shape: [Batch, 199]
+            
+            # 4. 对齐预测结果 (通常不需要切，但为了保险)
+            preds = (y_pred > 0.5).long() # Shape: [Batch, 199]
+
+            # 5. 计算 Reward
+            # 现在 preds 和 targets 的维度在 dim=1 上完全一致了
             rewards = (preds == targets).float()
 
+            # 6. 获取 RL 数据
+            probs_seq = torch.stack(self.model.rl_data["probs"], dim=1) # [B, T, K]
+            actions_seq = torch.stack(self.model.rl_data["actions"], dim=1) # [B, T]
+
+            # (双重保险) 确保 RL 记录的长度和 Reward 长度一致
+            # 如果 rl_data 只有 198 步 (极少情况)，则截断 reward
+            min_len = min(rewards.shape[1], probs_seq.shape[1])
+            rewards = rewards[:, :min_len]
+            probs_seq = probs_seq[:, :min_len, :]
+            actions_seq = actions_seq[:, :min_len]
+
+            # 7. 计算 Advantage (倒序)
             advantages = []
             adv = 0
-            # 倒序计算
             for t in reversed(range(rewards.shape[1])):
                 adv = rewards[:, t] + self.gamma * adv
                 advantages.insert(0, adv)
             advantages = torch.stack(advantages, dim=1).detach() # [B, T]
             
-            # Gather 选中动作的概率
+            # 8. 计算 RL Loss
             selected_probs = probs_seq.gather(2, actions_seq.unsqueeze(-1)).squeeze(-1)
-            
-            # Policy Gradient Loss: -log(p) * advantage
             loss_rl = -torch.log(selected_probs + 1e-8) * advantages
-            loss_rl = loss_rl.mean() # 或者 mask mean
+            
+            # 使用 Mask 过滤掉 padding 的部分 (sm)
+            # 同样需要对齐 sm 的长度
+            mask = data_new['sm'][:, :min_len]
+            loss_rl = (loss_rl * mask).sum() / (mask.sum() + 1e-8)
 
-            total_loss = loss + self.lambda_rl * loss_rl
+            total_loss = loss + self.lambda_rl * loss_rl # 确保你在 init 里定义了 lambda_rl
         else:
             total_loss = loss
 
