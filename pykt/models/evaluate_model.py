@@ -13,7 +13,44 @@ device = "cpu" if not torch.cuda.is_available() else "cuda"
 import os
 from datetime import datetime
 import ast
+import threading
+import queue
 current_time = datetime.now().strftime('%m_%d')
+class AsyncWriter:
+    def __init__(self, save_path):
+        self.save_path = save_path
+        self.queue = queue.Queue()
+        self.thread = threading.Thread(target=self._write_loop)
+        self.stop_signal = object()  # 哨兵对象
+        self.fout = None
+        
+    def start(self):
+        self.fout = open(self.save_path, "w", encoding="utf8")
+        # 写入表头
+        header = "orirow\tqidx\tlate_trues\tlate_mean\tquestions\tconcepts\n"
+        self.fout.write(header)
+        self.thread.start()
+        
+    def write(self, result_str):
+        """主线程调用此方法，几乎瞬间完成"""
+        self.queue.put(result_str)
+        
+    def _write_loop(self):
+        """子线程在后台运行"""
+        while True:
+            item = self.queue.get()
+            if item is self.stop_signal:
+                break
+            if self.fout:
+                self.fout.write(item + "\n")
+            self.queue.task_done()
+            
+    def close(self):
+        """等待所有写入完成并关闭"""
+        self.queue.put(self.stop_signal)
+        self.thread.join() # 等待子线程结束
+        if self.fout:
+            self.fout.close()
 def safe_roc_auc(y_true, y_score, dummy_score_strategy='mean'):
     # """
     # 计算 AUC，处理单一类别情况通过添加虚拟数据点。
@@ -422,11 +459,14 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             num_layers=num_layers,
             mode="eval"  # 标记为评估模式，确保与训练模式分离
         )
+    writer = None
     if save_path != "":
-        fout = open(save_path, "w", encoding="utf8")
-        # 写入表头
-        header = "orirow\tqidx\tlate_trues\tlate_mean\tquestions\tconcepts\n"
-        fout.write(header)
+        writer = AsyncWriter(save_path)
+        writer.start()
+        # fout = open(save_path, "w", encoding="utf8")
+        # # 写入表头
+        # header = "orirow\tqidx\tlate_trues\tlate_mean\tquestions\tconcepts\n"
+        # fout.write(header)
     student_time_step_tracker = {}
     with torch.no_grad():
         y_trues = []
@@ -573,24 +613,39 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 y = model(q.long(),c.long(),sd.long(),qd.long(),r.long(),qshft.long(),cshft.long(),sdshft.long(),qdshft.long())
             # print(f"after y: {y.shape}")
             # save predict result
-            if save_path != "":
-                # print(f"save_path:{save_path}")
-                # print(f"qshft.shape{qshft.shape}")
-                # print(f"cshft.shape{cbshft.shape}")
-                # print(cbshft)
-                result = save_cur_predict_result(dres, cb,q, r, cbshft,qshft, rshft, m, sm, y, uids, student_time_step_tracker)
-                # print("got result:{result}")
-                fout.write(result+"\n")
-
+            # if save_path != "":
+            #     # print(f"save_path:{save_path}")
+            #     # print(f"qshft.shape{qshft.shape}")
+            #     # print(f"cshft.shape{cbshft.shape}")
+            #     # print(cbshft)
+            #     result = save_cur_predict_result(dres, cb,q, r, cbshft,qshft, rshft, m, sm, y, uids, student_time_step_tracker)
+            #     # print("got result:{result}")
+            #     fout.write(result+"\n")
+            if writer is not None:
+                # 生成结果字符串 (这是纯 CPU 字符串操作，依然会消耗一点 CPU，但不会阻塞 GPU 等 I/O)
+                # 注意：传入的数据必须已经转回 CPU 或者是普通 python 变量
+                result_str = save_cur_predict_result(dres, cb,q, r, cbshft,qshft, rshft, m, sm, y, uids, student_time_step_tracker) 
+                
+                # 2. 扔进队列，瞬间返回
+                writer.write(result_str)
             if model_name not in ["llm", "mpllm"]:
-                y = torch.masked_select(y, sm).detach().cpu()
+                y = torch.masked_select(y, sm).detach().to("cpu", non_blocking=True)
             # print(f"pred_results:{y}")  
-            t = torch.masked_select(rshft, sm).detach().cpu()
-            y_trues.append(t.numpy())
-            y_scores.append(y.numpy())
+            t = torch.masked_select(rshft, sm).detach().to("cpu", non_blocking=True)
+
+
+
+            # y_trues.append(t.numpy())
+            # y_scores.append(y.numpy())
+            y_trues.append(t)
+            y_scores.append(y)
             test_mini_index+=1
-        ts = np.concatenate(y_trues, axis=0)
-        ps = np.concatenate(y_scores, axis=0)
+        # ts = np.concatenate(y_trues, axis=0)
+        if writer is not None:
+            writer.close()
+        # ps = np.concatenate(y_scores, axis=0)
+        ps = torch.cat(y_scores).numpy() 
+        ts = torch.cat(y_trues).numpy()
         # print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
         auc = safe_roc_auc(y_true=ts, y_score=ps)
 
@@ -691,7 +746,15 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
                 q, c, r = dcur["qseqs"], dcur["cseqs"], dcur["rseqs"] 
                 qshft, cshft, rshft= dcur["shft_qseqs"], dcur["shft_cseqs"], dcur["shft_rseqs"]
             m, sm = dcur["masks"], dcur["smasks"]
-            q, c, r, qshft, cshft, rshft, m, sm = q.to(device), c.to(device), r.to(device), qshft.to(device), cshft.to(device), rshft.to(device), m.to(device), sm.to(device)
+            # q, c, r, qshft, cshft, rshft, m, sm = q.to(device), c.to(device), r.to(device), qshft.to(device), cshft.to(device), rshft.to(device), m.to(device), sm.to(device)
+            q = q.to(device, non_blocking=True)
+            c = c.to(device, non_blocking=True)
+            r = r.to(device, non_blocking=True)
+            qshft = qshft.to(device, non_blocking=True)
+            cshft = cshft.to(device, non_blocking=True)
+            rshft = rshft.to(device, non_blocking=True)
+            m = m.to(device, non_blocking=True)
+            sm = sm.to(device, non_blocking=True)
             if model.model_name in que_type_models and model_name not in ["lpkt", "rkt", "promptkt", "unikt"]:
                 model.model.eval()
             elif model_name not in ["llm", "mpllm"]:
@@ -1227,7 +1290,11 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             if model_name in ["dimkt"]:
                 q, c, r ,sd, qd= dcurori["qseqs"], dcurori["cseqs"], dcurori["rseqs"],dcurori["sdseqs"],dcurori["qdseqs"]
                 qshft, cshft, rshft, sdshft, qdshft = dcurori["shft_qseqs"], dcurori["shft_cseqs"], dcurori["shft_rseqs"], dcurori["shft_sdseqs"],dcurori["shft_qdseqs"]
-                sd, qd, sdshft, qdshft = sd.to(device), qd.to(device), sdshft.to(device), qdshft.to(device)
+                # sd, qd, sdshft, qdshft = sd.to(device), qd.to(device), sdshft.to(device), qdshft.to(device)
+                sd = sd.to(device, non_blocking=True)
+                qd = qd.to(device, non_blocking=True)
+                sdshft = sdshft.to(device, non_blocking=True)
+                qdshft = qdshft.to(device, non_blocking=True)
             else:    
                 q, c, r = dcurori["qseqs"], dcurori["cseqs"], dcurori["rseqs"]
                 qshft, cshft, rshft = dcurori["shft_qseqs"], dcurori["shft_cseqs"], dcurori["shft_rseqs"]

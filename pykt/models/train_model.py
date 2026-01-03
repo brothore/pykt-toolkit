@@ -530,9 +530,10 @@ def model_forward(model, data, rel=None):
     return loss
     
 
-def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, test_loader=None, test_window_loader=None, save_model=False, data_config=None, fold=None,use_trained=0):
+def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, test_loader=None, test_window_loader=None, save_model=False, data_config=None, fold=None,use_trained=0, accumulation_steps=1):
     max_auc, best_epoch = 0, -1
     train_step = 0
+
     model_path = os.path.join(ckpt_path, model.emb_type + "_model.ckpt")
     if os.path.exists(model_path) and use_trained==1:
         print(f"检测到预训练模型文件，正在从 {model_path} 加载...")
@@ -573,7 +574,7 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
         scheduler = torch.optim.lr_scheduler.StepLR(opt, 10, gamma=0.5)
     for i in range(1, num_epochs + 1):
         loss_mean = []
-        for data in train_loader:
+        for batch_idx, data in enumerate(train_loader):
             train_step+=1
             if model.model_name in que_type_models and model.model_name not in ["lpkt", "rkt"]:
                 model.model.train()
@@ -592,21 +593,39 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
             if model.model_name not in ["hcgkt","abqr"]:
 
                 opt.zero_grad()
-                loss.backward()#compute gradients
-                if model.model_name == "rkt":
-                    clip_grad_norm_(model.parameters(), model.grad_clip)
-                if model.model_name == "dtransformer":
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-                opt.step()#update model’s parameters
+                loss_scaled = loss / accumulation_steps
+                loss_scaled.backward()
+                if (batch_idx + 1) % accumulation_steps == 0:
+                    # 梯度裁剪 (针对不同模型)
+                    if model.model_name == "rkt":
+                        clip_grad_norm_(model.parameters(), model.grad_clip)
+                    if model.model_name == "dtransformer":
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                    opt.step()      # 更新参数
+                # # loss.backward()#compute gradients
+                # if model.model_name == "rkt":
+                #     clip_grad_norm_(model.parameters(), model.grad_clip)
+                # if model.model_name == "dtransformer":
+                #     torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                # opt.step()#update model’s parameters
                 
             loss_mean.append(loss.detach().cpu().numpy())
             if model.model_name == "gkt" and train_step%10==0:
                 text = f"Total train step is {train_step}, the loss is {loss.item():.5}"
                 debug_print(text = text,fuc_name="train_model")
+        if model.model_name not in ["hcgkt", "abqr"] and (batch_idx + 1) % accumulation_steps != 0:
+            if model.model_name == "rkt":
+                clip_grad_norm_(model.parameters(), model.grad_clip)
+            if model.model_name == "dtransformer":
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            opt.step()
+            opt.zero_grad()
         if model.model_name=='lpkt':
             scheduler.step()#update each epoch
         loss_mean = np.mean(loss_mean)
         
+
+
         if model.model_name=='rkt':
             auc, acc = evaluate(model, valid_loader, model.model_name, rel)
         else:

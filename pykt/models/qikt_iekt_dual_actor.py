@@ -45,7 +45,7 @@ def get_outputs(self, emb_qc_shift, h, data, add_name="", model_type='question')
         y_question_next = torch.sigmoid(self.out_question_next(h_next))
         y_question_all = torch.sigmoid(self.out_question_all(h))
         # 确保 data['qshft'] 在 self.device 上并转换为 long 类型
-        qshft = data['qshft'].to(self.device).long()
+        qshft = data['qshft'].to(self.device, non_blocking=True).long()
         outputs["y_question_next" + add_name] = y_question_next.squeeze(-1)
         outputs["y_question_all" + add_name] = (y_question_all * F.one_hot(qshft, self.num_q)).sum(-1)
     else: 
@@ -53,7 +53,7 @@ def get_outputs(self, emb_qc_shift, h, data, add_name="", model_type='question')
         y_concept_next = torch.sigmoid(self.out_concept_next(h_next))
         y_concept_all = torch.sigmoid(self.out_concept_all(h))
         # 确保 data['cshft'] 在 self.device 上
-        cshft = data['cshft'].to(self.device).long()
+        cshft = data['cshft'].to(self.device, non_blocking=True).long()
         outputs["y_concept_next" + add_name] = self.get_avg_fusion_concepts(y_concept_next, cshft)
         outputs["y_concept_all" + add_name] = self.get_avg_fusion_concepts(y_concept_all, cshft)
 
@@ -115,7 +115,7 @@ class QIKTNet(nn.Module):
         elif self.version == "iekt":
             # --- Question Branch IEKT 组件 ---
             # 掌握度矩阵 Q
-            self.acq_matrix_q = nn.Parameter(torch.randn(self.acq_levels, self.emb_size).to(self.device), requires_grad=True)
+            self.acq_matrix_q = nn.Parameter(torch.randn(self.acq_levels, self.emb_size).to(self.device, non_blocking=True), requires_grad=True)
             # 策略网络 Q: 输入 (4*emb + h) -> 输出 10
             self.policy_net_q = nn.Sequential(
                 nn.Linear(self.emb_size * 4 + self.hidden_size, self.hidden_size),
@@ -135,7 +135,7 @@ class QIKTNet(nn.Module):
             )
             # --- Concept Branch IEKT 组件 (新增) ---
             # 掌握度矩阵 C
-            self.acq_matrix_c = nn.Parameter(torch.randn(self.cog_levels, self.emb_size).to(self.device), requires_grad=True)
+            self.acq_matrix_c = nn.Parameter(torch.randn(self.cog_levels, self.emb_size).to(self.device, non_blocking=True), requires_grad=True)
             # 策略网络 C: 输入 (2*emb + h) -> 输出 10 
             # 注意: emb_ca 的维度通常是 emb_c(1) + emb_r(1) = 2*emb_size
             self.policy_net_c = nn.Sequential(
@@ -189,15 +189,15 @@ class QIKTNet(nn.Module):
 
     def forward(self, q, c, r, data=None):
         # 确保输入张量在 self.device 上
-        q = q.to(self.device).long()
-        c = c.to(self.device).long()
-        r = r.to(self.device).long()
+        q = q.to(self.device, non_blocking=True).long()
+        c = c.to(self.device, non_blocking=True).long()
+        r = r.to(self.device, non_blocking=True).long()
         if data is not None:
-            data = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in data.items()}
+            data = {k: v.to(self.device, non_blocking=True) if isinstance(v, torch.Tensor) else v for k, v in data.items()}
         
         batch_size = q.size(0)
-        h_que = torch.zeros(batch_size, self.hidden_size).to(self.device)
-        h_concept = torch.zeros(batch_size, self.hidden_size).to(self.device)
+        h_que = torch.zeros(batch_size, self.hidden_size).to(self.device, non_blocking=True)
+        h_concept = torch.zeros(batch_size, self.hidden_size).to(self.device, non_blocking=True)
         concept_h_seq = []
         _, emb_qca, emb_qc, _, emb_c = self.que_emb(q, c, r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
         emb_ca = torch.cat([

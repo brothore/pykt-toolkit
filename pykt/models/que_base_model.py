@@ -112,8 +112,8 @@ class QueEmb(nn.Module):
         self.output_emb_dim = emb_size
     
     def get_att_skill_emb(self, q, c):
-        q = q.to(self.device)
-        c = c.to(self.device)
+        q = q.to(self.device, non_blocking=True)
+        c = c.to(self.device, non_blocking=True)
         
         b, s = q.shape  # batch, seq_len (for reshape)
         k = c.size(-1)  # max_kcs
@@ -126,7 +126,7 @@ class QueEmb(nn.Module):
         query = query.unsqueeze(3)  # [b, h, s, 1, head_dim]
         
         # 2. 获取 KC 嵌入，并投影 K/V
-        concept_emb_cat = torch.cat([torch.zeros(1, self.emb_size).to(self.device), self.concept_emb], dim=0)
+        concept_emb_cat = torch.cat([torch.zeros(1, self.emb_size).to(self.device, non_blocking=True), self.concept_emb], dim=0)
         related_concepts = (c + 1).long()  # [b, s, k]
         kc_embs = concept_emb_cat[related_concepts]  # [b, s, k, d]
         
@@ -164,10 +164,10 @@ class QueEmb(nn.Module):
         return att_emb
     def get_avg_skill_emb(self, c):
         # 确保输入 c 在正确的设备上
-        c = c.to(self.device)
+        c = c.to(self.device, non_blocking=True)
         # add zero for padding
         concept_emb_cat = torch.cat(
-            [torch.zeros(1, self.emb_size).to(self.device), 
+            [torch.zeros(1, self.emb_size).to(self.device, non_blocking=True), 
             self.concept_emb], dim=0)
         # shift c
         related_concepts = (c + 1).long()  # 确保 long 类型
@@ -181,10 +181,10 @@ class QueEmb(nn.Module):
 
     def forward(self, q, c, r=None, data=None):
         # 确保所有输入张量在同一设备上
-        q = q.to(self.device)
-        c = c.to(self.device)
+        q = q.to(self.device, non_blocking=True)
+        c = c.to(self.device, non_blocking=True)
         if r is not None:
-            r = r.to(self.device)
+            r = r.to(self.device, non_blocking=True)
             
         emb_type = self.emb_type
         if "qc_merge" in emb_type:
@@ -255,14 +255,14 @@ class QueEmb(nn.Module):
             # 2. 获取难度数据 (优先使用对齐后的 csd/cqd)
             # data['csd'] 是我们在 batch_to_device 中修正生成的
             if data is not None and 'csd' in data:
-                sd = data['csd'].to(self.device).long()
+                sd = data['csd'].to(self.device, non_blocking=True).long()
             else:
-                sd = data['sdseqs'].to(self.device).long() # [B, S_raw, K]
+                sd = data['sdseqs'].to(self.device, non_blocking=True).long() # [B, S_raw, K]
 
             if data is not None and 'cqd' in data:
-                qd = data['cqd'].to(self.device).long()
+                qd = data['cqd'].to(self.device, non_blocking=True).long()
             else:
-                qd = data['qdseqs'].to(self.device).long() # [B, S_raw]
+                qd = data['qdseqs'].to(self.device, non_blocking=True).long() # [B, S_raw]
             
             # --- 强制对齐 (安全兜底) ---
             # 如果 sd 的长度与 q 不一致，进行切片或填充
@@ -284,11 +284,11 @@ class QueEmb(nn.Module):
             # ------------------------
 
             # 3. 处理题目难度 (QD)
-            qd_input = torch.where(qd == -1, torch.tensor(0).to(self.device), qd)
+            qd_input = torch.where(qd == -1, torch.tensor(0).to(self.device, non_blocking=True), qd)
             emb_qd = self.qd_emb(qd_input) # [B, S, E]
 
             # 4. 处理知识点难度 (SD) - 聚合
-            sd_input = torch.where(sd == -1, torch.tensor(0).to(self.device), sd)
+            sd_input = torch.where(sd == -1, torch.tensor(0).to(self.device, non_blocking=True), sd)
             raw_emb_sd = self.sd_emb(sd_input) # [B, S, K, E]
             
             # Mask & Pooling
@@ -296,7 +296,7 @@ class QueEmb(nn.Module):
             sum_emb_sd = (raw_emb_sd * mask).sum(dim=2) # Sum pooling
             
             valid_count = mask.sum(dim=2)
-            valid_count = torch.where(valid_count == 0, torch.tensor(1.0).to(self.device), valid_count)
+            valid_count = torch.where(valid_count == 0, torch.tensor(1.0).to(self.device, non_blocking=True), valid_count)
             emb_sd = sum_emb_sd / valid_count # [B, S, E] (Mean pooling)
 
             # Concept 分支输入: 拼接 Concept + SD => [B, S, 2*E]
@@ -396,7 +396,7 @@ class QueBaseModel(nn.Module):
         data_new = {}
         for key in data:
             if isinstance(data[key], torch.Tensor):
-                data_new[key] = data[key].to(self.device)
+                data_new[key] = data[key].to(self.device, non_blocking=True)
                 # 确保索引类数据是 long 类型
                 if key in ['qseqs', 'cseqs', 'rseqs', 'shft_qseqs', 'shft_cseqs', 'shft_rseqs', 'sdseqs', 'qdseqs']:
                     data_new[key] = data_new[key].long()
@@ -504,9 +504,9 @@ class QueBaseModel(nn.Module):
                 skills = [int(_) for _ in concept.split("_")]
                 skills = skills +[-1]*(max_concepts-len(skills))
             concept_list.append(skills)
-        cq_full = torch.tensor(questions).to(self.device)
-        cc_full = torch.tensor(concept_list).to(self.device)
-        cr_full = torch.tensor(responses).to(self.device)
+        cq_full = torch.tensor(questions).to(self.device, non_blocking=True)
+        cc_full = torch.tensor(concept_list).to(self.device, non_blocking=True)
+        cr_full = torch.tensor(responses).to(self.device, non_blocking=True)
 
         history_start_index = max(start_index - max_len,0)
         hist_q = cq_full[history_start_index:start_index].unsqueeze(0)
@@ -552,7 +552,7 @@ class QueBaseModel(nn.Module):
             for i in range(start_index,seq_len):
                 cur_q = cq_full[start_index:i+1].unsqueeze(0)
                 cur_c = cc_full[start_index:i+1].unsqueeze(0)
-                cur_r = torch.tensor(seq_y_pred_hist).unsqueeze(0).to(self.device)
+                cur_r = torch.tensor(seq_y_pred_hist).unsqueeze(0).to(self.device, non_blocking=True)
                 # print(f"cur_q is {cur_q} shape is {cur_q.shape}")
                 # print(f"cur_r is {cur_r} shape is {cur_r.shape}")
                 cq = torch.cat([hist_q,cur_q],axis=1)[:,-max_len:]
@@ -563,9 +563,9 @@ class QueBaseModel(nn.Module):
                 # print(f"cq is {cq} shape is {cq.shape}")
                 data = [cq,cc,cr]
                 # print(f"cq.shape is {cq.shape}")
-                cq,cc,cr = [x.to(self.device) for x in data]#full sequence,[1,n]
-                q,c,r = [x[:,:-1].to(self.device) for x in data]#[0,n-1]
-                qshft,cshft,rshft = [x[:,1:].to(self.device) for x in data]#[1,n]
+                cq,cc,cr = [x.to(self.device, non_blocking=True) for x in data]#full sequence,[1,n]
+                q,c,r = [x[:,:-1].to(self.device, non_blocking=True) for x in data]#[0,n-1]
+                qshft,cshft,rshft = [x[:,1:].to(self.device, non_blocking=True) for x in data]#[1,n]
                 data = {"cq":cq,"cc":cc,"cr":cr,"q":q,"c":c,"r":r,"qshft":qshft,"cshft":cshft,"rshft":rshft}
                 y_last_pred = self.predict_one_step(data,process=False)[:,-1][0]
                 seq_y_pred_hist.append(1 if y_last_pred>acc_threshold else 0)
@@ -625,9 +625,9 @@ class QueBaseModel(nn.Module):
             dataloader = DataLoader(dataset=tensor_dataset,batch_size=batch_size) 
 
             for data in dataloader:
-                cq,cc,cr = [x.to(self.device) for x in data]#full sequence,[1,n]
-                q,c,r = [x[:,:-1].to(self.device) for x in data]#[0,n-1]
-                qshft,cshft,rshft = [x[:,1:].to(self.device) for x in data]#[1,n]
+                cq,cc,cr = [x.to(self.device, non_blocking=True) for x in data]#full sequence,[1,n]
+                q,c,r = [x[:,:-1].to(self.device, non_blocking=True) for x in data]#[0,n-1]
+                qshft,cshft,rshft = [x[:,1:].to(self.device, non_blocking=True) for x in data]#[1,n]
                 data = {"cq":cq,"cc":cc,"cr":cr,"q":q,"c":c,"r":r,"qshft":qshft,"cshft":cshft,"rshft":rshft}
                 y = self.predict_one_step(data,process=False)[:,-1].detach().cpu().numpy().flatten()
                 y_pred_list.extend(list(y))
