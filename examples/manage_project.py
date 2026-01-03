@@ -33,16 +33,46 @@ class Colors:
     CYAN = '\033[96m'
     RESET = '\033[0m'
     BOLD = '\033[1m'
-
 def get_project_sweeps(api, entity, project_name):
+    """获取指定项目的 sweeps (修改版: 出错不退出程序，而是返回空列表)"""
     try:
         project = api.project(project_name, entity=entity)
         sweeps = project.sweeps()
         return list(sweeps)
     except Exception as e:
         print(f"{Colors.RED}[Error] Could not access project {entity}/{project_name}: {e}{Colors.RESET}")
+        return [] # 修改：返回空列表而不是 sys.exit(1)，以便循环继续    try:
+        project = api.project(project_name, entity=entity)
+        sweeps = project.sweeps()
+        return list(sweeps)
+    except Exception as e:
+        print(f"{Colors.RED}[Error] Could not access project {entity}/{project_name}: {e}{Colors.RESET}")
         sys.exit(1)
+def get_all_projects(api, entity):
+    """[新增] 获取该实体下的所有项目名称"""
+    print(f"{Colors.CYAN}[Info] Fetching all projects for entity '{entity}'...{Colors.RESET}")
+    try:
+        projects = api.projects(entity=entity)
+        return [p.name for p in projects]
+    except Exception as e:
+        print(f"{Colors.RED}[Error] Failed to fetch project list: {e}{Colors.RESET}")
+        return []
+def process_single_project(api, entity, project_name, action):
+    """[新增] 处理单个项目的核心逻辑封装"""
+    print(f"\n{Colors.BOLD}>>> Processing Project: {entity}/{project_name}{Colors.RESET}")
+    
+    # 1. 如果是 stop，先杀本地进程
+    if action == 'stop':
+        kill_local_agents(project_name, entity)
+    
+    # 2. 获取云端 sweeps
+    sweeps = get_project_sweeps(api, entity, project_name)
+    if not sweeps:
+        print(f"    No accessible sweeps found for {project_name}.")
+        return
 
+    # 3. 更新云端状态
+    update_sweeps_state(sweeps, action)
 def kill_local_agents(project_name, entity):
     """
     查找并灭杀本地属于该项目的进程 (支持检测环境变量和命令行)
@@ -144,15 +174,16 @@ def update_sweeps_state(sweeps, action):
         print(f"{Colors.GREEN}[Cloud] Successfully sent '{action.upper()}' command to {cnt} sweeps.{Colors.RESET}")
     else:
         print(f"[Cloud] No sweeps needed updates.")
-
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--project", type=str, required=True)
+    parser.add_argument("--project", type=str, required=True, help="Project name or 'all'")
     parser.add_argument("--action", type=str, choices=['pause', 'resume', 'stop'], required=True)
     args = parser.parse_args()
 
     api_key = os.getenv("WANDB_API_KEY")
-    if not api_key: return
+    if not api_key: 
+        print(f"{Colors.RED}[Error] WANDB_API_KEY not found in environment.{Colors.RESET}")
+        return
 
     try:
         api = wandb.Api()
@@ -161,21 +192,30 @@ def main():
         print(f"{Colors.RED}Error: {e}{Colors.RESET}")
         return
 
-    print(f"Target: {Colors.BOLD}{entity}/{args.project}{Colors.RESET}")
     print(f"Action: {Colors.BOLD}{args.action.upper()}{Colors.RESET}")
 
-    if args.action == 'stop':
-        kill_local_agents(args.project, entity)
-    
-    sweeps = get_project_sweeps(api, entity, args.project)
-    if not sweeps:
-        print("No sweeps found.")
+    # ================= [逻辑分支] =================
+    target_projects = []
+
+    if args.project.lower() == "all":
+        # 获取所有项目
+        target_projects = get_all_projects(api, entity)
+    else:
+        # 单个项目
+        target_projects = [args.project]
+
+    if not target_projects:
+        print(f"{Colors.YELLOW}[Warning] No projects found to process.{Colors.RESET}")
         return
 
-    update_sweeps_state(sweeps, args.action)
+    # ================= [循环执行] =================
+    total = len(target_projects)
+    for i, proj in enumerate(target_projects):
+        print(f"\n[{i+1}/{total}] ----------------------------------------")
+        process_single_project(api, entity, proj, args.action)
 
     if args.action == 'resume':
-        print(f"\n{Colors.YELLOW}[Tip] Cloud set to RUNNING. Restart local agents manually.{Colors.RESET}")
+        print(f"\n{Colors.YELLOW}[Tip] Cloud sweeps set to RUNNING. Please restart local agents manually.{Colors.RESET}")
 
 if __name__ == "__main__":
     main()

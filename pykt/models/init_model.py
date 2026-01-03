@@ -176,6 +176,10 @@ def init_model(model_name, model_config, data_config, emb_type):
         from .qikt_iekt_dual import QIKT_IEKT_DUAL
         model = QIKT_IEKT_DUAL(num_q=data_config['num_q'], num_c=data_config['num_c'],
                      max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
+    elif model_name == "qikt_iekt_dual_actor":
+        from .qikt_iekt_dual_actor import QIKT_IEKT_DUAL_ACTOR
+        model = QIKT_IEKT_DUAL_ACTOR(num_q=data_config['num_q'], num_c=data_config['num_c'],
+                     max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
     elif model_name == "qikt_iekt_mask":
         from .qikt_iekt_mask import QIKT_IEKT_MASK
         model = QIKT_IEKT_MASK(num_q=data_config['num_q'], num_c=data_config['num_c'],
