@@ -30,8 +30,8 @@ export WANDB_API_KEY="b2fd3c192e86f37e55450d3c8894511ff8bce88d"
 # ==========================================
 
 # --- 基础配置 ---
-DATASET_NAME="bridge2algebra2006"   
-MODEL_NAME="qikt_iekt_dual"            
+DATASET_NAME="assist2009"   
+MODEL_NAME="qikt_iekt_dual_actor"            
 FOLDS="0"           
 
 # --- 版本标注 (Mark) ---

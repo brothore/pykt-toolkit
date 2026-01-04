@@ -139,30 +139,28 @@ def add_model_to_lists(file_path, base_model, new_model):
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
     return True
-
 def replace_model_name_in_file(file_path, base_model, new_model):
     """替换文件中的模型名称"""
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
-    # 替换类名（大写）
+    # 1. 优先替换类名 (保持大写逻辑)
     content = re.sub(rf'class\s+{base_model.upper()}\s*\(', f'class {new_model.upper()}(', content)
     
-    # 替换小写的模型名称 - 这里保持原有大小写
-    content = re.sub(rf'self\.model_name\s*=\s*["\']({base_model})["\']', 
-                     f'self.model_name = "{new_model}"', content)
-    
-    # 替换 in {'model_name'} 形式 - 保持原有大小写
-    content = re.sub(rf'in\s*{{[\'"]{base_model}[\'"]}}', 
-                     f"in {{'{new_model}'}}", content)
-    
-    # 替换 == "model_name" 形式 - 保持原有大小写
-    content = re.sub(rf'==\s*["\']({base_model})["\']', 
-                     f'== "{new_model}"', content)
-    
+    # 2. 【新增】通用替换：替换所有被引号包围的小写模型名
+    # 作用：将 "akt" 替换为 "new_model"，无论它出现在 print、super、dict key 还是变量赋值中
+    # 正则解释：(['"]) 捕获引号，\b 确保是单词边界（防止把 akt_plus 里的 akt 替换了）
+    content = re.sub(rf'([\'"])\b{base_model}\b\1', f'\\1{new_model}\\1', content)
+
+    # 3. (可选) 如果你的代码里有硬编码的变量名（非字符串），比如 model_akt = ...
+    # content = re.sub(rf'\b{base_model}\b', new_model, content)
+
+    # 注意：上面第2步通常已经涵盖了原本代码中的 self.model_name, in {}, == 等情况
+    # 如果你保留原本的逻辑，请确保它们不会和新的逻辑冲突，或者直接用上面的通用替换代替后三条。
+
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(content)
-
+        
 def update_init_file(file_path, base_model, new_model):
     """更新__init__.py文件"""
     with open(file_path, 'r', encoding='utf-8') as f:

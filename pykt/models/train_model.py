@@ -539,6 +539,8 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
         print(f"检测到预训练模型文件，正在从 {model_path} 加载...")
         model.load_state_dict(torch.load(model_path))
         print("模型加载成功！")
+    elif os.path.exists(model_path) and use_trained==0:
+        print(f"检测到预训练模型文件，但use_trained：{use_trained}，将从头开始训练。")
     else:
         print("未找到预训练模型文件，将从头开始训练。")
     # 为long_dkt创建学生隐藏状态管理器
