@@ -173,11 +173,11 @@ def parse_and_calculate_aucs_from_file(file_path):
                 student_scores_long, 
                 window_size=WINDOW_SIZE
             )
-            print(f"  [滑窗模式] 学生 {student_uid}: {len(student_trues_long)} → {len(collected_trues)} 个点")
+            # print(f"  [滑窗模式] 学生 {student_uid}: {len(student_trues_long)} → {len(collected_trues)} 个点")
         else:
             collected_trues = student_trues_long.tolist()
             collected_scores = student_scores_long.tolist()
-            print(f"  [整序列模式] 学生 {student_uid}: {len(collected_trues)} 个点")
+            # print(f"  [整序列模式] 学生 {student_uid}: {len(collected_trues)} 个点")
         # ======================================
 
         # 加入整体汇集（用于 overall_auc）
@@ -305,7 +305,7 @@ def save_auc_results_from_file(input_file_path, student_auc_output_csv=None, ove
         # 5. 保存学生 AUC DataFrame (来自您的原始逻辑)
         student_df.to_csv(student_auc_output_csv, index=False)
         print(f"✅ 学生AUC结果已保存至: {student_auc_output_csv}")
-        
+        print(f"📊 总体统计指标: {json.dumps(overall_info, indent=4, ensure_ascii=False)}")
         # 6. 保存总体统计结果字典 (来自您的原始逻辑)
         with open(overall_stats_output_json, 'w', encoding='utf-8') as f:
             json.dump(overall_info, f, indent=4, ensure_ascii=False, 

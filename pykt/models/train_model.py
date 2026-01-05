@@ -11,6 +11,7 @@ from ..utils.utils import debug_print
 from pykt.config import que_type_models,needs_uid_models
 import pandas as pd
 import torch.nn.functional as F
+import time
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 from pykt.models.long_dkt import StudentHiddenStateManager
 #成对排序损失函数（近似AUC计算）
@@ -528,9 +529,11 @@ def model_forward(model, data, rel=None):
     if model_name in ["ukt"] and model.use_CL != 0:
         return loss,temp
     return loss
-    
+
 
 def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, test_loader=None, test_window_loader=None, save_model=False, data_config=None, fold=None,use_trained=0, accumulation_steps=1):
+    start_train_time = time.time()
+
     max_auc, best_epoch = 0, -1
     train_step = 0
 
@@ -575,7 +578,10 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
     if model.model_name=='lpkt':
         scheduler = torch.optim.lr_scheduler.StepLR(opt, 10, gamma=0.5)
     for i in range(1, num_epochs + 1):
+        epoch_start_time = time.time()
         loss_mean = []
+        train_phase_start = time.time()
+
         for batch_idx, data in enumerate(train_loader):
             train_step+=1
             if model.model_name in que_type_models and model.model_name not in ["lpkt", "rkt"]:
@@ -615,6 +621,9 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
             if model.model_name == "gkt" and train_step%10==0:
                 text = f"Total train step is {train_step}, the loss is {loss.item():.5}"
                 debug_print(text = text,fuc_name="train_model")
+
+
+        train_phase_end = time.time()
         if model.model_name not in ["hcgkt", "abqr"] and (batch_idx + 1) % accumulation_steps != 0:
             if model.model_name == "rkt":
                 clip_grad_norm_(model.parameters(), model.grad_clip)
@@ -626,6 +635,7 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
             scheduler.step()#update each epoch
         loss_mean = np.mean(loss_mean)
         
+        val_phase_start = time.time()
 
 
         if model.model_name=='rkt':
@@ -634,7 +644,7 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
             auc, acc = evaluate(model, valid_loader, model.model_name)
         ### atkt 有diff， 以下代码导致的
         ### auc, acc = round(auc, 4), round(acc, 4)
-
+        val_phase_end = time.time()
         if auc > max_auc+1e-3:
             if save_model:
                 torch.save(model.state_dict(), os.path.join(ckpt_path, model.emb_type+"_model.ckpt"))
@@ -652,8 +662,20 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
             validauc, validacc = auc, acc
         print(f"Epoch: {i}, validauc: {validauc:.4}, validacc: {validacc:.4}, best epoch: {best_epoch}, best auc: {max_auc:.4}, train loss: {loss_mean}, emb_type: {model.emb_type}, model: {model.model_name}, save_dir: {ckpt_path}")
         print(f"            testauc: {round(testauc,4)}, testacc: {round(testacc,4)}, window_testauc: {round(window_testauc,4)}, window_testacc: {round(window_testacc,4)}")
+        epoch_end_time = time.time()
+        epoch_duration = epoch_end_time - epoch_start_time
+        train_duration = train_phase_end - train_phase_start
+        val_duration = val_phase_end - val_phase_start
+        
+        print(f"=== Epoch {i} Time Stat ===")
+        print(f"Total Epoch Time: {epoch_duration:.2f}s | Train Phase: {train_duration:.2f}s | Valid Phase: {val_duration:.2f}s")
+        print(f"Avg Batch Time: {train_duration / len(train_loader):.4f}s")
+        print(f"Epoch: {i}, validauc: {validauc:.4}, validacc: {validacc:.4}, best epoch: {best_epoch}, train loss: {np.mean(loss_mean):.5f}")
+        print("-" * 30)
 
-
-        if i - best_epoch >= 5:
+        if i - best_epoch >= 10:
+            print(f"Early stopping at epoch {i}")
             break
+    total_duration = time.time() - start_train_time # 5. 任务总耗时
+    print(f"✅ Training Finished! Total Time Cost: {total_duration/60:.2f} min")
     return testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch
