@@ -62,7 +62,7 @@ def get_outputs(self, emb_qc_shift, h, data, add_name="", model_type='question')
 class QIKTNet(nn.Module):
     def __init__(self, num_q,num_c,emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',mlp_layer_num=1,other_config={},num_attn_head=2,version="v0",acq_levels = 10,cog_levels = 10):
         super().__init__()
-        self.model_name = "qikt_iekt_dual"
+        self.model_name = "qikt_iekt_dual_ppo"
         self.num_q = num_q
         self.num_c = num_c
         self.emb_size = emb_size
@@ -122,7 +122,17 @@ class QIKTNet(nn.Module):
                 nn.ReLU(),
                 nn.Linear(self.hidden_size, self.acq_levels)
             )
-            
+            self.critic_net_q = nn.Sequential(
+                nn.Linear(self.emb_size * 4 + self.hidden_size, self.hidden_size),
+                nn.ReLU(),
+                nn.Linear(self.hidden_size, 1) # 输出 Value
+            )
+
+            self.critic_net_c = nn.Sequential(
+                nn.Linear(self.emb_size * 2 + self.hidden_size, self.hidden_size),
+                nn.ReLU(),
+                nn.Linear(self.hidden_size, 1) # 输出 Value
+            )
             # --- Concept Branch IEKT 组件 (新增) ---
             # 掌握度矩阵 C
             self.acq_matrix_c = nn.Parameter(torch.randn(self.cog_levels, self.emb_size).to(self.device), requires_grad=True)
@@ -197,8 +207,8 @@ class QIKTNet(nn.Module):
 
 
         self.rl_data = {
-            "probs_q": [], "actions_q": [],
-            "probs_c": [], "actions_c": [] # 新增 Concept 的记录
+            "probs_q": [], "actions_q": [], "values_q": [],
+            "probs_c": [], "actions_c": [], "values_c": []
         }
         emb_qc_shift = emb_qc[:, 1:, :]
         emb_qca_current = emb_qca[:, :-1, :] # Question 输入
@@ -233,20 +243,25 @@ class QIKTNet(nn.Module):
                 
                 # --- Question RL Logic ---
                 policy_input = torch.cat([xt, h_que], dim=1) # [B, 4e+h]
+                
+                # 1. Actor: 动作概率
                 probs = F.softmax(self.policy_net_q(policy_input), dim=-1)
                 
-                # 采样 (如果做 Ablation 可以这里改成全0或Argmax)
+                # 2. [新增] Critic: 状态价值估算
+                value = self.critic_net_q(policy_input) # [B, 1]
+                
                 m = Categorical(probs)
                 action = m.sample()
                 mastery_vec = self.acq_matrix_q[action]
                 
                 self.rl_data["probs_q"].append(probs)
                 self.rl_data["actions_q"].append(action)
+                self.rl_data["values_q"].append(value) # 存储 Value
                 
-                # Update
-                gru_input = torch.cat([xt, mastery_vec], dim=1) # [B, 5e]
+                gru_input = torch.cat([xt, mastery_vec], dim=1)
                 h_que = self.que_lstm_cell(gru_input, h_que)
                 que_h_seq.append(h_que)
+
             
             que_h = torch.stack(que_h_seq, dim=1)
             que_h = self.dropout_layer(que_h)
@@ -283,25 +298,25 @@ class QIKTNet(nn.Module):
             concept_h_seq = []
             
             for t in range(seq_len):
-                # Concept 输入 [Batch, 2*Emb]
                 ct = emb_ca_current[:, t, :]
                 
                 # --- Concept RL Logic ---
-                # 策略输入: emb_ca(2e) + h(e)
-                policy_input = torch.cat([ct, h_concept], dim=1) # [B, 3e]
+                policy_input = torch.cat([ct, h_concept], dim=1)
+                
+                # 1. Actor
                 probs = F.softmax(self.policy_net_c(policy_input), dim=-1)
                 
-                # 采样
+                # 2. [新增] Critic
+                value = self.critic_net_c(policy_input) # [B, 1]
+                
                 m = Categorical(probs)
                 action = m.sample()
                 mastery_vec = self.acq_matrix_c[action]
                 
-                # 记录 Concept 的 RL 数据
                 self.rl_data["probs_c"].append(probs)
                 self.rl_data["actions_c"].append(action)
+                self.rl_data["values_c"].append(value) # 存储 Value
                 
-                # Update Concept Cell
-                # 输入: emb_ca(2e) + mastery(e) = 3e
                 gru_input = torch.cat([ct, mastery_vec], dim=1) 
                 h_concept = self.concept_lstm_cell(gru_input, h_concept)
                 concept_h_seq.append(h_concept)
@@ -318,9 +333,9 @@ class QIKTNet(nn.Module):
         
         return outputs
 
-class QIKT_IEKT_DUAL(QueBaseModel):
+class QIKT_IEKT_DUAL_PPO(QueBaseModel):
     def __init__(self, num_q,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",num_attn_head=2,gamma=0.93,lambda_rl=0.1,cog_levels=10,acq_levels=10,**kwargs):
-        model_name = "qikt_iekt_dual"
+        model_name = "qikt_iekt_dual_ppo"
         self.gamma = gamma
         self.lambda_rl = lambda_rl
         debug_print(f"emb_type is {emb_type}",fuc_name="QIKT")
@@ -417,47 +432,61 @@ class QIKT_IEKT_DUAL(QueBaseModel):
 
         
         if self.version == "iekt":
-            # 1. 准备 Reward 基础数据
             y_pred = outputs['y']
             current_seq_len = y_pred.shape[1]
             targets = data_new['rshft'][:, :current_seq_len]
             preds = (y_pred > 0.5).long()
             rewards = (preds == targets).float()
             
-            # 截断长度对齐
-            # 注意: 这里假设 Q 和 C 分支步数一致，通常是一致的
+            # 1. 提取序列并对齐长度
             probs_q_seq = torch.stack(self.model.rl_data["probs_q"], dim=1)
             min_len = min(rewards.shape[1], probs_q_seq.shape[1])
+            
             rewards = rewards[:, :min_len]
             mask = data_new['sm'][:, :min_len]
-
-            # 计算 Advantage (两分支共享同一个 Reward 信号，这是合理的，因为最终目的是做对题)
-            advantages = []
-            adv = 0
-            for t in reversed(range(rewards.shape[1])):
-                adv = rewards[:, t] + self.gamma * adv
-                advantages.insert(0, adv)
-            advantages = torch.stack(advantages, dim=1).detach()
             
-            # --- 计算 Question Branch RL Loss ---
+            # 2. 计算真实回报 (Returns / G_t) - Monte Carlo
+            # 倒序计算 discounted return
+            returns = []
+            G = 0
+            for t in reversed(range(rewards.shape[1])):
+                G = rewards[:, t] + self.gamma * G
+                returns.insert(0, G)
+            returns = torch.stack(returns, dim=1).detach() # [Batch, Seq]
+            
+            # --- Question Branch RL Update ---
             probs_q_seq = torch.stack(self.model.rl_data["probs_q"], dim=1)[:, :min_len, :]
             actions_q_seq = torch.stack(self.model.rl_data["actions_q"], dim=1)[:, :min_len]
+            values_q_seq = torch.stack(self.model.rl_data["values_q"], dim=1)[:, :min_len].squeeze(-1) # [Batch, Seq]
             
+            # 计算 Advantage (Baseline Trick): A_t = G_t - V(s_t)
+            # detach() 确保 Critic 的梯度不会传给 Actor
+            advantage_q = returns - values_q_seq.detach()
+            
+            # Actor Loss: -log_prob * Advantage
             selected_probs_q = probs_q_seq.gather(2, actions_q_seq.unsqueeze(-1)).squeeze(-1)
-            loss_rl_q = -torch.log(selected_probs_q + 1e-8) * advantages
-            loss_rl_q = (loss_rl_q * mask).sum() / (mask.sum() + 1e-8)
-
-            # --- 计算 Concept Branch RL Loss ---
+            loss_actor_q = -torch.log(selected_probs_q + 1e-8) * advantage_q
+            loss_actor_q = (loss_actor_q * mask).sum() / (mask.sum() + 1e-8)
+            
+            # Critic Loss: MSE(Value, Return)
+            loss_critic_q = F.mse_loss(values_q_seq * mask, returns * mask, reduction='sum') / (mask.sum() + 1e-8)
+            
+            # --- Concept Branch RL Update ---
             probs_c_seq = torch.stack(self.model.rl_data["probs_c"], dim=1)[:, :min_len, :]
             actions_c_seq = torch.stack(self.model.rl_data["actions_c"], dim=1)[:, :min_len]
+            values_c_seq = torch.stack(self.model.rl_data["values_c"], dim=1)[:, :min_len].squeeze(-1)
+            
+            advantage_c = returns - values_c_seq.detach()
             
             selected_probs_c = probs_c_seq.gather(2, actions_c_seq.unsqueeze(-1)).squeeze(-1)
-            loss_rl_c = -torch.log(selected_probs_c + 1e-8) * advantages
-            loss_rl_c = (loss_rl_c * mask).sum() / (mask.sum() + 1e-8)
-
-            # --- 总 Loss ---
-            # 两个 RL Loss 都加上
-            total_loss = loss + self.lambda_rl * (loss_rl_q + loss_rl_c)
+            loss_actor_c = -torch.log(selected_probs_c + 1e-8) * advantage_c
+            loss_actor_c = (loss_actor_c * mask).sum() / (mask.sum() + 1e-8)
+            
+            loss_critic_c = F.mse_loss(values_c_seq * mask, returns * mask, reduction='sum') / (mask.sum() + 1e-8)
+            
+            # --- Total Loss ---
+            # 组合所有 Loss
+            total_loss = loss + self.lambda_rl * (loss_actor_q + loss_actor_c + 0.5 * loss_critic_q + 0.5 * loss_critic_c)
             
         else:
             total_loss = loss

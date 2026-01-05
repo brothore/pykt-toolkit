@@ -1,11 +1,11 @@
-program: wandb_qikt_iekt_dual_actor_train.py
+program: wandb_qikt_iekt_dual_ppo_train.py
 method: bayes
 metric:
     goal: maximize
     name: validauc
 parameters:
     model_name:
-        values: ["qikt_iekt_dual_actor"]
+        values: ["qikt_iekt_dual_ppo"]
         
     # ==========================================
     # ⚠️ 脚本占位符 (请勿修改，用于generate_wandb.py替换)
@@ -13,7 +13,7 @@ parameters:
     dataset_name:
         values: ["xes"]            # 脚本会将 "xes" 替换为具体数据集名 (如 assist2009)
     emb_type:
-        values: ["iekt"]            # 脚本会将 "qid" 替换为 "diff" (如果你在命令行指定了)
+        values: ["iekt","attn"]            # 脚本会将 "qid" 替换为 "diff" (如果你在命令行指定了)
     save_dir:
         values: ["models/xdkt_tiaocan"] # 脚本会处理后缀
     fold:
@@ -43,17 +43,17 @@ parameters:
     
     # Loss Lambda (结合了你不同命令中的取值 0.5, 1.0, 1.5, 2.0)
     loss_c_all_lambda:
-        values: [0.5, 1.0, 2.0]         # 命令中用过 1.0 和 0.5
+        values: [0.5, 1.0,1.5, 2.0]         # 命令中用过 1.0 和 0.5
     loss_q_all_lambda:
-        values: [0.5, 1.0, 2.0]              # 命令中似乎固定 1.0
+        values: [0.5, 1.0,1.5, 2.0]              # 命令中似乎固定 1.0
     loss_c_next_lambda:
-        values: [0.5, 1.0, 2.0]       # 命令中用过 2 和 1.5
+        values: [0.5, 1.0,1.5, 2.0]       # 命令中用过 2 和 1.5
     acq_levels:
-        values: [10]
+        values: [10,20,30]
     gamma:
         values: [0.2,0.4,0.6,0.8]
     cog_levels:
-        values: [10]
+        values: [10,20,30]
     lambda_rl:
         values: [0.05,0.1,0.3,0.5]
     output_mode:
