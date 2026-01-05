@@ -629,9 +629,9 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 # 2. 扔进队列，瞬间返回
                 writer.write(result_str)
             if model_name not in ["llm", "mpllm"]:
-                y = torch.masked_select(y, sm).detach().to("cpu", non_blocking=True)
+                y = torch.masked_select(y, sm).detach().to("cpu")
             # print(f"pred_results:{y}")  
-            t = torch.masked_select(rshft, sm).detach().to("cpu", non_blocking=True)
+            t = torch.masked_select(rshft, sm).detach().to("cpu")
 
 
 
@@ -747,14 +747,14 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
                 qshft, cshft, rshft= dcur["shft_qseqs"], dcur["shft_cseqs"], dcur["shft_rseqs"]
             m, sm = dcur["masks"], dcur["smasks"]
             # q, c, r, qshft, cshft, rshft, m, sm = q.to(device), c.to(device), r.to(device), qshft.to(device), cshft.to(device), rshft.to(device), m.to(device), sm.to(device)
-            q = q.to(device, non_blocking=True)
-            c = c.to(device, non_blocking=True)
-            r = r.to(device, non_blocking=True)
-            qshft = qshft.to(device, non_blocking=True)
-            cshft = cshft.to(device, non_blocking=True)
-            rshft = rshft.to(device, non_blocking=True)
-            m = m.to(device, non_blocking=True)
-            sm = sm.to(device, non_blocking=True)
+            q = q.to(device)
+            c = c.to(device)
+            r = r.to(device)
+            qshft = qshft.to(device)
+            cshft = cshft.to(device)
+            rshft = rshft.to(device)
+            m = m.to(device)
+            sm = sm.to(device)
             if model.model_name in que_type_models and model_name not in ["lpkt", "rkt", "promptkt", "unikt"]:
                 model.model.eval()
             elif model_name not in ["llm", "mpllm"]:
@@ -1291,10 +1291,10 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
                 q, c, r ,sd, qd= dcurori["qseqs"], dcurori["cseqs"], dcurori["rseqs"],dcurori["sdseqs"],dcurori["qdseqs"]
                 qshft, cshft, rshft, sdshft, qdshft = dcurori["shft_qseqs"], dcurori["shft_cseqs"], dcurori["shft_rseqs"], dcurori["shft_sdseqs"],dcurori["shft_qdseqs"]
                 # sd, qd, sdshft, qdshft = sd.to(device), qd.to(device), sdshft.to(device), qdshft.to(device)
-                sd = sd.to(device, non_blocking=True)
-                qd = qd.to(device, non_blocking=True)
-                sdshft = sdshft.to(device, non_blocking=True)
-                qdshft = qdshft.to(device, non_blocking=True)
+                sd = sd.to(device)
+                qd = qd.to(device)
+                sdshft = sdshft.to(device)
+                qdshft = qdshft.to(device)
             else:    
                 q, c, r = dcurori["qseqs"], dcurori["cseqs"], dcurori["rseqs"]
                 qshft, cshft, rshft = dcurori["shft_qseqs"], dcurori["shft_cseqs"], dcurori["shft_rseqs"]

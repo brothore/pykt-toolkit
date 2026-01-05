@@ -393,8 +393,10 @@ def main(params):
                     # 2. 临时替换 sys.argv
                     sys.argv = new_argv
                     
-                    print(f"--- 正在调用外部脚本 (runpy): {script_path} ---")
-                    print(f"--- 模拟参数: {' '.join(new_argv[1:])} ---")
+                    print(f"--- 正在调用外部脚本 (runpy): {script_path}")
+                    print(f"--- 模拟参数: {' '.join(new_argv[1:])}")
+                    print(f"--- 完整运行指令: python {script_path} {' '.join(new_argv[1:])}")
+
 
                     # 3. 使用 runpy 运行脚本
                     # run_name="__main__" 会让脚本认为它是主程序
