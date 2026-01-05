@@ -667,15 +667,14 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
         train_duration = train_phase_end - train_phase_start
         val_duration = val_phase_end - val_phase_start
         
-        print(f"=== Epoch {i} Time Stat ===")
+        print(f"")
         print(f"Total Epoch Time: {epoch_duration:.2f}s | Train Phase: {train_duration:.2f}s | Valid Phase: {val_duration:.2f}s")
         print(f"Avg Batch Time: {train_duration / len(train_loader):.4f}s")
-        print(f"Epoch: {i}, validauc: {validauc:.4}, validacc: {validacc:.4}, best epoch: {best_epoch}, train loss: {np.mean(loss_mean):.5f}")
         print("-" * 30)
 
         if i - best_epoch >= 10:
             print(f"Early stopping at epoch {i}")
             break
     total_duration = time.time() - start_train_time # 5. 任务总耗时
-    print(f"✅ Training Finished! Total Time Cost: {total_duration/60:.2f} min")
+    print(f"✅ Training Finished! Total Time Cost: {total_duration:.2f} s")
     return testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch
