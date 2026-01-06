@@ -210,8 +210,8 @@ def init_test_datasets_multi_stu(
                     test_question_window_dataset = KTDataset(os.path.join(data_config["dpath"], predict_file_type if "top_" in predict_file_type else data_config[predict_file_type]), data_config["input_type"], {-1}, True)
 
     # 构建 DataLoader
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False) if test_dataset else None
-    test_window_loader = DataLoader(test_window_dataset, batch_size=batch_size, shuffle=False) if test_window_dataset else None
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,num_workers=8, pin_memory=True) if test_dataset else None
+    test_window_loader = DataLoader(test_window_dataset, batch_size=batch_size, shuffle=False,num_workers=8, pin_memory=True) if test_window_dataset else None
 
     test_question_loader = None
     test_question_window_loader = None
@@ -219,9 +219,9 @@ def init_test_datasets_multi_stu(
     if "test_question_file" in data_config:
         # print(f"has test_question_file!")
         if test_question_dataset and flag_test_question:
-            test_question_loader = DataLoader(test_question_dataset, batch_size=batch_size, shuffle=False)
+            test_question_loader = DataLoader(test_question_dataset, batch_size=batch_size, shuffle=False,num_workers=8, pin_memory=True)
         if test_question_window_dataset and flag_test_question_window:
-            test_question_window_loader = DataLoader(test_question_window_dataset, batch_size=batch_size, shuffle=False)
+            test_question_window_loader = DataLoader(test_question_window_dataset, batch_size=batch_size, shuffle=False,num_workers=8, pin_memory=True)
 
     return test_loader, test_window_loader, test_question_loader, test_question_window_loader
 
@@ -320,15 +320,15 @@ def init_test_datasets(data_config, model_name, batch_size, diff_level=None, arg
             test_question_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_question_file"]), data_config["input_type"], {-1}, True)
             test_question_window_dataset = KTDataset(os.path.join(data_config["dpath"], data_config["test_question_window_file"]), data_config["input_type"], {-1}, True)
 
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-    test_window_loader = DataLoader(test_window_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,num_workers=8, pin_memory=True)
+    test_window_loader = DataLoader(test_window_dataset, batch_size=batch_size, shuffle=False,num_workers=8, pin_memory=True)
     if "test_question_file" in data_config:
         print(f"has test_question_file!")
         test_question_loader,test_question_window_loader = None,None
         if not test_question_dataset is None:
-            test_question_loader = DataLoader(test_question_dataset, batch_size=batch_size, shuffle=False)
+            test_question_loader = DataLoader(test_question_dataset, batch_size=batch_size, shuffle=False,num_workers=8, pin_memory=True)
         if not test_question_window_dataset is None:
-            test_question_window_loader = DataLoader(test_question_window_dataset, batch_size=batch_size, shuffle=False)
+            test_question_window_loader = DataLoader(test_question_window_dataset, batch_size=batch_size, shuffle=False,num_workers=8, pin_memory=True)
 
     return test_loader, test_window_loader, test_question_loader, test_question_window_loader
 
@@ -456,8 +456,8 @@ def init_dataset4train(dataset_name, model_name, data_config, i, batch_size, dif
         print(f"num_it:{len(it2idx)}")
         data_config["num_at"] = len(at2idx) + 1
         data_config["num_it"] = len(it2idx) + 1
-    # test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-    # # test_window_loader = DataLoader(test_window_dataset, batch_size=batch_size, shuffle=False)
+    # test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,num_workers=8, pin_memory=True)
+    # # test_window_loader = DataLoader(test_window_dataset, batch_size=batch_size, shuffle=False,num_workers=8, pin_memory=True)
     # test_window_loader = None
     return train_loader, valid_loader#, test_loader, test_window_loader
 
@@ -581,7 +581,7 @@ def init_dataset4train(dataset_name, model_name, data_config, i, batch_size, dif
 #         print(f"num_it:{len(it2idx)}")
 #         data_config["num_at"] = len(at2idx) + 1
 #         data_config["num_it"] = len(it2idx) + 1
-#     # test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-#     # # test_window_loader = DataLoader(test_window_dataset, batch_size=batch_size, shuffle=False)
+#     # test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,num_workers=8, pin_memory=True)
+#     # # test_window_loader = DataLoader(test_window_dataset, batch_size=batch_size, shuffle=False,num_workers=8, pin_memory=True)
 #     # test_window_loader = None
 #     return train_loader, valid_loader#, test_loader, test_window_loader

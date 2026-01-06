@@ -13,6 +13,8 @@ data/
 *.pkl
 saved_model
 build/
+offline_train/
+offline_logs/
 .vscode/
 data/assist*
 data/assist2012

@@ -49,14 +49,14 @@ parameters:
     loss_c_next_lambda:
         values: [0.5, 1.0,1.5, 2.0]       # 命令中用过 2 和 1.5
     acq_levels:
-        values: [10,20,30]
+        values: [10]
     gamma:
         values: [0.2,0.4,0.6,0.8]
     cog_levels:
-        values: [10,20,30]
+        values: [10]
     lambda_rl:
         values: [0.05,0.1,0.3,0.5]
+    lam:
+        values: [0.80, 0.90, 0.95, 0.98]
     output_mode:
         values: ['OUTPUT_MODEL']
-    batch_size:
-        values: [32]

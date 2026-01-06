@@ -1306,7 +1306,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             # print(f"start predict seqlen: {lenc}")
             if model_name not in ["llm", "mpllm"]:
                 model.eval()
-
+            
             # print(f"before y: {y.shape}")
             cq = torch.cat((q[:,0:1], qshft), dim=1)
             cc = torch.cat((c[:,0:1], cshft), dim=1)

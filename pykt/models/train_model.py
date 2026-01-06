@@ -182,15 +182,15 @@ def model_forward(model, data, rel=None):
     else:
         dcur = data
     if model_name in ["dimkt"]:
-        q, c, r, t,sd,qd = dcur["qseqs"].to(device), dcur["cseqs"].to(device), dcur["rseqs"].to(device), dcur["tseqs"].to(device),dcur["sdseqs"].to(device),dcur["qdseqs"].to(device)
-        qshft, cshft, rshft, tshft,sdshft,qdshft = dcur["shft_qseqs"].to(device), dcur["shft_cseqs"].to(device), dcur["shft_rseqs"].to(device), dcur["shft_tseqs"].to(device),dcur["shft_sdseqs"].to(device),dcur["shft_qdseqs"].to(device)
+        q, c, r, t,sd,qd = dcur["qseqs"].to(device, non_blocking=True), dcur["cseqs"].to(device, non_blocking=True), dcur["rseqs"].to(device, non_blocking=True), dcur["tseqs"].to(device, non_blocking=True),dcur["sdseqs"].to(device, non_blocking=True),dcur["qdseqs"].to(device, non_blocking=True)
+        qshft, cshft, rshft, tshft,sdshft,qdshft = dcur["shft_qseqs"].to(device, non_blocking=True), dcur["shft_cseqs"].to(device, non_blocking=True), dcur["shft_rseqs"].to(device, non_blocking=True), dcur["shft_tseqs"].to(device, non_blocking=True),dcur["shft_sdseqs"].to(device, non_blocking=True),dcur["shft_qdseqs"].to(device, non_blocking=True)
     else:
-        q, c, r, t = dcur["qseqs"].to(device), dcur["cseqs"].to(device), dcur["rseqs"].to(device), dcur["tseqs"].to(device)
-        qshft, cshft, rshft, tshft = dcur["shft_qseqs"].to(device), dcur["shft_cseqs"].to(device), dcur["shft_rseqs"].to(device), dcur["shft_tseqs"].to(device)
+        q, c, r, t = dcur["qseqs"].to(device, non_blocking=True), dcur["cseqs"].to(device, non_blocking=True), dcur["rseqs"].to(device, non_blocking=True), dcur["tseqs"].to(device, non_blocking=True)
+        qshft, cshft, rshft, tshft = dcur["shft_qseqs"].to(device, non_blocking=True), dcur["shft_cseqs"].to(device, non_blocking=True), dcur["shft_rseqs"].to(device, non_blocking=True), dcur["shft_tseqs"].to(device, non_blocking=True)
         
-    m, sm = dcur["masks"].to(device), dcur["smasks"].to(device)
+    m, sm = dcur["masks"].to(device, non_blocking=True), dcur["smasks"].to(device, non_blocking=True)
     # if model_name in needs_uid_models:
-    #     uid = dcur["uid"].to(device)  # 提取 uid 并送到设备
+    #     uid = dcur["uid"].to(device, non_blocking=True)  # 提取 uid 并送到设备
     ys, preloss = [], []
     cq = torch.cat((q[:,0:1], qshft), dim=1)
     cc = torch.cat((c[:,0:1], cshft), dim=1)
@@ -256,7 +256,7 @@ def model_forward(model, data, rel=None):
             if not matrix.is_sparse:
                 matrix = matrix.to_sparse()
         perturb_shape = (matrix.shape[0], emb_size)
-        perturb = torch.FloatTensor(*perturb_shape).uniform_(-step_size, step_size).to(device)
+        perturb = torch.FloatTensor(*perturb_shape).uniform_(-step_size, step_size).to(device, non_blocking=True)
         perturb.requires_grad_()
         y, y2, y3, contrast_loss = model(dcur, train=True, perb=perturb)
         ys = [y[:,1:], y2, y3]
@@ -289,7 +289,7 @@ def model_forward(model, data, rel=None):
         # https://drive.google.com/drive/folders/1JWstsquI3TzbUlqB1EyCbjem4qPyRLCh?usp=drive_link
         
         perturb_shape = (model.matrix.shape[0], model.emb_size)
-        perturb = torch.FloatTensor(*perturb_shape).uniform_(-step_size, step_size).to(device)
+        perturb = torch.FloatTensor(*perturb_shape).uniform_(-step_size, step_size).to(device, non_blocking=True)
         perturb.requires_grad_()
         y, y2, y3, contrast_loss = model(dcur, train=True, perb=perturb)
         
@@ -334,7 +334,7 @@ def model_forward(model, data, rel=None):
         y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
         ys.append(y) # first: yshft
     elif model_name in ["long_dkt"]:
-        uids = dcur["uid"].to(device)
+        uids = dcur["uid"].to(device, non_blocking=True)
         # print(f"uids：{uids}")
         
         # 如果提供了学生状态管理器，则使用持久化的隐藏状态
@@ -363,12 +363,12 @@ def model_forward(model, data, rel=None):
         probas = y[:,1:]  # 已经通过Sigmoid
         
         # print(dcur.keys()) 
-        uids = dcur["uid"].to(device)
+        uids = dcur["uid"].to(device, non_blocking=True)
         masks = sm
         # 获取当前批次的学生权重（假设权重存储在dcur中）
         weights = None
         # if "student_weights" in dcur:
-        #     weights = dcur["student_weights"].to(device)
+        #     weights = dcur["student_weights"].to(device, non_blocking=True)
         
         # 计算学生间AUC差异
         auc_discrepancy = student_auc_discrepancy(
@@ -411,7 +411,7 @@ def model_forward(model, data, rel=None):
         # 提取真实标签和学生ID
         targets = rshft
         # print(dcur.keys()) 
-        uids = dcur["uid"].to(device)
+        uids = dcur["uid"].to(device, non_blocking=True)
         masks = sm
         
         # 计算原始损失
@@ -420,7 +420,7 @@ def model_forward(model, data, rel=None):
         # 获取当前批次的学生权重（假设权重存储在dcur中）
         weights = None
         # if "student_weights" in dcur:
-        #     weights = dcur["student_weights"].to(device)
+        #     weights = dcur["student_weights"].to(device, non_blocking=True)
         
         # 计算学生间AUC差异
         auc_discrepancy = student_auc_discrepancy(
@@ -491,7 +491,7 @@ def model_forward(model, data, rel=None):
                 # FGSM对抗训练
                 features_grad = grad(loss, features, retain_graph=True)
                 p_adv = torch.FloatTensor(model.epsilon * _l2_normalize_adv(features_grad[0].data))
-                p_adv = Variable(p_adv).to(device)
+                p_adv = Variable(p_adv).to(device, non_blocking=True)
                 pred_res, _ = model(c.long(), r.long(), p_adv)
                 pred_res = (pred_res * one_hot(cshft.long(), model.num_c)).sum(-1)
                 adv_loss = cal_loss(model, [pred_res], r, rshft, sm)
