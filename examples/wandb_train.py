@@ -207,18 +207,7 @@ def main(params):
         with open("../configs/kt_config.json") as f:
             config = json.load(f)
             train_config = config["train_config"]
-            if model_name in ["dkvmn","deep_irt", "sakt", "saint","saint++", "akt", "robustkt", "folibikt", "atkt", "lpkt", "skvmn", "dimkt",  "Transformer_template", "mamba_atakt", "mamba_atakt", "balance_akt", "qwen", "at_dkt", "TransformerKT", "multi_dataset_akt"]:
-                train_config["batch_size"] = 64 ## because of OOM
-            if model_name in ["simplekt","stablekt", "bakt_time", "sparsekt", "dbakt"]:
-                train_config["batch_size"] = 64 ## because of OOM
-            if model_name in ["gkt"]:
-                train_config["batch_size"] = 16 
-            if model_name in ["qdkt","qikt", "qikt_mamba", "qikt_lpkt", "qikt_dimkt", "qikt_iekt", "qikt_iekt_low_dropout", "qikt_iekt_train", "qikt_iekt_mask", "qikt_iekt_dual", "qikt_iekt_dual_actor", "qikt_iekt_dual_gae", "qikt_iekt_dual_ppo"] and dataset_name in ['algebra2005','bridge2algebra2006', "qikt_mamba", "qikt_lpkt", "qikt_dimkt", "qikt_iekt", "qikt_iekt_low_dropout", "qikt_iekt_train", "qikt_iekt_mask", "qikt_iekt_dual", "qikt_iekt_dual_actor", "qikt_iekt_dual_gae", "qikt_iekt_dual_ppo"]:
-                train_config["batch_size"] = 32 
-            if model_name in ["dtransformer"]:
-                train_config["batch_size"] = 16 ## because of OOM
-            if model_name in ["long_dkt"]:
-                train_config["batch_size"] = 1 ## because of OOM
+            
             model_config = copy.deepcopy(params)
             for key in ["model_name", "dataset_name", "emb_type", "save_dir", "fold", "seed","use_trained"]:
                 del model_config[key]
@@ -347,7 +336,7 @@ def main(params):
            
             if predict_after_train == 1:
                 predict_params = {
-                    "bz": 16,  # 来自原cmd的--bz 16
+                    "bz": batch_size,  # 来自原cmd的--bz 16
                     "save_dir": ckpt_path,
                     "fusion_type": "late_fusion",  # 原脚本默认
                     "use_wandb": params['use_wandb'],
@@ -371,7 +360,7 @@ def main(params):
                         wandb.log({"prediction_status": "failed"})
             elif predict_after_train == 2:
                 predict_params = {
-                    "bz": 16,  # 来自原cmd的--bz 16
+                    "bz": batch_size,  # 来自原cmd的--bz 16
                     "save_dir": ckpt_path,
                     "use_wandb": params['use_wandb'],
                 }
