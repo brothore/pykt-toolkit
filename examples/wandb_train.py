@@ -177,6 +177,7 @@ def main(params):
             params['use_wandb'] = 0
 
         mode = params.get('mode', "train")
+        accumulation_steps = params.get('accumulation_steps', 1)
 
         if params['use_wandb']==1:
             import wandb
@@ -299,17 +300,17 @@ def main(params):
         if model_name == "rkt":
             testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = train_model(
                 model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model, 
-                data_config[dataset_name], fold, use_trained=use_trained
+                data_config[dataset_name], fold, use_trained=use_trained,accumulation_steps=accumulation_steps
             )
         elif model_name == "long_dkt":
             testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = train_model(
                 model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model,
-                data_config[dataset_name], use_trained=use_trained
+                data_config[dataset_name], use_trained=use_trained,accumulation_steps=accumulation_steps
             )
         else:
             testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = train_model(
                 model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model, 
-                use_trained=use_trained
+                use_trained=use_trained,accumulation_steps=accumulation_steps
             )
 
 
