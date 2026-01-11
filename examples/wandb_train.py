@@ -337,7 +337,7 @@ def main(params):
            
             if predict_after_train == 1:
                 predict_params = {
-                    "bz": batch_size,  # 来自原cmd的--bz 16
+                    "bz": batch_size/2,  # 来自原cmd的--bz 16
                     "save_dir": ckpt_path,
                     "fusion_type": "late_fusion",  # 原脚本默认
                     "use_wandb": params['use_wandb'],

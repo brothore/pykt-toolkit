@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser.add_argument("--dropout", type=float, default=0.4)
     parser.add_argument("--lambda_rl", type=float, default=0.1)
     parser.add_argument("--gamma", type=float, default=0.93)
-    parser.add_argument("--emb_size", type=int, default=300)
+    parser.add_argument("--emb_size", type=int, default=256)
     parser.add_argument("--acq_levels", type=int, default=10)
     parser.add_argument("--cog_levels", type=int, default=10)
     parser.add_argument("--mlp_layer_num", type=int, default=2)
