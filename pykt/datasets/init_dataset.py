@@ -15,7 +15,7 @@ from .que_data_loader_promptkt import KTQueDataset_promptKT
 from .pretrain_utils import get_pretrain_data
 # 1. 在文件开头添加新的导入
 from .multi_dataset_akt_dataloader import MultiKTDataset
-from pykt.models.cuda_retry import retry_decorator
+
 import os
 from torch.utils.data import DataLoader
 NUM_WORKERS = 8

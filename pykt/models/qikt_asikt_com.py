@@ -14,7 +14,48 @@ from scipy.special import softmax
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from mamba2 import Mamba2Config, Mamba2
+class KSM(nn.Module):
+    def __init__(self, d_model, device='cpu'):
+        super().__init__()
+        # 这里的 args 实例化建议根据具体的 Mamba2 库调整
+        # 方案 a 中 d_model 为 hidden_size；方案 b 中 d_model 为压缩后的目标维度
+        self.blocks_5 = Mamba2(args=Mamba2Config(d_model=d_model * 4), device=device)
+        self.blocks_6 = Mamba2(args=Mamba2Config(d_model=d_model), device=device)
+        self.linear = nn.Linear(d_model * 4, d_model * 4) # 对应你 forward 中的 self.linear
 
+    def forward(self, x):
+        # x shape: [batch, seq_len, d_model]
+        orig_seq_len = x.shape[1]
+        
+        # 动态获取 Mamba2 配置中的 chunk_size，你代码里默认是 10
+        chunk_size = self.blocks_5.args.chunk_size 
+        
+        # 1. 计算需要补齐的长度 (Padding)
+        pad_len = (chunk_size - orig_seq_len % chunk_size) % chunk_size
+        
+        if pad_len > 0:
+            # F.pad 的最后两个参数对应最后一个维度，倒数第三/四个参数对应倒数第二个维度
+            # 我们需要在序列维度 (dim=1) 填充，所以写成 (0, 0, 0, pad_len)
+            # 代表：d_model维度前后补0，seq_len维度前补0后补pad_len
+            x = F.pad(x, (0, 0, 0, pad_len), value=0.0) 
+
+        # 2. 运行 Mamba2 模块
+        # 注意：根据你提供的 Mamba2 代码，forward 返回 (y, h)，我们需要取第一个 y
+        h, _ = self.blocks_5(x) 
+        
+        # 这里的 linear 逻辑对应你之前的 forward 描述
+        h_gate = torch.sigmoid(self.linear(h))
+        
+        # 假设 blocks_6 接收的维度是 d_model，这里进行切片投影
+        # 如果你的 d_model 是按照 4 倍扩充的，需确保这里维度匹配
+        y, _ = self.blocks_6(h_gate[..., :h_gate.shape[-1]//4]) 
+
+        # 3. 切割回原始长度 (Unpadding)
+        if pad_len > 0:
+            y = y[:, :orig_seq_len, :]
+            
+        return y
 class MLP(nn.Module):
     '''
     classifier decoder implemented with mlp
@@ -62,7 +103,7 @@ def get_outputs(self, emb_qc_shift, h, data, add_name="", model_type='question')
 class QIKTNet(nn.Module):
     def __init__(self, num_q,num_c,emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',mlp_layer_num=1,other_config={},num_attn_head=2,version="v0"):
         super().__init__()
-        self.model_name = "qikt_mamba"
+        self.model_name = "qikt_asikt_com"
         self.num_q = num_q
         self.num_c = num_c
         self.emb_size = emb_size
@@ -113,8 +154,14 @@ class QIKTNet(nn.Module):
             self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, num_layers=2, batch_first=True)
             self.concept_lstm_layer = self.que_lstm_layer
         else:
-            self.que_lstm_layer = nn.GRU(self.emb_size*4, self.hidden_size, batch_first=True)
-            self.concept_lstm_layer = nn.GRU(self.emb_size*2, self.hidden_size, batch_first=True)
+            self.que_compressor = KSM(d_model=self.hidden_size, device=device)
+            self.que_comp_pre = nn.Linear(self.emb_size * 4, self.hidden_size * 4)
+            
+            # Concept 压缩器: 2*emb -> hidden_size
+            self.con_compressor = KSM(d_model=self.hidden_size, device=device)
+            self.con_comp_pre = nn.Linear(self.emb_size * 2, self.hidden_size * 4)
+            self.que_lstm_layer = nn.GRU(self.hidden_size, self.hidden_size, batch_first=True)
+            self.concept_lstm_layer = nn.GRU(self.hidden_size, self.hidden_size, batch_first=True)
             # self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
             # self.concept_lstm_layer = Mamba(d_model=self.emb_size*2, d_state=self.hidden_size)
 
@@ -181,8 +228,10 @@ class QIKTNet(nn.Module):
             que_h = self.que_proj(que_h)
         else:
             #原版
+            q_compressed = self.que_compressor(self.que_comp_pre(emb_qca_current))
+            que_h, _ = self.que_lstm_layer(q_compressed)
+            que_h = self.dropout_layer(que_h)
             
-            que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
         # print(f"[DEBUG] que_h.shape: {que_h.shape} (type: {type(que_h.shape)})")
         que_outputs = get_outputs(self, emb_qc_shift, que_h, data, add_name="", model_type="question")
         outputs = que_outputs
@@ -217,17 +266,18 @@ class QIKTNet(nn.Module):
             concept_h = self.dropout_layer(concept_h)
         else:
             #原版
-            
-            concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
+            c_compressed = self.con_compressor(self.con_comp_pre(emb_ca_current))
+            concept_h, _ = self.concept_lstm_layer(c_compressed)
+            concept_h = self.dropout_layer(concept_h)
         concept_outputs = get_outputs(self, emb_qc_shift, concept_h, data, add_name="", model_type="concept")
         outputs['y_concept_all'] = concept_outputs['y_concept_all']
         outputs['y_concept_next'] = concept_outputs['y_concept_next']
         
         return outputs
 
-class QIKT_MAMBA(QueBaseModel):
+class QIKT_ASIKT_COM(QueBaseModel):
     def __init__(self, num_q,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",num_attn_head=2,**kwargs):
-        model_name = "qikt_mamba"
+        model_name = "qikt_asikt_com"
        
         debug_print(f"emb_type is {emb_type}",fuc_name="QIKT")
 

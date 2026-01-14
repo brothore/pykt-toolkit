@@ -299,6 +299,10 @@ class QIKTNet(nn.Module):
             concept_h_seq = []
             
             for t in range(seq_len):
+                # if t == 0:
+                #     print(f"xt (题目表征) shape: {xt.shape}")
+                #     print(f"h_que (当前隐藏状态) shape: {h_que.shape}")
+                #     print(f"mastery_vec (RL选出的向量) shape: {mastery_vec.shape}")
                 ct = emb_ca_current[:, t, :]
                 
                 # --- Concept RL Logic ---
@@ -443,10 +447,12 @@ class QIKT_IEKT_DUAL_GAE(QueBaseModel):
             # 1. 提取 RL 数据
             # 形状均为 [Batch, Seq, Dim] 或 [Batch, Seq]
             probs_q_seq = torch.stack(self.model.rl_data["probs_q"], dim=1)[:, :current_seq_len, :]
+            # print(f"Action Distribution Sample: {probs_q_seq[0, 0].detach().cpu().numpy()}")
             actions_q_seq = torch.stack(self.model.rl_data["actions_q"], dim=1)[:, :current_seq_len]
             values_q_seq = torch.stack(self.model.rl_data["values_q"], dim=1)[:, :current_seq_len].squeeze(-1)
 
             probs_c_seq = torch.stack(self.model.rl_data["probs_c"], dim=1)[:, :current_seq_len, :]
+            # print(f"Action Distribution Sample: {probs_c_seq[0, 0].detach().cpu().numpy()}")
             actions_c_seq = torch.stack(self.model.rl_data["actions_c"], dim=1)[:, :current_seq_len]
             values_c_seq = torch.stack(self.model.rl_data["values_c"], dim=1)[:, :current_seq_len].squeeze(-1)
 
@@ -475,6 +481,8 @@ class QIKT_IEKT_DUAL_GAE(QueBaseModel):
 
             # 分别为 Question 和 Concept 计算
             adv_q, ret_q = compute_gae_and_returns(rewards, values_q_seq, self.gamma, self.lam, mask)
+            # print(f"values_q_seq requires_grad: {values_q_seq.requires_grad}")
+            # print(f"values_q_seq grad_fn: {values_q_seq.grad_fn}")
             adv_c, ret_c = compute_gae_and_returns(rewards, values_c_seq, self.gamma, self.lam, mask)
 
             # 3. 计算 Actor Loss (Policy Gradient with GAE)

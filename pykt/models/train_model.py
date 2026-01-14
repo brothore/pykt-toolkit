@@ -607,6 +607,34 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
                 opt.zero_grad()
                 loss_scaled = loss / accumulation_steps
                 loss_scaled.backward()
+
+                #debug 强化学习验证
+                # if model.model_name.startswith("qikt_iekt_dual_gae") and (batch_idx % 100 == 0):
+                #     print(f"\n[Gradient Check] Batch: {batch_idx}")
+                #     print(f"Model keys: {model.model.__dict__.keys()}")
+                #     # 这里的 model 实际上是 QIKT_IEKT_DUAL_GAE，里面的 RL 组件在 model.model 属性中
+                #     # 1. 检查 Question 分支的 Actor
+                #     if hasattr(model.model, 'policy_net_q'):
+                #         for name, param in model.model.policy_net_q.named_parameters():
+                #             if param.grad is not None:
+                #                 print(f"  Q-Actor Grad ({name}): {param.grad.abs().mean().item():.8f}")
+                #             else:
+                #                 print(f"  !!! Q-Actor Grad is NONE ({name}) !!!")
+                                
+                #     # 2. 检查 Question 分支的 Critic
+                #     if hasattr(model.model, 'critic_net_q'):
+                #         for name, param in model.model.critic_net_q.named_parameters():
+                #             if param.grad is not None:
+                #                 print(f"  Q-Critic Grad ({name}): {param.grad.abs().mean().item():.8f}")
+                                
+                #     # 3. 检查 Concept 分支
+                #     if hasattr(model.model, 'policy_net_c'):
+                #         p_grad = model.model.policy_net_c[0].weight.grad # 取第一层示例
+                #         if p_grad is not None:
+                #             print(f"  C-Actor Grad: {p_grad.abs().mean().item():.8f}")
+                # --- END: 梯度检查排查位置 ---
+
+
                 if (batch_idx + 1) % accumulation_steps == 0:
                     # 梯度裁剪 (针对不同模型)
                     if model.model_name == "rkt":

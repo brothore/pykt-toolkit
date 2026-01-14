@@ -1,11 +1,11 @@
-program: wandb_qikt_iekt_dual_gae_train.py
+program: wandb_qikt_iekt_dual_gae_v2_train.py
 method: bayes
 metric:
     goal: maximize
     name: validauc
 parameters:
     model_name:
-        values: ["qikt_iekt_dual_gae"]
+        values: ["qikt_iekt_dual_gae_v2"]
         
     # ==========================================
     # ⚠️ 脚本占位符 (请勿修改，用于generate_wandb.py替换)

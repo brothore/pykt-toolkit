@@ -160,6 +160,14 @@ def init_model(model_name, model_config, data_config, emb_type):
         from .qikt_mamba import QIKT_MAMBA
         model = QIKT_MAMBA(num_q=data_config['num_q'], num_c=data_config['num_c'],
                      max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
+    elif model_name == "qikt_asikt":
+        from .qikt_asikt import QIKT_ASIKT
+        model = QIKT_ASIKT(num_q=data_config['num_q'], num_c=data_config['num_c'],
+                     max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
+    elif model_name == "qikt_asikt_com":
+        from .qikt_asikt_com import QIKT_ASIKT_COM
+        model = QIKT_ASIKT_COM(num_q=data_config['num_q'], num_c=data_config['num_c'],
+                     max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
     elif model_name == "qikt_iekt":
         from .qikt_iekt import QIKT_IEKT
         model = QIKT_IEKT(num_q=data_config['num_q'], num_c=data_config['num_c'],
@@ -187,6 +195,14 @@ def init_model(model_name, model_config, data_config, emb_type):
     elif model_name == "qikt_iekt_dual_gae":
         from .qikt_iekt_dual_gae import QIKT_IEKT_DUAL_GAE
         model = QIKT_IEKT_DUAL_GAE(num_q=data_config['num_q'], num_c=data_config['num_c'],
+                     max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
+    elif model_name == "qikt_iekt_dual_gae_v2":
+        from .qikt_iekt_dual_gae_v2 import QIKT_IEKT_DUAL_GAE_V2
+        model = QIKT_IEKT_DUAL_GAE_V2(num_q=data_config['num_q'], num_c=data_config['num_c'],
+                     max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
+    elif model_name == "qikt_iekt_dual_gae_v3":
+        from .qikt_iekt_dual_gae_v3 import QIKT_IEKT_DUAL_GAE_V3
+        model = QIKT_IEKT_DUAL_GAE_V3(num_q=data_config['num_q'], num_c=data_config['num_c'],
                      max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
     elif model_name == "qikt_iekt_mask":
         from .qikt_iekt_mask import QIKT_IEKT_MASK

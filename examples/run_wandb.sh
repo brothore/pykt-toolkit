@@ -30,7 +30,7 @@ export WANDB_API_KEY="b2fd3c192e86f37e55450d3c8894511ff8bce88d"
 # ==========================================
 
 # --- 基础配置 ---
-DATASET_NAME="peiyou"   
+DATASET_NAME="nips_task34"   
 MODEL_NAME="qikt_iekt_dual_gae"            
 FOLDS="0"           
 
@@ -42,9 +42,9 @@ DEFAULT_PROJECT_NAME="${DATASET_NAME}_${MODEL_NAME}_${MARK}"
 
 # --- 其他配置 ---
 GPU_IDS="0"                 
-BATCH_SIZE=64
-BATCH_SIZE=1024 #nips_task34
-BATCH_SIZE=384 #peiyou
+BATCH_SIZE=256 
+# BATCH_SIZE=1024 #nips_task34
+# BATCH_SIZE=384 #peiyou
 SWEEP_START_ID=0            
 SWEEP_END_ID=100            
 EXECUTE_AGENTS=true         

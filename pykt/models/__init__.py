@@ -1,6 +1,7 @@
 from .evaluate_model import evaluate,evaluate_question,evaluate_splitpred_question,effective_fusion,evaluate_llm_question_async,evaluate_return_results
 from .train_model import train_model
-from .train_model4promptkt import train_model4promptkt
+# from .train_model4promptkt import train_model4promptkt
 from .init_model import init_model,load_model
 from .lpkt_utils import lpkt_evaluate_multi_ahead
-from .init_model4promptkt import init_model4promptkt,load_model4promptkt
+# from .init_model4promptkt import init_model4promptkt,load_model4promptkt
+from mamba2 import Mamba2Config, Mamba2

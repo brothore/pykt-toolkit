@@ -14,7 +14,7 @@ from scipy.special import softmax
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from torch.distributions import Categorical
 class MLP(nn.Module):
     '''
     classifier decoder implemented with mlp
@@ -60,9 +60,10 @@ def get_outputs(self, emb_qc_shift, h, data, add_name="", model_type='question')
     return outputs
 
 class QIKTNet(nn.Module):
-    def __init__(self, num_q,num_c,emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',mlp_layer_num=1,other_config={},num_attn_head=2,version="v0"):
+    def __init__(self, num_q,num_c,emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',mlp_layer_num=1,other_config={},num_attn_head=2,version="v0",acq_levels = 10,cog_levels = 10, lam=0.95):
         super().__init__()
-        self.model_name = "qikt_mamba"
+        self.model_name = "qikt_iekt_dual_gae_v2"
+        self.lam = lam
         self.num_q = num_q
         self.num_c = num_c
         self.emb_size = emb_size
@@ -71,10 +72,12 @@ class QIKTNet(nn.Module):
         self.device = device
         self.other_config = other_config
         self.output_mode = self.other_config.get('output_mode','an')
-
+        self.acq_levels = acq_levels
+        self.cog_levels = cog_levels
         self.version = version
         self.emb_type = emb_type
-      
+        self.mastery_gate = nn.Linear(self.emb_size, self.emb_size * 4)
+        self.skill_gate = nn.Linear(self.emb_size, self.emb_size * 2)
 
         self.que_emb = QueEmb(num_q=num_q,num_c=num_c,emb_size=emb_size,emb_type=self.emb_type,model_name=self.model_name,device=device,
                              emb_path=emb_path,pretrain_dim=pretrain_dim,num_attn_head=num_attn_head)
@@ -112,6 +115,46 @@ class QIKTNet(nn.Module):
             self.four2two = nn.Linear(self.emb_size*2, self.emb_size*4)
             self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, num_layers=2, batch_first=True)
             self.concept_lstm_layer = self.que_lstm_layer
+        elif self.version == "iekt":
+            # --- Question Branch IEKT 组件 ---
+            # 掌握度矩阵 Q
+            self.acq_matrix_q = nn.Parameter(torch.randn(self.acq_levels, self.emb_size).to(self.device), requires_grad=True)
+            # 策略网络 Q: 输入 (4*emb + h) -> 输出 10
+            self.policy_net_q = nn.Sequential(
+                nn.Linear(self.emb_size * 4 + self.hidden_size, self.hidden_size),
+                nn.ReLU(),
+                nn.Linear(self.hidden_size, self.acq_levels)
+            )
+            self.critic_net_q = nn.Sequential(
+                nn.Linear(self.emb_size * 4 + self.hidden_size, self.hidden_size),
+                nn.ReLU(),
+                nn.Linear(self.hidden_size, 1) # 输出 Value
+            )
+
+            self.critic_net_c = nn.Sequential(
+                nn.Linear(self.emb_size * 2 + self.hidden_size, self.hidden_size),
+                nn.ReLU(),
+                nn.Linear(self.hidden_size, 1) # 输出 Value
+            )
+            # --- Concept Branch IEKT 组件 (新增) ---
+            # 掌握度矩阵 C
+            self.acq_matrix_c = nn.Parameter(torch.randn(self.cog_levels, self.emb_size).to(self.device), requires_grad=True)
+            # 策略网络 C: 输入 (2*emb + h) -> 输出 10 
+            # 注意: emb_ca 的维度通常是 emb_c(1) + emb_r(1) = 2*emb_size
+            self.policy_net_c = nn.Sequential(
+                nn.Linear(self.emb_size * 2 + self.hidden_size, self.hidden_size),
+                nn.ReLU(),
+                nn.Linear(self.hidden_size, self.cog_levels)
+            )
+            self.que_lstm_cell = nn.GRUCell(self.emb_size * 4, self.hidden_size)
+            
+            # Concept Cell (新增): 输入 2*emb + 1*emb(mastery) = 3*emb
+            self.concept_lstm_cell = nn.GRUCell(self.emb_size * 2, self.hidden_size)
+            
+            # 为了兼容其他可能用到的地方，保留 layer 定义
+            self.que_lstm_layer = nn.GRU(self.emb_size*4, self.hidden_size, batch_first=True)
+            self.concept_lstm_layer = nn.GRU(self.emb_size*2, self.hidden_size, batch_first=True)
+            
         else:
             self.que_lstm_layer = nn.GRU(self.emb_size*4, self.hidden_size, batch_first=True)
             self.concept_lstm_layer = nn.GRU(self.emb_size*2, self.hidden_size, batch_first=True)
@@ -134,7 +177,8 @@ class QIKTNet(nn.Module):
         self.que_disc = MLP(self.mlp_layer_num,self.hidden_size*2,1,dropout)
         
         
-
+    def pi_func(self, x):
+        return F.softmax(self.policy_net(x), dim=-1)
     def get_avg_fusion_concepts(self,y_concept,cshft):
         """获取知识点 fusion 的预测结果
         """
@@ -153,11 +197,25 @@ class QIKTNet(nn.Module):
         r = r.to(self.device).long()
         if data is not None:
             data = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in data.items()}
-
-        _, emb_qca, emb_qc, _, emb_c = self.que_emb(q, c, r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
         
+        batch_size = q.size(0)
+        h_que = torch.zeros(batch_size, self.hidden_size).to(self.device)
+        h_concept = torch.zeros(batch_size, self.hidden_size).to(self.device)
+        concept_h_seq = []
+        _, emb_qca, emb_qc, _, emb_c = self.que_emb(q, c, r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
+        emb_ca = torch.cat([
+            emb_c.mul((1 - r).unsqueeze(-1).repeat(1, 1, self.emb_size)),
+            emb_c.mul(r.unsqueeze(-1).repeat(1, 1, self.emb_size))
+        ], dim=-1)
+
+
+        self.rl_data = {
+            "probs_q": [], "actions_q": [], "values_q": [],
+            "probs_c": [], "actions_c": [], "values_c": []
+        }
         emb_qc_shift = emb_qc[:, 1:, :]
-        emb_qca_current = emb_qca[:, :-1, :]
+        emb_qca_current = emb_qca[:, :-1, :] # Question 输入
+        emb_ca_current = emb_ca[:, :-1, :]   # Concept 输入
         # question model
         if self.version == "lstm":
 
@@ -179,6 +237,40 @@ class QIKTNet(nn.Module):
 
             que_h = self.dropout_layer(self.que_lstm_layer((emb_qca_current)))
             que_h = self.que_proj(que_h)
+        elif self.version == "iekt":
+            seq_len = emb_qca_current.size(1)
+            que_h_seq = []
+            
+            for t in range(seq_len):
+                xt = emb_qca_current[:, t, :]
+                
+                
+                # --- Question RL Logic ---
+                policy_input = torch.cat([xt, h_que], dim=1) # [B, 4e+h]
+                
+                # 1. Actor: 动作概率
+                probs = F.softmax(self.policy_net_q(policy_input), dim=-1)
+                
+                # 2. [新增] Critic: 状态价值估算
+                value = self.critic_net_q(policy_input) # [B, 1]
+                
+                m = Categorical(probs)
+                action = m.sample()
+                mastery_vec = self.acq_matrix_q[action]
+                
+                self.rl_data["probs_q"].append(probs)
+                self.rl_data["actions_q"].append(action)
+                self.rl_data["values_q"].append(value) # 存储 Value
+                gate = torch.sigmoid(self.mastery_gate(mastery_vec))
+                gru_input = xt * gate
+                # gru_input = torch.cat([modulated_xt, mastery_vec], dim=1)
+                # gru_input = torch.cat([xt, mastery_vec], dim=1)
+                h_que = self.que_lstm_cell(gru_input, h_que)
+                que_h_seq.append(h_que)
+
+            
+            que_h = torch.stack(que_h_seq, dim=1)
+            que_h = self.dropout_layer(que_h)
         else:
             #原版
             
@@ -186,14 +278,6 @@ class QIKTNet(nn.Module):
         # print(f"[DEBUG] que_h.shape: {que_h.shape} (type: {type(que_h.shape)})")
         que_outputs = get_outputs(self, emb_qc_shift, que_h, data, add_name="", model_type="question")
         outputs = que_outputs
-
-        # concept model
-        emb_ca = torch.cat([
-            emb_c.mul((1 - r).unsqueeze(-1).repeat(1, 1, self.emb_size)),
-            emb_c.mul(r.unsqueeze(-1).repeat(1, 1, self.emb_size))
-        ], dim=-1)
-        
-        emb_ca_current = emb_ca[:, :-1, :]
         if self.version == "lstm":
             #mamba
             concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
@@ -215,6 +299,43 @@ class QIKTNet(nn.Module):
             concept_h = self.concept_lstm_layer(self.four2two(emb_ca_current))  # [32, 199, 512]
             concept_h = self.concept_proj(concept_h)  # [32, 199, 256]
             concept_h = self.dropout_layer(concept_h)
+        elif self.version == "iekt":
+            seq_len = emb_ca_current.size(1)
+            concept_h_seq = []
+            
+            for t in range(seq_len):
+                # if t == 0:
+                #     print(f"xt (题目表征) shape: {xt.shape}")
+                #     print(f"h_que (当前隐藏状态) shape: {h_que.shape}")
+                #     print(f"mastery_vec (RL选出的向量) shape: {mastery_vec.shape}")
+                ct = emb_ca_current[:, t, :]
+                
+                # --- Concept RL Logic ---
+                policy_input = torch.cat([ct, h_concept], dim=1)
+                
+                # 1. Actor
+                probs = F.softmax(self.policy_net_c(policy_input), dim=-1)
+                
+                # 2. [新增] Critic
+                value = self.critic_net_c(policy_input) # [B, 1]
+                
+                m = Categorical(probs)
+                action = m.sample()
+                mastery_vec = self.acq_matrix_c[action]
+                
+                self.rl_data["probs_c"].append(probs)
+                self.rl_data["actions_c"].append(action)
+                self.rl_data["values_c"].append(value) # 存储 Value
+                
+                gate = torch.sigmoid(self.skill_gate(mastery_vec))
+                modulated_ct = ct * gate
+                gru_input = modulated_ct
+                # gru_input = torch.cat([ct, mastery_vec], dim=1) 
+                h_concept = self.concept_lstm_cell(gru_input, h_concept)
+                concept_h_seq.append(h_concept)
+                
+            concept_h = torch.stack(concept_h_seq, dim=1)
+            concept_h = self.dropout_layer(concept_h)
         else:
             #原版
             
@@ -225,15 +346,16 @@ class QIKTNet(nn.Module):
         
         return outputs
 
-class QIKT_MAMBA(QueBaseModel):
-    def __init__(self, num_q,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",num_attn_head=2,**kwargs):
-        model_name = "qikt_mamba"
-       
+class QIKT_IEKT_DUAL_GAE_V2(QueBaseModel):
+    def __init__(self, num_q,num_c, emb_size, dropout=0.1, emb_type='qaid', emb_path="", pretrain_dim=768,device='cpu',seed=0,mlp_layer_num=1,other_config={},version="v0",num_attn_head=2,gamma=0.93,lambda_rl=0.1,cog_levels=10,acq_levels=10, lam=0.95,**kwargs):
+        model_name = "qikt_iekt_dual_gae_v2"
+        self.gamma = gamma
+        self.lambda_rl = lambda_rl
         debug_print(f"emb_type is {emb_type}",fuc_name="QIKT")
-
+        self.lam = lam
         super().__init__(model_name=model_name,emb_type=emb_type,emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,seed=seed)
         self.model = QIKTNet(num_q=num_q,num_c=num_c,emb_size=emb_size,dropout=dropout,emb_type=emb_type,
-                               emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,mlp_layer_num=mlp_layer_num,other_config=other_config,num_attn_head=num_attn_head,version=version)
+                               emb_path=emb_path,pretrain_dim=pretrain_dim,device=device,mlp_layer_num=mlp_layer_num,other_config=other_config,num_attn_head=num_attn_head,version=version,acq_levels=acq_levels,cog_levels=cog_levels)
         # 新增：支持动态权重的模块
         self.version = version
         if "auto_uncertainty" in self.version:
@@ -262,6 +384,7 @@ class QIKT_MAMBA(QueBaseModel):
         loss_c_next = self.get_loss(outputs['y_concept_next'],data_new['rshft'],data_new['sm'])#kc level loss
         # over all
         loss_kt = self.get_loss(outputs['y'],data_new['rshft'],data_new['sm'])
+
 
         def get_loss_lambda(x):
             return self.model.other_config.get(f'loss_{x}',0)*self.model.other_config.get(f'output_{x}',0)
@@ -319,7 +442,78 @@ class QIKT_MAMBA(QueBaseModel):
         else:
             loss = loss_kt  + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda* loss_c_next + loss_q_next_lambda*loss_q_next
         # print(f"loss={loss:.3f},loss_kt={loss_kt:.3f},loss_q_all={loss_q_all:.3f},loss_c_all={loss_c_all:.3f},loss_q_next={loss_q_next:.3f},loss_c_next={loss_c_next:.3f}")
-        return outputs['y'],loss#y_question没用
+
+        
+        if self.version == "iekt":
+            y_pred = outputs['y']
+            current_seq_len = y_pred.shape[1]
+            targets = data_new['rshft'][:, :current_seq_len]
+            preds = (y_pred > 0.5).long()
+            rewards = (preds == targets).float()
+            mask = data_new['sm'][:, :current_seq_len]
+
+            # 1. 提取 RL 数据
+            # 形状均为 [Batch, Seq, Dim] 或 [Batch, Seq]
+            probs_q_seq = torch.stack(self.model.rl_data["probs_q"], dim=1)[:, :current_seq_len, :]
+            # print(f"Action Distribution Sample Q: {probs_q_seq[0, 0].detach().cpu().numpy()}")
+            actions_q_seq = torch.stack(self.model.rl_data["actions_q"], dim=1)[:, :current_seq_len]
+            values_q_seq = torch.stack(self.model.rl_data["values_q"], dim=1)[:, :current_seq_len].squeeze(-1)
+
+            probs_c_seq = torch.stack(self.model.rl_data["probs_c"], dim=1)[:, :current_seq_len, :]
+            # print(f"Action Distribution Sample C: {probs_c_seq[0, 0].detach().cpu().numpy()}")
+            actions_c_seq = torch.stack(self.model.rl_data["actions_c"], dim=1)[:, :current_seq_len]
+            values_c_seq = torch.stack(self.model.rl_data["values_c"], dim=1)[:, :current_seq_len].squeeze(-1)
+
+            # 2. 计算 GAE 优势函数
+            # 我们定义一个内部辅助函数来处理两个分支
+            def compute_gae_and_returns(rewards, values, gamma, lam, mask):
+                batch_size, seq_len = rewards.shape
+                advantages = torch.zeros_like(rewards)
+                
+                # 获取 V(s_{t+1})，最后一步补 0
+                next_values = torch.cat([values[:, 1:], torch.zeros(batch_size, 1).to(self.device)], dim=1)
+                
+                # 计算 TD-Error: delta_t = r_t + gamma * V(s_{t+1}) - V(s_t)
+                td_errors = rewards + gamma * next_values - values
+                
+                last_gae_lam = 0
+                for t in reversed(range(seq_len)):
+                    # GAE 公式: A_t = delta_t + gamma * lambda * A_{t+1}
+                    # 只有当 mask[t] 为 1 时才有效
+                    last_gae_lam = td_errors[:, t] + gamma * lam * last_gae_lam * mask[:, t]
+                    advantages[:, t] = last_gae_lam
+                
+                # Returns = Advantage + Value (用于训练 Critic)
+                returns = advantages + values
+                return advantages.detach(), returns.detach()
+
+            # 分别为 Question 和 Concept 计算
+            adv_q, ret_q = compute_gae_and_returns(rewards, values_q_seq, self.gamma, self.lam, mask)
+            # print(f"values_q_seq requires_grad: {values_q_seq.requires_grad}")
+            # print(f"values_q_seq grad_fn: {values_q_seq.grad_fn}")
+            adv_c, ret_c = compute_gae_and_returns(rewards, values_c_seq, self.gamma, self.lam, mask)
+
+            # 3. 计算 Actor Loss (Policy Gradient with GAE)
+            # Question Branch
+            log_probs_q = torch.log(probs_q_seq.gather(2, actions_q_seq.unsqueeze(-1)).squeeze(-1) + 1e-8)
+            loss_actor_q = -(log_probs_q * adv_q * mask).sum() / (mask.sum() + 1e-8)
+            
+            # Concept Branch
+            log_probs_c = torch.log(probs_c_seq.gather(2, actions_c_seq.unsqueeze(-1)).squeeze(-1) + 1e-8)
+            loss_actor_c = -(log_probs_c * adv_c * mask).sum() / (mask.sum() + 1e-8)
+
+            # 4. 计算 Critic Loss (MSE)
+            loss_critic_q = (F.mse_loss(values_q_seq * mask, ret_q * mask, reduction='sum')) / (mask.sum() + 1e-8)
+            loss_critic_c = (F.mse_loss(values_c_seq * mask, ret_c * mask, reduction='sum')) / (mask.sum() + 1e-8)
+
+            # 5. 总 Loss 组合
+            total_loss = loss + self.lambda_rl * (loss_actor_q + loss_actor_c + 0.5 * loss_critic_q + 0.5 * loss_critic_c)
+            
+        else:
+            total_loss = loss
+
+
+        return outputs['y'],total_loss#y_question没用
 
 
     def predict(self,dataset,batch_size,return_ts=False,process=True):
