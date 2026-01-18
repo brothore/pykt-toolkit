@@ -90,7 +90,14 @@ def read_data_from_csv(primary_data_path,meta_data_dir,task_name,write_file):
     
     df['tmp_index'] = range(len(df))
     df = df.dropna(subset=["UserId","answer_timestamp", "SubjectId_level3_str", "IsCorrect", "answer_timestamp","QuestionId"])
+    # ================= 修改开始 =================
+    # 2. 【关键修改】强制将 IsCorrect 转为 int，去掉 .0
+    df['IsCorrect'] = df['IsCorrect'].astype(int)
     
+    # 3. (可选建议) 为了保险，把 QuestionId 也转为 int，防止题目ID也变成 100.0
+    df['QuestionId'] = df['QuestionId'].astype(int)
+    # ================= 修改结束 =================
+    df['answer_timestamp'] = df['answer_timestamp'].astype('int64') 
     ins, us, qs, cs, avgins, avgcq, na = sta_infos(df, KEYS, stares)
     print(f"after drop interaction num: {ins}, user num: {us}, question num: {qs}, concept num: {cs}, avg(ins) per s: {avgins}, avg(c) per q: {avgcq}, na: {na}")
 
