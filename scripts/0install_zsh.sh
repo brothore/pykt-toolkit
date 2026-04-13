@@ -31,7 +31,7 @@ sed -i 's/^ZSH_THEME=.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' "$ZSHRC"
 
 # --- 2. 替换 plugins 块 (多行替换) ---
 # 使用 perl 匹配从 plugins=( 到 ) 的所有内容并替换
-perl -i -0777 -pe 's/plugins=\(.*?\)/plugins=(\n  git\n  zsh-autosuggestions\n  zsh-syntax-highlighting\n  zsh-autocomplete\n  docker\n  sudo\n  copyfile\n  history\n)/gs' "$ZSHRC"
+perl -i -0777 -pe 's/plugins=\(.*?\)/plugins=(\n  git\n  zsh-autosuggestions\n  zsh-syntax-highlighting\n  sudo\n)/gs' "$ZSHRC"
 
 # --- 3. 添加 PYTHONPATH 和 network_turbo (如果不存在则添加) ---
 # 检查是否已有 network_turbo，没有则追加到末尾
