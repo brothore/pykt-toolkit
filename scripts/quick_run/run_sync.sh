@@ -1,0 +1,1 @@
+nohup '/root/autodl-tmp/pykt-toolkit/scripts/quick_run/sync_logs.sh' > ./run_logs/03_2116.txt 2>&1 &
