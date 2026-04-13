@@ -15,7 +15,7 @@ class Robustkt(nn.Module):
     def __init__(self, n_question, n_pid, d_model, n_blocks, dropout,
                  ks=5, d_ff=256, kq_same=1, final_fc_dim=512,
                  num_attn_heads=8, separate_qa=False, l2=1e-5,
-                 emb_type="qid", emb_path="", pretrain_dim=768):
+                 emb_type="qid", emb_path="", pretrain_dim=768,batch_size=16):
         super().__init__()
         self.model_name = "robustkt"
         self.n_question = n_question
@@ -23,6 +23,7 @@ class Robustkt(nn.Module):
         self.kq_same = kq_same
         self.n_pid = n_pid
         self.l2 = l2
+        self.batch_size = batch_size
         self.model_type = self.model_name
         self.separate_qa = separate_qa
         self.emb_type = emb_type
