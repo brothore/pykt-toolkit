@@ -72,9 +72,8 @@ docs/
 llm_config.py
 saved_model/
 examples/saved_model/
-data
+*.zip
 local_data/
-data
 configs/data_config.json
 examples/seq
 examples/saved_models.zip
