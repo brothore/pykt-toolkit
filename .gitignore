@@ -13,6 +13,7 @@ dist/
 saved_model
 build/
 .vscode/
+*.pub
 .ipynb_checkpoints
 dev_tools
 tmp*
