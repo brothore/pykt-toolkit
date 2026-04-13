@@ -31,7 +31,7 @@ class UKT(nn.Module):
     """
     def __init__(self, n_question, n_pid, 
             d_model, n_blocks, dropout, d_ff=256, num_layers=2, seq_len=200, nheads=8, loss1=0, loss2=0, loss3=0, start=50,
-            kq_same=1, final_fc_dim=512, final_fc_dim2=256, num_attn_heads=8, separate_qa=False, use_CL = True,use_mean_cov_diff=False, cl_weight=0.02, use_uncertainty_aug=True, l2=1e-5, emb_type="stoc_qid",atten_type='w2', emb_path="", pretrain_dim=768):
+            kq_same=1, final_fc_dim=512, final_fc_dim2=256, num_attn_heads=8, separate_qa=False, use_CL = True,use_mean_cov_diff=False, cl_weight=0.02, use_uncertainty_aug=True, l2=1e-5, emb_type="stoc_qid",atten_type='w2', emb_path="", pretrain_dim=768,batch_size=16):
         super().__init__()
         """
         Input:
@@ -46,6 +46,7 @@ class UKT(nn.Module):
             l2 (float): L2 regularization coefficient.
         """
         self.model_name = "ukt"
+        self.batch_size = batch_size
         print(f"model_name: {self.model_name}, emb_type: {emb_type}")
         self.n_question = n_question
         self.dropout = dropout
