@@ -367,7 +367,7 @@ def main(params):
                 }
                 
                 # 定义要运行的脚本的路径
-                script_path = "/data/pykt-toolkit/examples/wandb_predict_with_unbalance.py"
+                script_path = "wandb_predict_with_unbalance.py"
                 
                 # 保存当前的 sys.argv，以便后续恢复
                 original_argv = sys.argv
