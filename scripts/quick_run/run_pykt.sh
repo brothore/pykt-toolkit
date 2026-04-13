@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 1. 定义统一的路径变量
-PROJECT_ROOT="/root/pykt-toolkit"
+PROJECT_ROOT="/root/autodl-tmp/pykt-toolkit"
 CONFIG_FILE="$HOME/.zshrc"
 
 # 2. 运行pykt的环境配置
