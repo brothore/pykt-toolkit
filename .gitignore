@@ -7,7 +7,6 @@ examples/saved_model/
 examples/start_predict.sh
 examples/wandb/
 dist/
-data/
 *.egg-info/
 *.pyc
 *.pkl
@@ -71,7 +70,6 @@ docs/
 .private
 *.npy
 llm_config.py
-data/
 saved_model/
 examples/saved_model/
 data

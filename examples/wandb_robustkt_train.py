@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("--n_blocks", type=int, default=4)
     parser.add_argument("--learning_rate", type=float, default=1e-4)
     parser.add_argument("--ks", type=float, default=5)
+    parser.add_argument("--batch_size", type=int, default=32)
 
     parser.add_argument("--use_wandb", type=int, default=0)
     parser.add_argument("--add_uuid", type=int, default=0)
