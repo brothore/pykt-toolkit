@@ -46,11 +46,14 @@ def write_txt(file, data):
 
 from datetime import datetime
 def change2timestamp(t, hasf=True):
-    if hasf:
-        timeStamp = datetime.strptime(t, "%Y-%m-%d %H:%M:%S.%f").timestamp() * 1000
-    else:
-        timeStamp = datetime.strptime(t, "%Y-%m-%d %H:%M:%S").timestamp() * 1000
-    return int(timeStamp)
+    try:
+        # pd.to_datetime 极其强大，能自动处理 '10:42:' 这种不规范格式
+
+        ts = pd.to_datetime(t).timestamp()
+        return int(ts * 1000)
+    except Exception as e:
+        # 如果数据确实烂到没法解析（比如空值），返回一个默认值 0
+        return 0
 
 def replace_text(text):
     text = text.replace("_", "####").replace(",", "@@@@")
