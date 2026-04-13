@@ -6,7 +6,7 @@ CONFIG_FILE="$HOME/.zshrc"
 
 # 2. 运行pykt的环境配置
 echo "Installing python dependencies..."
-pip install pandas scikit-learn matplotlib seaborn wandb retrying einops
+pip install pandas scikit-learn matplotlib seaborn wandb retrying einops nvitop
 
 # 3. 定义要写入的配置行
 # 注意：这里 \$PYTHONPATH 加上了转义，防止在脚本运行时被展开，保留到 zshrc 中

@@ -577,10 +577,7 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
 
     if model.model_name=='lpkt':
         scheduler = torch.optim.lr_scheduler.StepLR(opt, 10, gamma=0.5)
-    else:
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        opt, mode='max', factor=0.5, patience=5, verbose=True
-    )
+
     for i in range(1, num_epochs + 1):
         epoch_start_time = time.time()
         loss_mean = []
@@ -675,8 +672,7 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
             auc, acc = evaluate(model, valid_loader, model.model_name)
         if model.model_name=='lpkt':
             scheduler.step()#update each epoch
-        else:
-            scheduler.step(auc)
+
         ### atkt 有diff， 以下代码导致的
         ### auc, acc = round(auc, 4), round(acc, 4)
         val_phase_end = time.time()
