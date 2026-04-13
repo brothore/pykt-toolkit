@@ -1,1 +1,0 @@
- python wandb_dkt_train.py --use_wandb 0 --dataset_name assist2009
