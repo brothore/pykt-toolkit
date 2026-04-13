@@ -3,7 +3,7 @@ import torch
 from torch import nn
 from torch.nn.functional import one_hot
 from sklearn import metrics
-from pykt.config import que_type_models,needs_uid_models
+from pykt.config import que_type_models,needs_uid_models,hasearly
 from ..datasets.lpkt_utils import generate_time2idx
 import pandas as pd
 import csv
@@ -957,7 +957,7 @@ def effective_fusion(df, model, model_name, fusion_type):
 
     curhs, curr = [[], []], []
     dcur = {"late_trues": [], "qidxs": [], "questions": [], "concepts": [], "row": [], "concept_preds": []}
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "akt","extrakt", "folibikt", "robustkt", "dtransformer", "simplekt","stablekt","cskt","fluckt", "ukt", "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt", "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]
+    
     for ui in df:
         # 一题一题处理
         curdf = ui[1]
@@ -1005,7 +1005,7 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
     if cq.shape[1] == 0:
         cq = cc
 
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","robustkt", "extrakt", "folibikt","simplekt","stablekt","cskt", "fluckt", "ukt",  "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]
+
     
     alldfs, drest = [], dict() # not predict infos!
     # print(f"real bz in group fusion: {rs.shape[0]}")
@@ -1257,7 +1257,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             num_layers=num_layers,
             mode="eval"  # 标记为评估模式，确保与训练模式分离
         )
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","extrakt","folibikt", "robustkt", "simplekt","cskt","fluckt", "stablekt", "ukt", "hcgkt", "bakt_time", "sparsekt", "lefokt_akt", "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt",  "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]
+
     if save_path != "":
     # 检查文件是否存在且不为空
         file_exists = os.path.exists(save_path) and os.path.getsize(save_path) > 0
