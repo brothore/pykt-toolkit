@@ -31,7 +31,7 @@ class UKT(nn.Module):
     """
     def __init__(self, n_question, n_pid, 
             d_model, n_blocks, dropout, d_ff=256, num_layers=2, seq_len=200, nheads=8, loss1=0, loss2=0, loss3=0, start=50,
-            kq_same=1, final_fc_dim=512, final_fc_dim2=256, num_attn_heads=8, separate_qa=False, use_CL = True,use_mean_cov_diff=False, cl_weight=0.02, use_uncertainty_aug=True, l2=1e-5, emb_type="stoc_qid",atten_type='w2', emb_path="", pretrain_dim=768):
+            kq_same=1, final_fc_dim=512, final_fc_dim2=256, num_attn_heads=8, separate_qa=False, use_CL = True,use_mean_cov_diff=False, cl_weight=0.02, use_uncertainty_aug=True, l2=1e-5, emb_type="stoc_qid",atten_type='w2', emb_path="", pretrain_dim=768,batch_size=16):
         super().__init__()
         """
         Input:
@@ -46,6 +46,7 @@ class UKT(nn.Module):
             l2 (float): L2 regularization coefficient.
         """
         self.model_name = "ukt"
+        self.batch_size = batch_size
         print(f"model_name: {self.model_name}, emb_type: {emb_type}")
         self.n_question = n_question
         self.dropout = dropout
@@ -124,19 +125,25 @@ class UKT(nn.Module):
         return q_mean_embed_data, q_cov_embed_data, qa_mean_embed_data, qa_cov_embed_data
 
     def forward(self, dcur, qtest=False, train=False):
-        q, c, r = dcur["qseqs"].long(), dcur["cseqs"].long(), dcur["rseqs"].long()
-        qshft, cshft, rshft = dcur["shft_qseqs"].long(), dcur["shft_cseqs"].long(), dcur["shft_rseqs"].long()
+        q = dcur["qseqs"].long().to(device)
+        c = dcur["cseqs"].long().to(device)
+        r = dcur["rseqs"].long().to(device)
+        
+        qshft = dcur["shft_qseqs"].long().to(device)
+        cshft = dcur["shft_cseqs"].long().to(device)
+        rshft = dcur["shft_rseqs"].long().to(device)
+
         pid_data = torch.cat((q[:,0:1], qshft), dim=1)
         q_data = torch.cat((c[:,0:1], cshft), dim=1)
         target = torch.cat((r[:,0:1], rshft), dim=1)
-        mask = dcur["masks"]
+        mask = dcur["masks"].to(device)
 
         # Prepare augmented response data for CL
         if train and self.use_CL:
             if self.use_uncertainty_aug:
                 # Create augmented target by introducing aleatory uncertainty
-                rshft_aug = dcur["shft_r_aug"].long()
-                r_aug     = dcur["r_aug"].long()
+                rshft_aug = dcur["shft_r_aug"].long().to(device)
+                r_aug     = dcur["r_aug"].long().to(device)
                 target_aug = torch.cat((r_aug[:,0:1], rshft_aug), dim=1)
             else:
                 target_aug = target
