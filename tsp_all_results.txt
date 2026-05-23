@@ -1,0 +1,75 @@
+=== Task 0 (E-Level: 2) ===
+/tmp/ts-out.8un45i
+
+=== Task 1 (E-Level: 2) ===
+/tmp/ts-out.PI8rbH
+
+=== Task 2 (E-Level: 2) ===
+/tmp/ts-out.lG7NT0
+
+=== Task 3 (E-Level: 2) ===
+/tmp/ts-out.KDYVRd
+
+=== Task 4 (E-Level: 2) ===
+/tmp/ts-out.Clr29f
+
+=== Task 5 (E-Level: 2) ===
+/tmp/ts-out.ISLbgQ
+
+=== Task 6 (E-Level: 2) ===
+/tmp/ts-out.y8ttcl
+
+=== Task 7 (E-Level: 2) ===
+/tmp/ts-out.vMJGTa
+
+=== Task 8 (E-Level: 2) ===
+/tmp/ts-out.3N0pqR
+
+=== Task 9 (E-Level: 2) ===
+/tmp/ts-out.OE4WXZ
+
+=== Task 10 (E-Level: 2) ===
+/tmp/ts-out.xaAF1X
+
+=== Task 11 (E-Level: 2) ===
+/tmp/ts-out.2c9o7M
+
+=== Task 12 (E-Level: 2) ===
+/tmp/ts-out.zlGxNQ
+
+=== Task 13 (E-Level: 0) ===
+/tmp/ts-out.EbG2Q5
+
+=== Task 14 (E-Level: 0) ===
+/tmp/ts-out.Njrsx9
+
+=== Task 15 (E-Level: 0) ===
+/tmp/ts-out.M9n0tE
+
+=== Task 16 (E-Level: 0) ===
+/tmp/ts-out.NpceZN
+
+=== Task 17 (E-Level: 0) ===
+/tmp/ts-out.DJ6cJi
+
+=== Task 18 (E-Level: 0) ===
+/tmp/ts-out.LJM5x1
+
+=== Task 19 (E-Level: 2) ===
+/tmp/ts-out.1Tc8GE
+
+=== Task 20 (E-Level: 2) ===
+/tmp/ts-out.yAxmgv
+
+=== Task 21 (E-Level: ) ===
+
+
+=== Task 22 (E-Level: ) ===
+
+
+=== Task 23 (E-Level: 0) ===
+/tmp/ts-out.1NmH1x
+
+=== Task 24 (E-Level: 0) ===
+/tmp/ts-out.50Y415
+

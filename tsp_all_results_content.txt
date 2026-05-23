@@ -1,0 +1,221 @@
+=== Task 0 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/wandb_robuskt_train.py': [Errno 2] No such file or directory
+
+=== Task 1 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/wandb_ukt_akt_train.py': [Errno 2] No such file or directory
+
+=== Task 2 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/wandb_ukt_akt_train.py': [Errno 2] No such file or directory
+
+=== Task 3 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/wandb_ukt_akt_train.py': [Errno 2] No such file or directory
+
+=== Task 4 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/wandb_ukt_akt_train.py': [Errno 2] No such file or directory
+
+=== Task 5 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/wandb_ukt_akt_train.py': [Errno 2] No such file or directory
+
+=== Task 6 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/examples/wandb_robuskt_train.py': [Errno 2] No such file or directory
+
+=== Task 7 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/examples/wandb_ukt_akt_train.py': [Errno 2] No such file or directory
+
+=== Task 8 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/examples/wandb_ukt_akt_train.py': [Errno 2] No such file or directory
+
+=== Task 9 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/examples/wandb_ukt_akt_train.py': [Errno 2] No such file or directory
+
+=== Task 10 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/examples/wandb_ukt_akt_train.py': [Errno 2] No such file or directory
+
+=== Task 11 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/examples/wandb_ukt_akt_train.py': [Errno 2] No such file or directory
+
+=== Task 12 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/examples/wandb_robuskt_train.py': [Errno 2] No such file or directory
+
+=== Task 13 ===
+    "student_stats_epi": 3.197226795399972,
+    "student_stats_gini_coefficient": 0.16972354968865253,
+    "student_stats_average_auc": 0.6361837218942984,
+    "student_stats_eawi_alpha_10": 0.5282083623602595,
+    "student_stats_eawi_alpha_20": 0.43855896412524625,
+    "student_stats_eawi_alpha_30": 0.36412517998613103,
+    "student_stats_iqr": 0.2687629575730448,
+    "student_stats_q1": 0.5,
+    "student_stats_q3": 0.7687629575730448
+}
+✅ 总体统计结果已保存至: saved_model/assist2009_ukt_stoc_qid_saved_model_3407_2_16_0.2_256_512_8_4_0.0001_256_256_2_4_0.5_0.5_0.5_50_0_0.02_1_w2_0_1_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 2.26s ---
+------------------------------
+Total Prediction Time: 407.71s
+------------------------------
+Prediction completed successfully!
+--- 外部脚本执行完毕 ---
+Training and prediction process completed at: 2026-05-21 19:50:28.669751
+✅ 运行历史状态已更新为成功 (ID: f86e9cdd-ea3a-4f7a-b6d3-db67a4d4d47f)
+💡 正在执行最终资源清理...
+
+=== Task 14 ===
+    "student_stats_epi": 14.265970837112306,
+    "student_stats_gini_coefficient": 0.07368562835006051,
+    "student_stats_average_auc": 0.7172354509387591,
+    "student_stats_eawi_alpha_10": 0.6643855060613976,
+    "student_stats_eawi_alpha_20": 0.6154298425805905,
+    "student_stats_eawi_alpha_30": 0.570081507924661,
+    "student_stats_iqr": 0.11893100161861014,
+    "student_stats_q1": 0.6658318379187073,
+    "student_stats_q3": 0.7847628395373174
+}
+✅ 总体统计结果已保存至: saved_model/nips_task34_ukt_stoc_qid_saved_model_3407_0_16_0.2_256_512_8_4_0.0001_256_256_2_4_0.5_0.5_0.5_50_0_0.02_1_w2_0_1_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 15.60s ---
+------------------------------
+Total Prediction Time: 1584.31s
+------------------------------
+Prediction completed successfully!
+--- 外部脚本执行完毕 ---
+Training and prediction process completed at: 2026-05-21 20:43:51.385751
+✅ 运行历史状态已更新为成功 (ID: dc6bc6b1-53c4-423c-bb8e-4a91e5cfa1ef)
+💡 正在执行最终资源清理...
+
+=== Task 15 ===
+    "student_stats_epi": 13.231811193575584,
+    "student_stats_gini_coefficient": 0.0743154477830307,
+    "student_stats_average_auc": 0.7175469561119783,
+    "student_stats_eawi_alpha_10": 0.664222132763166,
+    "student_stats_eawi_alpha_20": 0.6148601675394717,
+    "student_stats_eawi_alpha_30": 0.5691665588648265,
+    "student_stats_iqr": 0.11938787092602454,
+    "student_stats_q1": 0.6661484456124733,
+    "student_stats_q3": 0.7855363165384979
+}
+✅ 总体统计结果已保存至: saved_model/nips_task34_ukt_stoc_qid_saved_model_3407_1_16_0.2_256_512_8_4_0.0001_256_256_2_4_0.5_0.5_0.5_50_0_0.02_1_w2_0_1_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 15.41s ---
+------------------------------
+Total Prediction Time: 1236.98s
+------------------------------
+Prediction completed successfully!
+--- 外部脚本执行完毕 ---
+Training and prediction process completed at: 2026-05-21 20:54:39.617558
+✅ 运行历史状态已更新为成功 (ID: 3565baf8-197d-4c8e-8e64-ada912ee2970)
+💡 正在执行最终资源清理...
+
+=== Task 16 ===
+    "student_stats_epi": 26.039851437046053,
+    "student_stats_gini_coefficient": 0.0456934817794367,
+    "student_stats_average_auc": 0.7657928732728629,
+    "student_stats_eawi_alpha_10": 0.7308011305711469,
+    "student_stats_eawi_alpha_20": 0.6974082824270026,
+    "student_stats_eawi_alpha_30": 0.6655412697810961,
+    "student_stats_iqr": 0.08161000785818207,
+    "student_stats_q1": 0.7256374048620114,
+    "student_stats_q3": 0.8072474127201935
+}
+✅ 总体统计结果已保存至: saved_model/peiyou_ukt_stoc_qid_saved_model_3407_1_16_0.2_256_512_8_4_0.0001_256_256_2_4_0.5_0.5_0.5_50_0_0.02_1_w2_0_1_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 54.73s ---
+------------------------------
+Total Prediction Time: 8831.85s
+------------------------------
+Prediction completed successfully!
+--- 外部脚本执行完毕 ---
+Training and prediction process completed at: 2026-05-22 01:49:21.978652
+✅ 运行历史状态已更新为成功 (ID: 5823e76f-efc7-4b1e-9445-76714ebb45fa)
+💡 正在执行最终资源清理...
+
+=== Task 17 ===
+    "student_stats_epi": 25.824553574602632,
+    "student_stats_gini_coefficient": 0.04578585390626524,
+    "student_stats_average_auc": 0.7646511583854322,
+    "student_stats_eawi_alpha_10": 0.7296409521583404,
+    "student_stats_eawi_alpha_20": 0.6962337181187903,
+    "student_stats_eawi_alpha_30": 0.6643560628163875,
+    "student_stats_iqr": 0.08239499088592228,
+    "student_stats_q1": 0.7238344180091754,
+    "student_stats_q3": 0.8062294088950976
+}
+✅ 总体统计结果已保存至: saved_model/peiyou_ukt_stoc_qid_saved_model_3407_3_16_0.2_256_512_8_4_0.0001_256_256_2_4_0.5_0.5_0.5_50_0_0.02_1_w2_0_1_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 51.00s ---
+------------------------------
+Total Prediction Time: 8640.22s
+------------------------------
+Prediction completed successfully!
+--- 外部脚本执行完毕 ---
+Training and prediction process completed at: 2026-05-22 01:51:06.529220
+✅ 运行历史状态已更新为成功 (ID: 0bc7f27d-b1cb-4877-bd90-faee4d16b643)
+💡 正在执行最终资源清理...
+
+=== Task 19 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/examples/wandb_iekt_akt_train.py': [Errno 2] No such file or directory
+
+=== Task 20 ===
+python: can't open file '/root/autodl-tmp/pykt-toolkit/examples/wandb_iekt_akt_train.py': [Errno 2] No such file or directory
+
+=== Task 23 ===
+    "student_stats_epi": 3.148992698751465,
+    "student_stats_gini_coefficient": 0.17297269370195942,
+    "student_stats_average_auc": 0.6328376990085974,
+    "student_stats_eawi_alpha_10": 0.5233740575349305,
+    "student_stats_eawi_alpha_20": 0.4328446369893893,
+    "student_stats_eawi_alpha_30": 0.35797433417488783,
+    "student_stats_iqr": 0.26312320022204483,
+    "student_stats_q1": 0.5,
+    "student_stats_q3": 0.7631232002220448
+}
+✅ 总体统计结果已保存至: saved_model/assist2009_iekt_qid_saved_model_0.001_42_2_0_64_40_1_10_10_0.93_0_1_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 2.21s ---
+------------------------------
+Total Prediction Time: 238.28s
+------------------------------
+Prediction completed successfully!
+--- 外部脚本执行完毕 ---
+Training and prediction process completed at: 2026-05-22 04:04:05.084799
+✅ 运行历史状态已更新为成功 (ID: c9606da7-5600-4b01-94a9-1e241c4ddcf6)
+💡 正在执行最终资源清理...
+
+=== Task 24 ===
+    "student_stats_epi": 14.001566476931055,
+    "student_stats_gini_coefficient": 0.07209367694093859,
+    "student_stats_average_auc": 0.7195743493923745,
+    "student_stats_eawi_alpha_10": 0.6676975887122946,
+    "student_stats_eawi_alpha_20": 0.6195608144574267,
+    "student_stats_eawi_alpha_30": 0.5748943972546683,
+    "student_stats_iqr": 0.11865473121492376,
+    "student_stats_q1": 0.6666666666666667,
+    "student_stats_q3": 0.7853213978815905
+}
+✅ 总体统计结果已保存至: saved_model/nips_task34_iekt_qid_saved_model_0.001_42_1_0_64_40_1_10_10_0.93_0_1_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 13.27s ---
+------------------------------
+Total Prediction Time: 816.07s
+------------------------------
+Prediction completed successfully!
+--- 外部脚本执行完毕 ---
+Training and prediction process completed at: 2026-05-22 06:04:51.410535
+✅ 运行历史状态已更新为成功 (ID: abbd5e15-d12a-43a0-b10b-efc7511fdb6d)
+💡 正在执行最终资源清理...
+
+=== Task 18 ===
+    "student_stats_epi": 26.179803834232793,
+    "student_stats_gini_coefficient": 0.04492545304885898,
+    "student_stats_average_auc": 0.7655581934643524,
+    "student_stats_eawi_alpha_10": 0.7311651447877003,
+    "student_stats_eawi_alpha_20": 0.6983172194045782,
+    "student_stats_eawi_alpha_30": 0.6669450019510081,
+    "student_stats_iqr": 0.08022926327032198,
+    "student_stats_q1": 0.7255328686699251,
+    "student_stats_q3": 0.805762131940247
+}
+✅ 总体统计结果已保存至: saved_model/peiyou_robustkt_qid_saved_model_3407_3_0.2_256_512_8_4_0.0001_5_32_0_0_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 52.96s ---
+------------------------------
+Total Prediction Time: 7416.31s
+------------------------------
+Prediction completed successfully!
+--- 外部脚本执行完毕 ---
+Training and prediction process completed at: 2026-05-22 06:07:28.775889
+✅ 运行历史状态已更新为成功 (ID: cb38b4ae-7199-48c4-b64c-e0ea3bd3b5fa)
+💡 正在执行最终资源清理...
+
