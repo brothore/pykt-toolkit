@@ -991,8 +991,8 @@ def effective_fusion(df, model, model_name, fusion_type):
         dres[key].append(np.array(dcur[key]))
     # early fusion
     if "early_fusion" in fusion_type and model_name in hasearly:
-        curhs = [torch.tensor(curh).float().to(device) for curh in curhs]
-        curr = torch.tensor(curr).long().to(device)
+        curhs = [torch.from_numpy(np.asarray(curh, dtype=np.float32)).to(device) for curh in curhs]
+        curr = torch.from_numpy(np.asarray(curr, dtype=np.int64)).to(device)
         p = early_fusion(curhs, model, model_name)
         dres.setdefault("early_trues", [])
         dres["early_trues"].append(curr.cpu().numpy())
@@ -1010,33 +1010,52 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
     alldfs, drest = [], dict() # not predict infos!
     # print(f"real bz in group fusion: {rs.shape[0]}")
     realbz = rs.shape[0]
+    sms_cpu = sms.cpu().tolist()
+    qidxs_cpu = qidxs.cpu().tolist()
+    rests_cpu = rests.cpu().tolist()
+    orirows_cpu = [orirows[bz].cpu().tolist() for bz in range(realbz)]
+    ps_cpu = ps.cpu().tolist()
+    cq_cpu = cq.cpu().tolist()
+    cc_cpu = cc.cpu().tolist()
+    rs_cpu = rs.cpu().tolist()
+    if model_name in hasearly and model_name not in ["kqn","lpkt","deep_irt"]:
+        hs0_cpu = hs[0].cpu().tolist()
+    elif model_name == "kqn":
+        hs0_cpu = hs[0].cpu().tolist()
+        hs1_cpu = hs[1].cpu().tolist()
+    elif model_name == "lpkt":
+        hs0_cpu = hs[0].cpu().tolist()
+        hs1_cpu = hs[1].cpu().tolist()
+    elif model_name == "deep_irt":
+        hs0_cpu = hs[0].cpu().tolist()
+        hs1_cpu = hs[1].cpu().tolist()
     for bz in range(rs.shape[0]):
 
-        cursm = ([0] + sms[bz].cpu().tolist())
-        curqidxs = ([-1] + qidxs[bz].cpu().tolist())
-        currests = ([-1] + rests[bz].cpu().tolist())
+        cursm = ([0] + sms_cpu[bz])
+        curqidxs = ([-1] + qidxs_cpu[bz])
+        currests = ([-1] + rests_cpu[bz])
         # print(f"[DEBUG] orirows[bz].shape: {orirows[bz].shape} (type: {type(orirows[bz].shape)})")
-        currows = ([-1] + orirows[bz].cpu().tolist())
+        currows = ([-1] + orirows_cpu[bz])
 
-           
-        curps = ([-1] + ps[bz].cpu().tolist())
+
+        curps = ([-1] + ps_cpu[bz])
         # print(f"qid: {len(curqidxs)}, select: {len(cursm)}, response: {len(rs[bz].cpu().tolist())}, preds: {len(curps)}")
-        df = pd.DataFrame({"qidx": curqidxs, "rest": currests, "row": currows, "select": cursm, 
-                "questions": cq[bz].cpu().tolist(), "concepts": cc[bz].cpu().tolist(), "response": rs[bz].cpu().tolist(), "preds": curps})
-    
+        df = pd.DataFrame({"qidx": curqidxs, "rest": currests, "row": currows, "select": cursm,
+                "questions": cq_cpu[bz], "concepts": cc_cpu[bz], "response": rs_cpu[bz], "preds": curps})
+
         if model_name in hasearly and model_name not in ["kqn","lpkt","deep_irt"]:
-            df["hidden"] = [np.array(a) for a in hs[0][bz].cpu().tolist()]
+            df["hidden"] = [np.array(a) for a in hs0_cpu[bz]]
         elif model_name == "kqn":
-            df["ek"] = [np.array(a) for a in hs[0][bz].cpu().tolist()]
-            df["es"] = [np.array(a) for a in hs[1][bz].cpu().tolist()]
+            df["ek"] = [np.array(a) for a in hs0_cpu[bz]]
+            df["es"] = [np.array(a) for a in hs1_cpu[bz]]
         elif model_name == "lpkt":
             # print(f"hidden:{hs[0].shape}")
-            df["h"] = [np.array(a) for a in hs[0][bz].cpu().tolist()]
+            df["h"] = [np.array(a) for a in hs0_cpu[bz]]
             # print(f"e_data:{hs[1].shape}")
-            df["e_data"] = [np.array(a) for a in hs[1][bz].cpu().tolist()]
+            df["e_data"] = [np.array(a) for a in hs1_cpu[bz]]
         elif model_name == "deep_irt":
-            df["h"] = [np.array(a) for a in hs[0][bz].cpu().tolist()]
-            df["k"] = [np.array(a) for a in hs[1][bz].cpu().tolist()]
+            df["h"] = [np.array(a) for a in hs0_cpu[bz]]
+            df["k"] = [np.array(a) for a in hs1_cpu[bz]]
 
         df = df[df["select"] != 0]
 
@@ -1067,13 +1086,10 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
             drest[key] = dmerge[key][rest_start:] 
     restlen = drest["cr"].shape[0]
 
-    dfs = dict()
-    for df in effective_dfs:
-        for i, row in df.iterrows():
-            for key in row.keys():
-                dfs.setdefault(key, [])
-                dfs[key].extend([row[key]])
-    df = pd.DataFrame(dfs)
+    if effective_dfs:
+        df = pd.concat(effective_dfs, ignore_index=True)
+    else:
+        df = pd.DataFrame()
     # print(f"real bz: {realbz}, effective_dfs: {len(effective_dfs)}, rest_start: {rest_start}, drestlen: {restlen}, predict infos: {df.shape}")
 
     if df.shape[0] == 0:
