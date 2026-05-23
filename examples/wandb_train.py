@@ -169,7 +169,7 @@ def main(params):
 
         start_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         if "use_trained" not in params:
-            params['use_trained'] = 0
+            params['use_trained'] = 1
         use_trained = params['use_trained']
         # print(f"\n\n\n\n\nuse_trained!!!!!!!!!!!\n\n\n\n\n: {use_trained}")
         # print(f"\n\n\n\n\nuse_trained!!!!!!!!!!!\n\n\n\n\n: {use_trained}")

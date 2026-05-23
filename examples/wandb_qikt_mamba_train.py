@@ -44,7 +44,7 @@ if __name__ == "__main__":
     
     parser.add_argument("--output_mode", type=str, default="an")
     parser.add_argument("--version", type=str, default="an")
-    parser.add_argument("--use_trained", type=int, default=0)
+    parser.add_argument("--use_trained", type=int, default=1)
     args = parser.parse_args()
 
     params = vars(args)
