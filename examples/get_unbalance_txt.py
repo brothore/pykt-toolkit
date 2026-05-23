@@ -288,19 +288,19 @@ def parse_and_calculate_aucs_from_file(file_path):
     valid_aucs = student_auc_df['auc'].dropna()
     
     if valid_aucs.empty:
-        stats = {'mean': 0.5, 'std': 0.0, 'max': 0.5, 'min': 0.5, 'range': 0.0}
+        stats = {'mean': 0.5, 'std': 0.0, 'max': 0.5, 'min': 0.5, 'range': 0.0, 'iqr': 0.0, 'q1': 0.5, 'q3': 0.5}
     else:
         mean_auc = valid_aucs.mean()
         std_auc = valid_aucs.std() if len(valid_aucs) > 1 else 0.0
         max_auc = valid_aucs.max()
         min_auc = valid_aucs.min()
         range_auc = max_auc - min_auc
-        
+
         stats = {
-            'mean': mean_auc, 
-            'std': std_auc, 
-            'max': max_auc, 
-            'min': min_auc, 
+            'mean': mean_auc,
+            'std': std_auc,
+            'max': max_auc,
+            'min': min_auc,
             'range': range_auc
         }
         # === 新增：在返回前计算基尼系数和 EAWI ===
@@ -313,6 +313,14 @@ def parse_and_calculate_aucs_from_file(file_path):
             'gini_coefficient': float(gini),
             'average_auc': float(average_wealth),  # 等价于 mean，但更清晰
             **eawi_dict  # 自动展开 eawi_alpha_10, eawi_alpha_20, eawi_alpha_30
+        })
+        # IQR: Q3(75%) - Q1(25%)
+        q1_auc = np.percentile(valid_aucs_list, 25)
+        q3_auc = np.percentile(valid_aucs_list, 75)
+        stats.update({
+            "iqr": float(q3_auc - q1_auc),
+            "q1": float(q1_auc),
+            "q3": float(q3_auc)
         })
         # ===========================================
     # 6. 整合结果字典
