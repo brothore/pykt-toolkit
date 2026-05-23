@@ -26,10 +26,13 @@ AKT_GRID = [
 ]
 
 FAIRKT_GRID = [
-    {"tag": "FairKT-default", "emb_size": 300, "mlp_layer_num": 2, "num_attn_head": 1},
-    {"tag": "FairKT-S1",      "emb_size": 200, "mlp_layer_num": 2, "num_attn_head": 1},
-    {"tag": "FairKT-S2",      "emb_size": 128, "mlp_layer_num": 1, "num_attn_head": 1},
-    {"tag": "FairKT-S3",      "emb_size": 256, "mlp_layer_num": 1, "num_attn_head": 1},
+    {"tag": "FairKT-default(emb300_mlp2)", "emb_size": 300, "mlp_layer_num": 2, "num_attn_head": 1},
+    {"tag": "FairKT-main(emb256_mlp1)",   "emb_size": 256, "mlp_layer_num": 1, "num_attn_head": 1},
+    {"tag": "FairKT-main(emb256_mlp2)",   "emb_size": 256, "mlp_layer_num": 2, "num_attn_head": 1},
+    {"tag": "FairKT-S(emb128_mlp1)",      "emb_size": 128, "mlp_layer_num": 1, "num_attn_head": 1},
+    {"tag": "FairKT-S(emb128_mlp2)",      "emb_size": 128, "mlp_layer_num": 2, "num_attn_head": 1},
+    {"tag": "FairKT-S(emb200_mlp1)",      "emb_size": 200, "mlp_layer_num": 1, "num_attn_head": 1},
+    {"tag": "FairKT-S(emb200_mlp2)",      "emb_size": 200, "mlp_layer_num": 2, "num_attn_head": 1},
 ]
 
 
