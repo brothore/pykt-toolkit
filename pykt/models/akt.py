@@ -15,8 +15,8 @@ class Dim(IntEnum):
     feature = 2
 
 class AKT(nn.Module):
-    def __init__(self, n_question, n_pid, d_model, n_blocks, dropout, d_ff=256, 
-            kq_same=1, final_fc_dim=512, num_attn_heads=8, separate_qa=False, l2=1e-5, emb_type="qid", emb_path="", pretrain_dim=768):
+    def __init__(self, n_question, n_pid, d_model, n_blocks, dropout, d_ff=256,
+            kq_same=1, final_fc_dim=512, num_attn_heads=8, separate_qa=False, l2=1e-5, emb_type="qid", emb_path="", pretrain_dim=768, **kwargs):
         super().__init__()
         """
         Input:
