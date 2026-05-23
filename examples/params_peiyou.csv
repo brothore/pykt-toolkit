@@ -1,0 +1,10 @@
+d_ff,d_model,dropout,emb_size,mlp_layer_num,model,n_blocks,num_attn_head,num_attn_heads,tag,total,trainable
+512,256,0.2,,,akt,4,,8,AKT-default,6824518,6824518
+1024,256,0.2,,,akt,4,,8,AKT-M,9976390,9976390
+768,384,0.2,,,akt,4,,8,AKT-L1,14295622,14295622
+512,256,0.2,,,akt,8,,8,AKT-L2,12360358,12360358
+1024,512,0.2,,,akt,4,,8,AKT-XL,24519238,24519238
+,,,300,2,qikt_mamba,,1,,FairKT-default,12930684,12930684
+,,,200,2,qikt_mamba,,1,,FairKT-S1,7063584,7063584
+,,,128,1,qikt_mamba,,1,,FairKT-S2,3410728,3410728
+,,,256,1,qikt_mamba,,1,,FairKT-S3,8581544,8581544

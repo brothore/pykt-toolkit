@@ -265,6 +265,17 @@ def main(params):
         # print(f"model_name:{model_name}")
         model = init_model(model_name, model_config, data_config[dataset_name], emb_type)
         # print(f"model is {model}")
+        n_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        n_total = sum(p.numel() for p in model.parameters())
+        print(f"[PARAM_COUNT] model={model_name} emb_type={emb_type} dataset={dataset_name} trainable={n_trainable:,} total={n_total:,}")
+        if params.get("use_wandb", 0) == 1:
+            try:
+                import wandb
+                if wandb.run is not None:
+                    wandb.run.summary["param_count_trainable"] = n_trainable
+                    wandb.run.summary["param_count_total"] = n_total
+            except Exception:
+                pass
         if model_name == "hawkes":
             weight_p, bias_p = [], []
             for name, p in filter(lambda x: x[1].requires_grad, model.named_parameters()):
