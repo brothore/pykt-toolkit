@@ -10,7 +10,7 @@ from sklearn import metrics
 from torch.utils.data import DataLoader
 from .loss import Loss
 from scipy.special import softmax
-# from mamba_ssm import Mamba
+from mamba_ssm import Mamba
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
