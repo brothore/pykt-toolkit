@@ -344,7 +344,7 @@ if __name__ == "__main__":
     parser.add_argument("--bz", type=int, default=4)
     parser.add_argument("--save_dir_origin", type=str, default="saved_model")
     parser.add_argument("--save_dir_pert", type=str, default="saved_model")
-    parser.add_argument("--fusion_type", type=str, default="early_fusion,late_fusion")
+    parser.add_argument("--fusion_type", type=str, default="late_fusion")
     parser.add_argument("--use_wandb", type=int, default=0)
     parser.add_argument("--model_name", type=str, default="")
     parser.add_argument("--dataset_name", type=str, default="")
