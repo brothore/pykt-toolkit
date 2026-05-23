@@ -10,6 +10,7 @@ dist/
 *.egg-info/
 *.pyc
 *.pkl
+*.whl
 saved_model
 build/
 offline_train/
