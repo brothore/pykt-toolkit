@@ -1,3 +1,4 @@
+source /etc/network_turbo
 pip install ninja
 
 # 一键安装 mamba 和卷积插件
