@@ -467,5 +467,12 @@ def main(params):
         print("💡 正在执行最终资源清理...")
         
         # 1. 确保释放 PyTorch 内部缓存 (对 OOM 尤为重要)
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        try:
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                os._exit(1)
+        except BaseException as cleanup_err:
+            # CUDA context 已损坏，empty_cache 也会失败；
+            # 此时后台 CUDA 线程会卡住 Python 正常退出，强制 os._exit 释放 tsp 槽位。
+            print(f"⚠️ CUDA 清理失败，强制退出: {cleanup_err}")
+            os._exit(1)
