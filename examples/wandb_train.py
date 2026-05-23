@@ -4,6 +4,8 @@ import json
 import subprocess
 import sys
 import datetime
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
 from pykt.models.cuda_retry import retry_decorator
 import torch
 # torch.set_num_threads(4) 
@@ -470,9 +472,11 @@ def main(params):
         try:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
-                os._exit(1)
+                print("💡 CUDA 缓存已释放。")
         except BaseException as cleanup_err:
             # CUDA context 已损坏，empty_cache 也会失败；
             # 此时后台 CUDA 线程会卡住 Python 正常退出，强制 os._exit 释放 tsp 槽位。
             print(f"⚠️ CUDA 清理失败，强制退出: {cleanup_err}")
+            sys.stdout.flush()
+            sys.stderr.flush()
             os._exit(1)

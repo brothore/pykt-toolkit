@@ -52,32 +52,35 @@ class AsyncWriter:
         if self.fout:
             self.fout.close()
 def safe_roc_auc(y_true, y_score, dummy_score_strategy='mean'):
-    # """
-    # 计算 AUC，处理单一类别情况通过添加虚拟数据点。
-    # :param y_true: 真实标签 (numpy array)
-    # :param y_score: 预测概率 (numpy array)
-    # :param dummy_score_strategy: 虚拟点分数策略 ('mean', 'min', 'max')
-    # :return: AUC 分数
-    # """
-    # y_true = np.array(y_true)
-    # y_score = np.array(y_score)
-    # unique_labels = np.unique(y_true)
-    
-    # if len(unique_labels) < 2:
-    #     label = unique_labels[0]
-    #     dummy_label = 1 - label  # 相反类别
-    #     # 选择虚拟点的预测分数
-    #     if dummy_score_strategy == 'mean':
-    #         dummy_score = np.mean(y_score)
-    #     elif dummy_score_strategy == 'min':
-    #         dummy_score = np.min(y_score)
-    #     elif dummy_score_strategy == 'max':
-    #         dummy_score = np.max(y_score)
-    #     else:
-    #         raise ValueError("Invalid dummy_score_strategy")
-    #     # 添加虚拟数据点
-    #     y_true = np.append(y_true, dummy_label)
-    #     y_score = np.append(y_score, dummy_score)
+    y_true = np.asarray(y_true)
+    y_score = np.asarray(y_score)
+
+    if len(y_true) != len(y_score):
+        n = min(len(y_true), len(y_score))
+        print(f"[safe_roc_auc] length mismatch: y_true={len(y_true)}, y_score={len(y_score)}; truncating to {n}")
+        y_true = y_true[:n]
+        y_score = y_score[:n]
+
+    if len(y_true) == 0:
+        print("[safe_roc_auc] empty input, returning -1")
+        return -1.0
+
+    unique_labels = np.unique(y_true)
+    if len(unique_labels) < 2:
+        label = int(unique_labels[0])
+        dummy_label = 1 - label
+        if dummy_score_strategy == 'mean':
+            dummy_score = float(np.mean(y_score))
+        elif dummy_score_strategy == 'min':
+            dummy_score = float(np.min(y_score))
+        elif dummy_score_strategy == 'max':
+            dummy_score = float(np.max(y_score))
+        else:
+            raise ValueError(f"Invalid dummy_score_strategy: {dummy_score_strategy}")
+        print(f"[safe_roc_auc] only one class ({label}) in y_true; appending dummy point (label={dummy_label}, score={dummy_score:.4f})")
+        y_true = np.append(y_true, dummy_label)
+        y_score = np.append(y_score, dummy_score)
+
     return metrics.roc_auc_score(y_true=y_true, y_score=y_score)
 
 def process_results_to_df(result_string):
