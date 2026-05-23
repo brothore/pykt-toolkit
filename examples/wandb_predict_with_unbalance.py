@@ -8,6 +8,9 @@ from cal_unbalance import save_auc_results_from_file
 from pykt.models import evaluate,evaluate_question,load_model
 from pykt.datasets import init_test_datasets
 import time
+from datetime import datetime
+def _now():
+    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 os.environ['CUBLAS_WORKSPACE_CONFIG']=':4096:2'
 
@@ -16,6 +19,7 @@ with open("../configs/wandb.json") as fin:
 
 def main(params):
     start_total = time.time()  # 记录总起始时间
+    print(f"--- [Time] Start: {_now()} ---")
 
     if params['use_wandb'] ==1:
         import wandb
@@ -58,11 +62,11 @@ def main(params):
     print(f"Start predicting model: {model_name}, embtype: {emb_type}, save_dir: {save_dir}, dataset_name: {dataset_name}")
     # print(f"model_config: {model_config}")
     # print(f"data_config: {data_config}")
-    print(f"--- [Time] Data Loading: {time.time() - t1:.2f}s ---")
+    print(f"--- [Time] Data Loading: {time.time() - t1:.2f}s (started {datetime.fromtimestamp(t1).strftime('%H:%M:%S')}) ---")
     t2 = time.time()
 
     model = load_model(model_name, model_config, data_config, emb_type, save_dir)
-    print(f"--- [Time] Model Loading: {time.time() - t2:.2f}s ---")
+    print(f"--- [Time] Model Loading: {time.time() - t2:.2f}s (started {datetime.fromtimestamp(t2).strftime('%H:%M:%S')}) ---")
     t3 = time.time()
     save_test_path = os.path.join(save_dir, model.emb_type+"_test_predictions.txt")
 
@@ -84,7 +88,7 @@ def main(params):
     else:
         testauc, testacc = evaluate(model, test_loader, model_name, save_path=save_test_path)
     print(f"testauc: {testauc}, testacc: {testacc}")
-    print(f"--- [Time] Basic Evaluation: {time.time() - t3:.2f}s ---")
+    print(f"--- [Time] Basic Evaluation: {time.time() - t3:.2f}s (started {datetime.fromtimestamp(t3).strftime('%H:%M:%S')}) ---")
     t4 = time.time()
 
     window_testauc, window_testacc = -1, -1
@@ -96,7 +100,7 @@ def main(params):
     else:
         window_testauc, window_testacc = evaluate(model, test_window_loader, model_name, save_path=save_test_window_path)
     print(f"testauc: {testauc}, testacc: {testacc}, window_testauc: {window_testauc}, window_testacc: {window_testacc}")
-    print(f"--- [Time] Window Evaluation: {time.time() - t4:.2f}s ---")
+    print(f"--- [Time] Window Evaluation: {time.time() - t4:.2f}s (started {datetime.fromtimestamp(t4).strftime('%H:%M:%S')}) ---")
     t5 = time.time()
 
     # question_testauc, question_testacc = -1, -1
@@ -126,7 +130,7 @@ def main(params):
             dres["windowauc"+key] = qw_testaucs[key]
         for key in qw_testaccs:
             dres["windowacc"+key] = qw_testaccs[key]
-    print(f"--- [Time] Question Evaluation: {time.time() - t5:.2f}s ---")
+    print(f"--- [Time] Question Evaluation: {time.time() - t5:.2f}s (started {datetime.fromtimestamp(t5).strftime('%H:%M:%S')}) ---")
     t6 = time.time()
 
         
@@ -148,10 +152,10 @@ def main(params):
     else:
         overall_auc_info = save_auc_results_from_file(save_test_window_path)
 
-    print(f"--- [Time] Fairness Calculation: {time.time() - t6:.2f}s ---")
+    print(f"--- [Time] Fairness Calculation: {time.time() - t6:.2f}s (started {datetime.fromtimestamp(t6).strftime('%H:%M:%S')}) ---")
     end_total = time.time()
     print("-" * 30)
-    print(f"Total Prediction Time: {end_total - start_total:.2f}s")
+    print(f"Total Prediction Time: {end_total - start_total:.2f}s (end {_now()})")
     print("-" * 30)
 
     if params['use_wandb'] ==1:
