@@ -1010,52 +1010,33 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
     alldfs, drest = [], dict() # not predict infos!
     # print(f"real bz in group fusion: {rs.shape[0]}")
     realbz = rs.shape[0]
-    sms_cpu = sms.cpu().tolist()
-    qidxs_cpu = qidxs.cpu().tolist()
-    rests_cpu = rests.cpu().tolist()
-    orirows_cpu = [orirows[bz].cpu().tolist() for bz in range(realbz)]
-    ps_cpu = ps.cpu().tolist()
-    cq_cpu = cq.cpu().tolist()
-    cc_cpu = cc.cpu().tolist()
-    rs_cpu = rs.cpu().tolist()
-    if model_name in hasearly and model_name not in ["kqn","lpkt","deep_irt"]:
-        hs0_cpu = hs[0].cpu().tolist()
-    elif model_name == "kqn":
-        hs0_cpu = hs[0].cpu().tolist()
-        hs1_cpu = hs[1].cpu().tolist()
-    elif model_name == "lpkt":
-        hs0_cpu = hs[0].cpu().tolist()
-        hs1_cpu = hs[1].cpu().tolist()
-    elif model_name == "deep_irt":
-        hs0_cpu = hs[0].cpu().tolist()
-        hs1_cpu = hs[1].cpu().tolist()
     for bz in range(rs.shape[0]):
 
-        cursm = ([0] + sms_cpu[bz])
-        curqidxs = ([-1] + qidxs_cpu[bz])
-        currests = ([-1] + rests_cpu[bz])
+        cursm = ([0] + sms[bz].cpu().tolist())
+        curqidxs = ([-1] + qidxs[bz].cpu().tolist())
+        currests = ([-1] + rests[bz].cpu().tolist())
         # print(f"[DEBUG] orirows[bz].shape: {orirows[bz].shape} (type: {type(orirows[bz].shape)})")
-        currows = ([-1] + orirows_cpu[bz])
+        currows = ([-1] + orirows[bz].cpu().tolist())
 
 
-        curps = ([-1] + ps_cpu[bz])
+        curps = ([-1] + ps[bz].cpu().tolist())
         # print(f"qid: {len(curqidxs)}, select: {len(cursm)}, response: {len(rs[bz].cpu().tolist())}, preds: {len(curps)}")
         df = pd.DataFrame({"qidx": curqidxs, "rest": currests, "row": currows, "select": cursm,
-                "questions": cq_cpu[bz], "concepts": cc_cpu[bz], "response": rs_cpu[bz], "preds": curps})
+                "questions": cq[bz].cpu().tolist(), "concepts": cc[bz].cpu().tolist(), "response": rs[bz].cpu().tolist(), "preds": curps})
 
         if model_name in hasearly and model_name not in ["kqn","lpkt","deep_irt"]:
-            df["hidden"] = [np.array(a) for a in hs0_cpu[bz]]
+            df["hidden"] = [np.array(a) for a in hs[0][bz].cpu().tolist()]
         elif model_name == "kqn":
-            df["ek"] = [np.array(a) for a in hs0_cpu[bz]]
-            df["es"] = [np.array(a) for a in hs1_cpu[bz]]
+            df["ek"] = [np.array(a) for a in hs[0][bz].cpu().tolist()]
+            df["es"] = [np.array(a) for a in hs[1][bz].cpu().tolist()]
         elif model_name == "lpkt":
             # print(f"hidden:{hs[0].shape}")
-            df["h"] = [np.array(a) for a in hs0_cpu[bz]]
+            df["h"] = [np.array(a) for a in hs[0][bz].cpu().tolist()]
             # print(f"e_data:{hs[1].shape}")
-            df["e_data"] = [np.array(a) for a in hs1_cpu[bz]]
+            df["e_data"] = [np.array(a) for a in hs[1][bz].cpu().tolist()]
         elif model_name == "deep_irt":
-            df["h"] = [np.array(a) for a in hs0_cpu[bz]]
-            df["k"] = [np.array(a) for a in hs1_cpu[bz]]
+            df["h"] = [np.array(a) for a in hs[0][bz].cpu().tolist()]
+            df["k"] = [np.array(a) for a in hs[1][bz].cpu().tolist()]
 
         df = df[df["select"] != 0]
 
