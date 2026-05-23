@@ -17,6 +17,7 @@ from pykt.utils import debug_print,set_seed
 from pykt.datasets import init_dataset4train
 from pykt.config import predict_after_train
 import datetime
+import traceback
 # from auc_processor import save_auc_results_from_file
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 device = "cpu" if not torch.cuda.is_available() else "cuda"
@@ -307,12 +308,15 @@ def main(params):
         save_model = True
         
         debug_print(text = "train model",fuc_name="main")
-        
+
         model.cuda()  # 确保模型在GPU上
 
-        if model_name == "rkt":
+        existing_ckpt = os.path.join(ckpt_path, emb_type + "_model.ckpt")
+        if use_trained == 1 and os.path.exists(existing_ckpt):
+            print(f"⏭️  use_trained=1 且检测到已训练模型 {existing_ckpt}，跳过训练阶段。")
+        elif model_name == "rkt":
             testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = train_model(
-                model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model, 
+                model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model,
                 data_config[dataset_name], fold, use_trained=use_trained,accumulation_steps=accumulation_steps
             )
         elif model_name == "long_dkt":
@@ -322,7 +326,7 @@ def main(params):
             )
         else:
             testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = train_model(
-                model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model, 
+                model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model,
                 use_trained=use_trained,accumulation_steps=accumulation_steps
             )
 
@@ -437,6 +441,7 @@ def main(params):
                     # 这个 except 块现在可以捕获来自 runpy 脚本内部的任何 Python 错误
                     prediction_success = False
                     print(f"Prediction failed: {str(e)}")
+                    traceback.print_exc() 
                     if params['use_wandb']==1:
                         wandb.log({"prediction_status": "failed"})
                 

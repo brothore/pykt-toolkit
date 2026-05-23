@@ -187,7 +187,7 @@ def process_results_to_df(result_string):
 #         except Exception as e:
 #             # print(e)
 #             auc = -1
-#         prelabels = [1 if p >= 0.5 else 0 for p in ps]
+#         prelabels = (np.asarray(ps) >= 0.5).astype(np.int64)
 #         acc = metrics.accuracy_score(ts, prelabels)
 #         dres[len(dres)] = [qs, rs, ds, ts, ps, prelabels, auc, acc]
 #         results.append(str([qs, rs, ds, ts, ps, prelabels, auc, acc]))
@@ -241,7 +241,7 @@ def process_results_to_df(result_string):
 
 #             auc = -1
 
-#         prelabels = [1 if p >= 0.5 else 0 for p in ps]
+#         prelabels = (np.asarray(ps) >= 0.5).astype(np.int64)
 
 #         acc = metrics.accuracy_score(ts, prelabels)
 
@@ -292,7 +292,7 @@ def process_results_to_df(result_string):
 #         except Exception as e:
 #             # print(e)
 #             auc = -1
-#         prelabels = [1 if p >= 0.5 else 0 for p in ps]
+#         prelabels = (np.asarray(ps) >= 0.5).astype(np.int64)
 #         acc = metrics.accuracy_score(ts, prelabels)
 #         dres[len(dres)] = [current_uid, qs, rs, ds, ts, ps, prelabels, auc, acc]
 #         results.append(str([current_uid, qs, rs, ds, ts, ps, prelabels, auc, acc]))
@@ -652,7 +652,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
         # print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
         auc = safe_roc_auc(y_true=ts, y_score=ps)
 
-        prelabels = [1 if p >= 0.5 else 0 for p in ps]
+        prelabels = (np.asarray(ps) >= 0.5).astype(np.int64)
         acc = metrics.accuracy_score(ts, prelabels)
     # if save_path != "":
     #     pd.to_pickle(dres, save_path+".pkl")
@@ -895,7 +895,7 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
         # print(f"ts.shape: {ts.shape}, ps.shape: {ps.shape}")
         auc = safe_roc_auc(y_true=ts, y_score=ps)
 
-        prelabels = [1 if p >= 0.5 else 0 for p in ps]
+        prelabels = (np.asarray(ps) >= 0.5).astype(np.int64)
         acc = metrics.accuracy_score(ts, prelabels)
         # print(f"[DEBUG] c: {c} (type: {type(c)})")
         # print(f"[DEBUG] q: {q} (type: {type(q)})")
@@ -1013,35 +1013,35 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
     alldfs, drest = [], dict() # not predict infos!
     # print(f"real bz in group fusion: {rs.shape[0]}")
     realbz = rs.shape[0]
-    sms_cpu = sms.cpu().tolist()
-    qidxs_cpu = qidxs.cpu().tolist()
-    rests_cpu = rests.cpu().tolist()
-    orirows_cpu = [orirows[bz].cpu().tolist() for bz in range(realbz)]
-    ps_cpu = ps.cpu().tolist()
-    cq_cpu = cq.cpu().tolist()
-    cc_cpu = cc.cpu().tolist()
-    rs_cpu = rs.cpu().tolist()
+    sms_cpu = sms.cpu().numpy()
+    qidxs_cpu = qidxs.cpu().numpy()
+    rests_cpu = rests.cpu().numpy()
+    orirows_cpu = [orirows[bz].cpu().numpy() for bz in range(realbz)]
+    ps_cpu = ps.cpu().numpy()
+    cq_cpu = cq.cpu().numpy()
+    cc_cpu = cc.cpu().numpy()
+    rs_cpu = rs.cpu().numpy()
     if model_name in hasearly and model_name not in ["kqn","lpkt","deep_irt"]:
-        hs0_cpu = hs[0].cpu().tolist()
+        hs0_cpu = hs[0].cpu().numpy()
     elif model_name == "kqn":
-        hs0_cpu = hs[0].cpu().tolist()
-        hs1_cpu = hs[1].cpu().tolist()
+        hs0_cpu = hs[0].cpu().numpy()
+        hs1_cpu = hs[1].cpu().numpy()
     elif model_name == "lpkt":
-        hs0_cpu = hs[0].cpu().tolist()
-        hs1_cpu = hs[1].cpu().tolist()
+        hs0_cpu = hs[0].cpu().numpy()
+        hs1_cpu = hs[1].cpu().numpy()
     elif model_name == "deep_irt":
-        hs0_cpu = hs[0].cpu().tolist()
-        hs1_cpu = hs[1].cpu().tolist()
+        hs0_cpu = hs[0].cpu().numpy()
+        hs1_cpu = hs[1].cpu().numpy()
     for bz in range(rs.shape[0]):
 
-        cursm = ([0] + sms_cpu[bz])
-        curqidxs = ([-1] + qidxs_cpu[bz])
-        currests = ([-1] + rests_cpu[bz])
+        cursm = np.concatenate(([0], sms_cpu[bz]))
+        curqidxs = np.concatenate(([-1], qidxs_cpu[bz]))
+        currests = np.concatenate(([-1], rests_cpu[bz]))
         # print(f"[DEBUG] orirows[bz].shape: {orirows[bz].shape} (type: {type(orirows[bz].shape)})")
-        currows = ([-1] + orirows_cpu[bz])
+        currows = np.concatenate(([-1], orirows_cpu[bz]))
 
 
-        curps = ([-1] + ps_cpu[bz])
+        curps = np.concatenate(([-1], ps_cpu[bz]))
         # print(f"qid: {len(curqidxs)}, select: {len(cursm)}, response: {len(rs[bz].cpu().tolist())}, preds: {len(curps)}")
         df = pd.DataFrame({"qidx": curqidxs, "rest": currests, "row": currows, "select": cursm,
                 "questions": cq_cpu[bz], "concepts": cc_cpu[bz], "response": rs_cpu[bz], "preds": curps})
@@ -1239,7 +1239,7 @@ async def evaluate_llm_question_async(
         ps = np.concatenate(y_scores, axis=0)
         
         auc = metrics.roc_auc_score(y_true=ts, y_score=ps)
-        prelabels = [1 if p >= 0.5 else 0 for p in ps]
+        prelabels = (np.asarray(ps) >= 0.5).astype(np.int64)
         acc = metrics.accuracy_score(ts, prelabels)
         aucs["concepts"] = auc
         accs["concepts"] = acc
@@ -1250,7 +1250,7 @@ async def evaluate_llm_question_async(
             ts = np.concatenate(dinfos['late_trues'], axis=0)
             ps = np.concatenate(dinfos[key], axis=0)
             auc = metrics.roc_auc_score(y_true=ts, y_score=ps)
-            prelabels = [1 if p >= 0.5 else 0 for p in ps]
+            prelabels = (np.asarray(ps) >= 0.5).astype(np.int64)
             acc = metrics.accuracy_score(ts, prelabels)
             aucs[key] = auc
             accs[key] = acc
@@ -1510,7 +1510,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         auc = safe_roc_auc(y_true=ts, y_score=ps)
 
         
-        prelabels = [1 if p >= 0.5 else 0 for p in ps]
+        prelabels = (np.asarray(ps) >= 0.5).astype(np.int64)
         acc = metrics.accuracy_score(ts, prelabels)
         aucs["concepts"] = auc
         accs["concepts"] = acc
@@ -1524,7 +1524,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             ps = np.concatenate(dinfos[key], axis=0)
             # print(f"key: {key}, ts.shape: {ts.shape}, ps.shape: {ps.shape}")
             auc = safe_roc_auc(y_true=ts, y_score=ps)
-            prelabels = [1 if p >= 0.5 else 0 for p in ps]
+            prelabels = (np.asarray(ps) >= 0.5).astype(np.int64)
             acc = metrics.accuracy_score(ts, prelabels)
             aucs[key] = auc
             accs[key] = acc
@@ -2073,7 +2073,7 @@ def cal_predres(dcres, dqres):
     ctrues, cpreds = np.array(dcres["trues"]), np.array(dcres["preds"])
     # print(f"key: concepts, ts.shape: {ctrues.shape}, ps.shape: {cpreds.shape}")
     auc = metrics.roc_auc_score(y_true=ctrues, y_score=cpreds)
-    prelabels = [1 if p >= 0.5 else 0 for p in cpreds]
+    prelabels = (np.asarray(cpreds) >= 0.5).astype(np.int64)
     acc = metrics.accuracy_score(ctrues, prelabels)
 
     dres["concepts"] = [len(cpreds), auc, acc]
