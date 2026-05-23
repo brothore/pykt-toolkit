@@ -8,7 +8,6 @@
 
 set -euo pipefail
 
-source /etc/network_turbo
 
 PY_SITE="$(python -c 'import site; print(site.getsitepackages()[0])')"
 echo "[info] site-packages: $PY_SITE"
@@ -58,6 +57,7 @@ echo "==[4/5]== 安装 torch 2.8.0+cu128（来自 PyTorch 官方索引）..."
 pip install --no-cache-dir --force-reinstall \
   --index-url https://download.pytorch.org/whl/cu128 \
   "torch==2.8.0+cu128"
+
 
 # ──────────── Step 5/5: 自检 ────────────
 echo
