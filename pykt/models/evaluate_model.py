@@ -36,14 +36,23 @@ class AsyncWriter:
         self.queue.put(result_str)
         
     def _write_loop(self):
-        """子线程在后台运行"""
+        """子线程在后台运行（批量 flush）"""
+        BATCH = 1024
+        buf = []
         while True:
             item = self.queue.get()
             if item is self.stop_signal:
+                if buf and self.fout:
+                    self.fout.write("\n".join(buf) + "\n")
+                    buf.clear()
+                self.queue.task_done()
                 break
-            if self.fout:
-                self.fout.write(item + "\n")
+            buf.append(item)
             self.queue.task_done()
+            if len(buf) >= BATCH:
+                if self.fout:
+                    self.fout.write("\n".join(buf) + "\n")
+                buf.clear()
             
     def close(self):
         """等待所有写入完成并关闭"""
@@ -382,19 +391,19 @@ def save_cur_predict_result(dres, c, q, r, cshft, qshft, t, m, sm, p, uids, stud
         # 1. 获取有效的 p (predictions) 和 t (targets)
         cps = torch.masked_select(p[i], sm[i]).detach().cpu()
         cts = torch.masked_select(t[i], sm[i]).detach().cpu()
-        
+
         # 2. 处理 qshft (形状: (num_valid_steps,))
-        cqs = torch.masked_select(qshft[i], sm[i]).detach().cpu() 
-        
+        cqs = torch.masked_select(qshft[i], sm[i]).detach().cpu()
+
         # 3. 处理 cshft (形状可能为 (num_valid_steps, num_concepts) 或 (num_valid_steps,))
         #    cshft[i] 的形状是 (seq_len-1, ...)
         #    sm[i] 的形状是 (seq_len-1,)
         #    ccs 的形状是 (num_valid_steps, ...)
-        ccs = cshft[i][sm[i]].detach().cpu() 
+        ccs = cshft[i][sm[i]].detach().cpu()
 
         # 获取当前样本的uid
         current_uid = uids[i].item() if hasattr(uids[i], 'item') else uids[i]
-        
+
         # --- 新增：获取该学生的全局起始时间步 ---
         global_time_step_offset = student_time_step_tracker.get(current_uid, 0)
         # --- 结束新增 ---
@@ -404,13 +413,13 @@ def save_cur_predict_result(dres, c, q, r, cshft, qshft, t, m, sm, p, uids, stud
         for time_step, (ct, cp, cq, cc_list_tensor) in enumerate(zip(cts.int(), cps, cqs.int(), ccs.int())):
             true_val = ct.item()
             predict_val = cp.item()
-            
+
             # ... (中间的 cshft 和 qshft 过滤逻辑不变) ...
-            
+
             # --- 关键修改: 过滤 -1 ---
-            qshft_val_single = cq.item() 
+            qshft_val_single = cq.item()
             cshft_val_list_raw = cc_list_tensor.tolist() # <--- 这里可能是 list 或 int
-            
+
             # ++++++ 修复开始 ++++++
             if isinstance(cshft_val_list_raw, list):
                 # 情况1: KTQueDataset (多知识点), cshft_val_list_raw 是 [23, 45, -1]
@@ -421,7 +430,7 @@ def save_cur_predict_result(dres, c, q, r, cshft, qshft, t, m, sm, p, uids, stud
                     valid_cshft_list = [cshft_val_list_raw] # 包装成列表
                 else:
                     valid_cshft_list = [] # 如果这个单知识点是-1, 则为空
-            
+
             num_valid_concepts = len(valid_cshft_list)
             # ++++++ 修复结束 ++++++
 
@@ -429,14 +438,14 @@ def save_cur_predict_result(dres, c, q, r, cshft, qshft, t, m, sm, p, uids, stud
             qshft_val_list_expanded = [qshft_val_single] * num_valid_concepts
             qshft_val_str = ",".join(map(str, qshft_val_list_expanded))
             # --- 结束 ---
-            
+
             # --- 修改：使用全局时间步 ---
             current_global_time_step = global_time_step_offset + time_step + 1
             result_line = f"{current_uid}\t{current_global_time_step}\t{true_val}\t{predict_val}\t{qshft_val_str}\t{cshft_val_str}"
             # --- 结束修改 ---
-            
+
             results.append(result_line)
-            
+
             # # dres 的处理 (如果需要)
             # ...
 
@@ -1517,10 +1526,11 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
         print(f"[DEBUG] auc: {auc} (type: {type(auc)})")
 
         # print(f"dinfos: {dinfos.keys()}")
+        late_trues_concat = np.concatenate(dinfos['late_trues'], axis=0) if 'late_trues' in dinfos else None
         for key in dinfos:
             if key not in ["late_mean", "late_vote", "late_all", "early_preds"]:
                 continue
-            ts = np.concatenate(dinfos['late_trues'], axis=0) # early_trues == late_trues
+            ts = late_trues_concat # early_trues == late_trues
             ps = np.concatenate(dinfos[key], axis=0)
             # print(f"key: {key}, ts.shape: {ts.shape}, ps.shape: {ps.shape}")
             auc = safe_roc_auc(y_true=ts, y_score=ps)
