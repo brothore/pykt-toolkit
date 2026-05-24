@@ -13,4 +13,4 @@ random_rev = 1.0
 hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "akt","extrakt", "folibikt", "dtransformer", "simplekt","stablekt","fluckt", "hcgkt", "bakt_time", "sparsekt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt", "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]
 # hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "akt","extrakt", "folibikt", "robustkt", "dtransformer", "simplekt","stablekt","cskt","fluckt", "ukt", "hcgkt", "bakt_time", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt", "Transformer_template", "dbakt", "balance_akt", "qwen", "multi_dataset_akt", "hawkes_lstm", "hawkes_mamba", "mamba_hawkes_dkt"]
 
-PYKT_COUNT_ONLY = 1
+PYKT_COUNT_ONLY = 0

@@ -236,8 +236,7 @@ def main(params):
             train_loader, valid_loader, *_ = init_dataset4train(dataset_name, model_name, data_config, fold, batch_size,aug_probs=aug_probs)
         else:
             diff_level = params["difficult_levels"]
-            train_loader, valid_loader, *_ = init_dataset4train(dataset_name, model_name, data_config, fold, batch_size,aug_probs=aug_probs)
-
+            train_loader, valid_loader, *_ = init_dataset4train(dataset_name, model_name, data_config, fold, batch_size, diff_level=diff_level, aug_probs=aug_probs)
         params_str = "_".join([str(v) for k,v in params.items() if not k in ['other_config']])
 
         print(f"params: {params}, params_str: {params_str}")
@@ -271,7 +270,7 @@ def main(params):
         n_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
         n_total = sum(p.numel() for p in model.parameters())
         print(f"[PARAM_COUNT] model={model_name} emb_type={emb_type} dataset={dataset_name} trainable={n_trainable:,} total={n_total:,}")
-        if PYKT_COUNT_ONLY == 1: return
+        if os.environ.get("PYKT_COUNT_ONLY") == '1': return
         if params.get("use_wandb", 0) == 1:
             try:
                 import wandb

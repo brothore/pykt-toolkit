@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(tsp -l)"
+      "Bash(tsp -l)",
+      "Bash(PYTHONPATH=/root/autodl-tmp/pykt-toolkit PYKT_COUNT_ONLY=1 python wandb_ukt_train.py --dataset_name nips_task34 --use_wandb 0 --add_uuid 0 --d_model 248 --d_ff 496)",
+      "Bash(PYTHONPATH=/root/autodl-tmp/pykt-toolkit python count_param_dimkt.py --dataset_name assist2009 --emb_type qid --emb_size 512 --difficult_levels 100)",
+      "Bash(PYTHONPATH=/root/autodl-tmp/pykt-toolkit python count_param_dimkt.py --dataset_name assist2009 --emb_type qid --emb_size 504 --difficult_levels 100)",
+      "Bash(PYTHONPATH=/root/autodl-tmp/pykt-toolkit python count_param_dimkt.py --dataset_name nips_task34 --emb_type qid --emb_size 496 --difficult_levels 100)",
+      "Bash(PYTHONPATH=/root/autodl-tmp/pykt-toolkit PYKT_COUNT_ONLY=1 python wandb_ukt_train.py --dataset_name assist2009 --use_wandb 0 --add_uuid 0 --d_model 328 --d_ff 656)",
+      "Bash(PYTHONPATH=/root/autodl-tmp/pykt-toolkit PYKT_COUNT_ONLY=1 python wandb_ukt_train.py --dataset_name assist2009 --use_wandb 0 --add_uuid 0 --d_model 336 --d_ff 672)"
     ]
   }
 }
