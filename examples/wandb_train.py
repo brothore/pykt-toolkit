@@ -15,7 +15,7 @@ from wandb_multi_predict import main as predict_main
 from pykt.models import train_model,evaluate,init_model
 from pykt.utils import debug_print,set_seed
 from pykt.datasets import init_dataset4train
-from pykt.config import predict_after_train
+from pykt.config import predict_after_train,PYKT_COUNT_ONLY
 import datetime
 import traceback
 # from auc_processor import save_auc_results_from_file
@@ -271,6 +271,7 @@ def main(params):
         n_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
         n_total = sum(p.numel() for p in model.parameters())
         print(f"[PARAM_COUNT] model={model_name} emb_type={emb_type} dataset={dataset_name} trainable={n_trainable:,} total={n_total:,}")
+        if PYKT_COUNT_ONLY == 1: return
         if params.get("use_wandb", 0) == 1:
             try:
                 import wandb

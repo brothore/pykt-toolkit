@@ -28,7 +28,7 @@ from cal_unbalance import (
     ENABLE_SLIDING_WINDOW,
     WINDOW_SIZE,
 )
-from pykt.models import evaluate, evaluate_question, load_model
+from pykt.models import evaluate, evaluate_question, load_model  # noqa: F401
 from pykt.datasets import init_test_datasets
 
 device = "cpu" if not torch.cuda.is_available() else "cuda"
@@ -271,28 +271,50 @@ def main(params):
         else:
             rel = pd.read_pickle(os.path.join(dpath, "phi_array" + folds_str + ".pkl"))
 
-    # 3) 只跑 question_window 通路 (固定长度实验只看这一路)
-    if test_question_window_loader is None or "test_question_window_file" not in data_config:
+    # 3) 推理: 优先 question_window, 缺啥退啥
+    #    两路 txt 都含 orirow / late_trues / late_mean, build_student_records 兼容。
+    rkt_kw = {"rel": rel} if model.model_name == "rkt" else {}
+    candidates = [
+        ("test_question_window_file", test_question_window_loader,
+         "_test_question_window_predictions.txt", "evaluate_question"),
+        ("test_window_file",          test_window_loader,
+         "_test_window_predictions.txt",          "evaluate"),
+        ("test_question_file",        test_question_loader,
+         "_test_question_predictions.txt",        "evaluate_question"),
+        ("test_file",                 test_loader,
+         "_test_predictions.txt",                 "evaluate"),
+    ]
+    save_path, eval_source = None, None
+    for cfg_key, loader, suffix, eval_kind in candidates:
+        if loader is None or cfg_key not in data_config:
+            continue
+        save_path = os.path.join(save_dir, model.emb_type + suffix)
+        eval_source = cfg_key
+        t3 = time.time()
+        if eval_kind == "evaluate_question":
+            aucs, accs = evaluate_question(
+                model, loader, model_name,
+                fusion_type=fusion_type, save_path=save_path,
+            )
+        else:
+            aucs, accs = evaluate(
+                model, loader, model_name, save_path=save_path, **rkt_kw,
+            )
+        print(f"[Time] {eval_source} eval: {time.time() - t3:.2f}s")
+        print(f"[{eval_source}] testaucs: {aucs}")
+        print(f"[{eval_source}] testaccs: {accs}")
+        break
+    if save_path is None:
         raise RuntimeError(
-            "当前 dataset 没有 test_question_window_file / test_question_window_loader, "
-            "无法做按学生长度的固定长度评估。请确认数据集预处理产物。"
+            "当前 dataset 没有任何可用的 test loader / test_*_file, 无法评估。"
         )
-    save_qw_path = os.path.join(save_dir, model.emb_type + "_test_question_window_predictions.txt")
-    t3 = time.time()
-    qw_aucs, qw_accs = evaluate_question(
-        model, test_question_window_loader, model_name,
-        fusion_type=fusion_type, save_path=save_qw_path,
-    )
-    print(f"[Time] question_window eval: {time.time() - t3:.2f}s")
-    print(f"qw_testaucs: {qw_aucs}")
-    print(f"qw_testaccs: {qw_accs}")
 
     # 4) 桶级指标
     t4 = time.time()
     out_json = os.path.join(save_dir, "seq_len_bucket_stats.json")
     out_csv = os.path.join(save_dir, "student_auc_with_length.csv")
     payload = evaluate_seq_len_buckets(
-        save_qw_path, target_seq_lens, tolerance,
+        save_path, target_seq_lens, tolerance,
         out_json=out_json, out_csv=out_csv,
     )
     print(f"[Time] seq_len bucketing  : {time.time() - t4:.2f}s")
