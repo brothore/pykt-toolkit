@@ -1,39 +1,186 @@
 {
-  "generated_at": "2026-05-24 08:49:17",
+  "generated_at": "2026-05-24 02:35:37",
   "summary": {
-    "sockets": [
-      "default",
-      "/tmp/ts_gpu0",
-      "/tmp/ts_gpu1"
-    ],
-    "total_tasks": 94,
-    "total_groups": 32,
+    "total_tasks": 130,
+    "total_groups": 55,
     "by_status": {
-      "success": 28,
-      "failed": 3,
+      "success": 32,
+      "failed": 19,
+      "running": 2,
+      "queued": 1,
       "unknown": 1
     },
     "by_model": {
-      "qikt_mamba": 10,
-      "akt": 9,
-      "simplekt": 6,
-      "stablekt": 6,
-      "None": 1
+      "qikt_mamba": 37,
+      "lefokt_akt": 3,
+      "robuskt": 3,
+      "robuskt_akt": 3,
+      "robustkt": 3,
+      "iekt": 2,
+      "iekt_akt": 2,
+      "ukt": 1,
+      "ukt_akt": 1
     },
     "by_dataset": {
-      "assist2009": 13,
-      "nips_task34": 9,
-      "peiyou": 9,
-      "None": 1
-    },
-    "by_socket": {
-      "/tmp/ts_gpu0": 43,
-      "default": 26,
-      "/tmp/ts_gpu1": 25
+      "peiyou": 21,
+      "assist2009": 20,
+      "nips_task34": 14
     }
   },
   "pending": [],
   "results": [
+    {
+      "task_id": 162,
+      "status": "success",
+      "model": "extrakt",
+      "dataset": "nips_task34",
+      "fold": 1,
+      "emb_type": null,
+      "version": null,
+      "params": {
+        "use_wandb": 0,
+        "dataset_name": "nips_task34",
+        "fold": 1,
+        "_inferred_model": "extrakt",
+        "_script": "wandb_extrakt_train.py"
+      },
+      "tsp": {
+        "state": "finished",
+        "exit_code": 0,
+        "enqueue_time": "Sun May 24 04:27:10 2026",
+        "start_time": "Sun May 24 04:27:10 2026",
+        "end_time": "Sun May 24 04:47:24 2026",
+        "time_sec": 1213.883911,
+        "output_file": "/tmp/ts-out.Pk2YE5"
+      },
+      "save_dir": "saved_model/nips_task34_extrakt_qid_saved_model_3407_1_0.05_256_256_4_4_0.001_0_1_1",
+      "save_dir_abs": "/root/autodl-tmp/pykt-toolkit/examples/saved_model/nips_task34_extrakt_qid_saved_model_3407_1_0.05_256_256_4_4_0.001_0_1_1",
+      "save_dir_exists": true,
+      "run_id": "eff7674c-4621-447b-ac76-6019eb5492d4",
+      "log_status": "success",
+      "param_count": {
+        "model": "extrakt",
+        "emb_type": "qid",
+        "dataset": "nips_task34",
+        "trainable": 4414438,
+        "total": 4414438
+      },
+      "overall_stats": {
+        "overall_dataset_auc": 0.8068044317100949,
+        "student_stats_mean": 0.7160808218330359,
+        "student_stats_std": 0.0981888283447614,
+        "student_stats_max": 0.9974314096721557,
+        "student_stats_min": 0.42370370370370375,
+        "student_stats_range": 0.573727705968452,
+        "student_stats_epi": 12.711422144609404,
+        "student_stats_gini_coefficient": 0.07626700235200713,
+        "student_stats_average_auc": 0.7160808218330359,
+        "student_stats_eawi_alpha_10": 0.6614674841100685,
+        "student_stats_eawi_alpha_20": 0.6110193419436697,
+        "student_stats_eawi_alpha_30": 0.56441872835453,
+        "student_stats_iqr": 0.1245571992196165,
+        "student_stats_q1": 0.6601644318962603,
+        "student_stats_q3": 0.7847216311158768
+      },
+      "all_results": {
+        "testauc": 0.804975805643435,
+        "testacc": 0.7338773188659433,
+        "window_testauc": 0.8077757249987769,
+        "window_testacc": 0.7362749587503725,
+        "oriaucconcepts": 0.7986661675782998,
+        "oriauclate_mean": 0.8000853628278549,
+        "oriauclate_vote": 0.7992594127901274,
+        "oriauclate_all": 0.800325246087753,
+        "oriaccconcepts": 0.7295827955107309,
+        "oriacclate_mean": 0.7301649400067172,
+        "oriacclate_vote": 0.7299065868970684,
+        "oriacclate_all": 0.7308218950569668,
+        "windowaucconcepts": 0.8015367656426702,
+        "windowauclate_mean": 0.8029652955289527,
+        "windowauclate_vote": 0.8021796367278993,
+        "windowauclate_all": 0.803182015836446,
+        "windowaccconcepts": 0.7320836043946459,
+        "windowacclate_mean": 0.7326593901402699,
+        "windowacclate_vote": 0.7324349876578634,
+        "windowacclate_all": 0.7332627017323136
+      }
+    },
+    {
+      "task_id": 161,
+      "status": "success",
+      "model": "extrakt",
+      "dataset": "peiyou",
+      "fold": 1,
+      "emb_type": null,
+      "version": null,
+      "params": {
+        "use_wandb": 0,
+        "dataset_name": "peiyou",
+        "fold": 1,
+        "_inferred_model": "extrakt",
+        "_script": "wandb_extrakt_train.py"
+      },
+      "tsp": {
+        "state": "finished",
+        "exit_code": 0,
+        "enqueue_time": "Sun May 24 04:27:10 2026",
+        "start_time": "Sun May 24 04:27:10 2026",
+        "end_time": "Sun May 24 05:28:44 2026",
+        "time_sec": 3693.789307,
+        "output_file": "/tmp/ts-out.X27ZQv"
+      },
+      "save_dir": "saved_model/peiyou_extrakt_qid_saved_model_3407_1_0.05_256_256_4_4_0.001_0_1_1",
+      "save_dir_abs": "/root/autodl-tmp/pykt-toolkit/examples/saved_model/peiyou_extrakt_qid_saved_model_3407_1_0.05_256_256_4_4_0.001_0_1_1",
+      "save_dir_exists": true,
+      "run_id": "0783a1b3-c88e-4a9c-8cbb-313bf722b153",
+      "log_status": "success",
+      "param_count": {
+        "model": "extrakt",
+        "emb_type": "qid",
+        "dataset": "peiyou",
+        "trainable": 5248534,
+        "total": 5248534
+      },
+      "overall_stats": {
+        "overall_dataset_auc": 0.8252898729655722,
+        "student_stats_mean": 0.7661890748627382,
+        "student_stats_std": 0.062439716009097,
+        "student_stats_max": 0.9833186720099045,
+        "student_stats_min": 0.5013115232493253,
+        "student_stats_range": 0.48200714876057926,
+        "student_stats_epi": 25.45784022686206,
+        "student_stats_gini_coefficient": 0.04563878747328145,
+        "student_stats_average_auc": 0.7661890748627382,
+        "student_stats_eawi_alpha_10": 0.7312211345107276,
+        "student_stats_eawi_alpha_20": 0.6978490885568208,
+        "student_stats_eawi_alpha_30": 0.6660001023157529,
+        "student_stats_iqr": 0.0816511921768015,
+        "student_stats_q1": 0.7257624340679837,
+        "student_stats_q3": 0.8074136262447852
+      },
+      "all_results": {
+        "testauc": 0.8627685567820117,
+        "testacc": 0.8504512261106877,
+        "window_testauc": 0.8652360833998987,
+        "window_testacc": 0.8512712718069467,
+        "oriaucconcepts": 0.7896059947423403,
+        "oriauclate_mean": 0.8139668337835305,
+        "oriauclate_vote": 0.8095942263644492,
+        "oriauclate_all": 0.8132626374046201,
+        "oriaccconcepts": 0.8238752475372808,
+        "oriacclate_mean": 0.824658868327194,
+        "oriacclate_vote": 0.8258483526281939,
+        "oriacclate_all": 0.8246031398000351,
+        "windowaucconcepts": 0.7924346796960812,
+        "windowauclate_mean": 0.8172043079031406,
+        "windowauclate_vote": 0.812692896060195,
+        "windowauclate_all": 0.8165003510126838,
+        "windowaccconcepts": 0.8247909501877768,
+        "windowacclate_mean": 0.825583585108038,
+        "windowacclate_vote": 0.8267189593858062,
+        "windowacclate_all": 0.8255899533932498
+      }
+    },
     {
       "task_id": 24,
       "tsp_socket": "/tmp/ts_gpu0",
@@ -994,44 +1141,87 @@
           "overall_dataset_auc": 0.7879454488254147
         },
         {
-          "task_id": 6,
-          "tsp_socket": "default",
-          "status": "success",
-          "overall_dataset_auc": 0.7879454488254147
-        },
-        {
-          "task_id": 7,
-          "tsp_socket": "default",
-          "status": "success",
-          "overall_dataset_auc": 0.7879454488254147
-        },
-        {
-          "task_id": 40,
-          "tsp_socket": "/tmp/ts_gpu0",
-          "status": "success",
-          "overall_dataset_auc": 0.7879454488254147
-        },
-        {
-          "task_id": 1,
-          "tsp_socket": "/tmp/ts_gpu1",
-          "status": "success",
-          "overall_dataset_auc": 0.7847872748862503
-        },
-        {
-          "task_id": 2,
-          "tsp_socket": "default",
-          "status": "unknown",
-          "overall_dataset_auc": null
-        },
-        {
-          "task_id": 4,
-          "tsp_socket": "default",
+          "task_id": 46,
           "status": "failed",
           "overall_dataset_auc": null
         },
         {
-          "task_id": 39,
-          "tsp_socket": "/tmp/ts_gpu0",
+          "task_id": 131,
+          "status": "failed",
+          "overall_dataset_auc": null
+        }
+      ]
+    },
+    {
+      "task_id": 160,
+      "status": "queued",
+      "model": "qikt_mamba",
+      "dataset": "assist2009",
+      "fold": 1,
+      "emb_type": "attn",
+      "version": "public_mamba",
+      "params": {
+        "model_name": "qikt_mamba",
+        "emb_size": 256,
+        "use_wandb": 0,
+        "learning_rate": 0.0001,
+        "batch_size": 32,
+        "num_epochs": 200,
+        "dataset_name": "assist2009",
+        "fold": 1,
+        "dropout": 0.5,
+        "mlp_layer_num": 1,
+        "seed": 42,
+        "loss_q_all_lambda": 2.0,
+        "loss_c_all_lambda": 2.0,
+        "loss_c_next_lambda": 2.0,
+        "version": "public_mamba",
+        "output_mode": "an_irt",
+        "emb_type": "attn",
+        "_inferred_model": "qikt_mamba",
+        "_script": "wandb_qikt_mamba_train.py"
+      },
+      "tsp": {
+        "state": "queued",
+        "exit_code": null,
+        "enqueue_time": "Sun May 24 01:44:20 2026",
+        "start_time": null,
+        "end_time": null,
+        "time_sec": null,
+        "output_file": null
+      },
+      "save_dir": null,
+      "save_dir_abs": null,
+      "save_dir_exists": false,
+      "run_id": null,
+      "log_status": null,
+      "param_count": null,
+      "overall_stats": null,
+      "all_results": null,
+      "log_tail": null,
+      "attempts": [
+        {
+          "task_id": 49,
+          "status": "failed",
+          "overall_dataset_auc": null
+        },
+        {
+          "task_id": 79,
+          "status": "failed",
+          "overall_dataset_auc": null
+        },
+        {
+          "task_id": 129,
+          "status": "failed",
+          "overall_dataset_auc": null
+        },
+        {
+          "task_id": 145,
+          "status": "failed",
+          "overall_dataset_auc": null
+        },
+        {
+          "task_id": 157,
           "status": "failed",
           "overall_dataset_auc": null
         }
@@ -2088,33 +2278,69 @@
       },
       "attempts": [
         {
-          "task_id": 31,
-          "tsp_socket": "/tmp/ts_gpu0",
-          "status": "success",
-          "overall_dataset_auc": 0.8022940546223064
-        },
+          "task_id": 40,
+          "status": "failed",
+          "overall_dataset_auc": null
+        }
+      ]
+    },
+    {
+      "task_id": 159,
+      "status": "running",
+      "model": "qikt_mamba",
+      "dataset": "peiyou",
+      "fold": 1,
+      "emb_type": "attn",
+      "version": "public_mamba",
+      "params": {
+        "model_name": "qikt_mamba",
+        "emb_size": 256,
+        "use_wandb": 0,
+        "learning_rate": 0.0001,
+        "batch_size": 32,
+        "num_epochs": 200,
+        "dataset_name": "peiyou",
+        "fold": 1,
+        "dropout": 0.3,
+        "mlp_layer_num": 2,
+        "seed": 3407,
+        "loss_q_all_lambda": 0.0,
+        "loss_c_all_lambda": 0.5,
+        "loss_c_next_lambda": 0.0,
+        "version": "public_mamba",
+        "output_mode": "an_irt",
+        "emb_type": "attn",
+        "_inferred_model": "qikt_mamba",
+        "_script": "wandb_qikt_mamba_train.py"
+      },
+      "tsp": {
+        "state": "running",
+        "exit_code": null,
+        "enqueue_time": "Sun May 24 01:44:20 2026",
+        "start_time": "Sun May 24 01:44:20 2026",
+        "end_time": null,
+        "time_sec": 3076.779785,
+        "output_file": "/tmp/ts-out.r6QkDF"
+      },
+      "save_dir": "saved_model/peiyou_1_0.0001_3407_32_200_0_1_saved_model_qikt_mamba_attn_0.3_256_2_1_public_mamba_1",
+      "save_dir_abs": "/root/autodl-tmp/pykt-toolkit/examples/saved_model/peiyou_1_0.0001_3407_32_200_0_1_saved_model_qikt_mamba_attn_0.3_256_2_1_public_mamba_1",
+      "save_dir_exists": true,
+      "run_id": "7117ca22-7758-4889-a009-f2f301dc92f6",
+      "log_status": "incomplete",
+      "param_count": {
+        "model": "qikt_mamba",
+        "emb_type": "attn",
+        "dataset": "peiyou",
+        "trainable": 17771944,
+        "total": 17771944
+      },
+      "overall_stats": null,
+      "all_results": null,
+      "log_tail": "Namespace(bz=32, save_dir='saved_model/peiyou_1_0.0001_3407_32_200_0_1_saved_model_qikt_mamba_attn_0.3_256_2_1_public_mamba_1', fusion_type='late_fusion', use_wandb=0)\n--- [Time] Start: 2026-05-24 02:16:03 ---\nmodel_name is qikt_mamba, dataset_name is peiyou\nRead data from processed file: ../data/peiyou/test_sequences_quelevel.csv_-1_td0_tr0_dp0_sh0_cr0_dr0_diff100_aug_qlevel.pkl\nfile path: ../data/peiyou/test_sequences_quelevel.csv, mode: test, qlen: 7711, rlen: 7711\nRead data from processed file: ../data/peiyou/test_window_sequences_quelevel.csv_-1_td0_tr0_dp0_sh0_cr0_dr0_diff100_aug_qlevel.pkl\nfile path: ../data/peiyou/test_window_sequences_quelevel.csv, mode: test, qlen: 383823, rlen: 383823\nhas test_question_file!\nStart predicting model: qikt_mamba, embtype: attn, save_dir: saved_model/peiyou_1_0.0001_3407_32_200_0_1_saved_model_qikt_mamba_attn_0.3_256_2_1_public_mamba_1, dataset_name: peiyou\n--- [Time] Data Loading: 14.97s (started 02:16:03) ---\n2026-05-24 02:16:18 - QIKT - said: emb_type is attn\nemb_type is attn\n--- [Time] Model Loading: 0.13s (started 02:16:18) ---\ntestauc: 0.8153340821311136, testacc: 0.8274495657494589\n--- [Time] Basic Evaluation: 35.14s (started 02:16:18) ---",
+      "attempts": [
         {
-          "task_id": 34,
-          "tsp_socket": "/tmp/ts_gpu0",
-          "status": "success",
-          "overall_dataset_auc": 0.8022940546223064
-        },
-        {
-          "task_id": 36,
-          "tsp_socket": "/tmp/ts_gpu0",
-          "status": "success",
-          "overall_dataset_auc": 0.8022940546223064
-        },
-        {
-          "task_id": 37,
-          "tsp_socket": "/tmp/ts_gpu0",
-          "status": "success",
-          "overall_dataset_auc": 0.8022940546223064
-        },
-        {
-          "task_id": 1,
-          "tsp_socket": "default",
-          "status": "unknown",
+          "task_id": 43,
+          "status": "failed",
           "overall_dataset_auc": null
         },
         {
@@ -2130,20 +2356,7 @@
           "overall_dataset_auc": null
         },
         {
-          "task_id": 19,
-          "tsp_socket": "/tmp/ts_gpu0",
-          "status": "unknown",
-          "overall_dataset_auc": null
-        },
-        {
-          "task_id": 21,
-          "tsp_socket": "/tmp/ts_gpu0",
-          "status": "unknown",
-          "overall_dataset_auc": null
-        },
-        {
-          "task_id": 26,
-          "tsp_socket": "/tmp/ts_gpu0",
+          "task_id": 141,
           "status": "failed",
           "overall_dataset_auc": null
         },
@@ -2346,14 +2559,13 @@
       ]
     },
     {
-      "task_id": 6,
-      "tsp_socket": "/tmp/ts_gpu1",
-      "status": "success",
-      "model": "stablekt",
-      "dataset": "assist2009",
-      "fold": 1,
-      "emb_type": null,
-      "version": null,
+      "task_id": 158,
+      "status": "running",
+      "model": "qikt_mamba",
+      "dataset": "peiyou",
+      "fold": 3,
+      "emb_type": "iekt",
+      "version": "all",
       "params": {
         "use_wandb": 0,
         "dataset_name": "assist2009",
@@ -2362,70 +2574,41 @@
         "_script": "wandb_stablekt_train.py"
       },
       "tsp": {
-        "socket": "/tmp/ts_gpu1",
-        "state": "finished",
-        "exit_code": 0,
-        "enqueue_time": "Sat May 23 13:53:43 2026",
-        "start_time": "Sat May 23 13:53:43 2026",
-        "end_time": "Sat May 23 14:10:10 2026",
-        "time_sec": 986.482483,
-        "output_file": "/tmp/ts-out.mnznbH"
+        "state": "running",
+        "exit_code": null,
+        "enqueue_time": "Sun May 24 01:44:20 2026",
+        "start_time": "Sun May 24 01:44:20 2026",
+        "end_time": null,
+        "time_sec": 3076.7771,
+        "output_file": "/tmp/ts-out.UVqOUA"
       },
       "save_dir": "saved_model/assist2009_stablekt_qid_saved_model_42_1_0.05_256_256_2_4_256_256_8_4_0.0001_0.5_0.7_0_1_0",
       "save_dir_abs": "/root/autodl-tmp/pykt-toolkit/examples/saved_model/assist2009_stablekt_qid_saved_model_42_1_0.05_256_256_2_4_256_256_8_4_0.0001_0.5_0.7_0_1_0",
       "save_dir_exists": true,
-      "run_id": "a9f06fa5-92a0-42b4-8eb6-23760af7490f",
-      "log_status": "success",
+      "run_id": "9236da6c-61a0-4eea-ac9b-d1263e0f7ae3",
+      "log_status": "incomplete",
       "param_count": {
-        "model": "stablekt",
-        "emb_type": "qid",
-        "dataset": "assist2009",
-        "trainable": 6185217,
-        "total": 6441217
+        "model": "qikt_mamba",
+        "emb_type": "iekt",
+        "dataset": "peiyou",
+        "trainable": 8318376,
+        "total": 8318376
       },
-      "overall_stats": {
-        "overall_dataset_auc": 0.7601390147156843,
-        "student_stats_mean": 0.6354359948909164,
-        "student_stats_std": 0.20366530442152905,
-        "student_stats_max": 1.0,
-        "student_stats_min": 0.0,
-        "student_stats_range": 1.0,
-        "student_stats_epi": 3.1200012034241493,
-        "student_stats_gini_coefficient": 0.17296383712560273,
-        "student_stats_average_auc": 0.6354359948909164,
-        "student_stats_eawi_alpha_10": 0.5255285469668586,
-        "student_stats_eawi_alpha_20": 0.4346311129644282,
-        "student_stats_eawi_alpha_30": 0.35945564793192947,
-        "student_stats_iqr": 0.26498599439775916,
-        "student_stats_q1": 0.5,
-        "student_stats_q3": 0.7649859943977592
-      },
-      "all_results": {
-        "testauc": 0.8425138143764486,
-        "testacc": 0.775378004652365,
-        "window_testauc": 0.8429467088893117,
-        "window_testacc": 0.7770309477756286,
-        "oriaucconcepts": 0.7481673767048753,
-        "oriauclate_mean": 0.7746627843396959,
-        "oriauclate_vote": 0.7691465849079029,
-        "oriauclate_all": 0.7705447048444108,
-        "oriaucearly_preds": 0.767189627909901,
-        "oriaccconcepts": 0.7233618510596928,
-        "oriacclate_mean": 0.7289585486278563,
-        "oriacclate_vote": 0.7320970643395721,
-        "oriacclate_all": 0.7279634094997512,
-        "oriaccearly_preds": 0.7304895319018639,
-        "windowaucconcepts": 0.7490216937105447,
-        "windowauclate_mean": 0.7751994514403321,
-        "windowauclate_vote": 0.7701657574300768,
-        "windowauclate_all": 0.771126231102357,
-        "windowaucearly_preds": 0.7676305131246202,
-        "windowaccconcepts": 0.7250250476713745,
-        "windowacclate_mean": 0.7301156974302188,
-        "windowacclate_vote": 0.7337431746152965,
-        "windowacclate_all": 0.7294092939783878,
-        "windowaccearly_preds": 0.7314903203635114
-      }
+      "overall_stats": null,
+      "all_results": null,
+      "log_tail": "Total Epoch Time: 271.73s | Train Phase: 244.54s | Valid Phase: 27.18s\nAvg Batch Time: 0.3155s\n------------------------------\nEpoch: 9, validauc: 0.8184, validacc: 0.8298, best epoch: 7, best auc: 0.8184, train loss: 1.8984110375958878, emb_type: iekt, model: qikt_mamba, save_dir: saved_model/peiyou_3_0.0001_42_32_200_0_1_saved_model_qikt_mamba_iekt_0.5_256_1_1_all_1\n            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1\n\nTotal Epoch Time: 289.76s | Train Phase: 263.17s | Valid Phase: 26.60s\nAvg Batch Time: 0.3396s\n------------------------------\nEpoch: 10, validauc: 0.8197, validacc: 0.8304, best epoch: 10, best auc: 0.8197, train loss: 1.8919955285275019, emb_type: iekt, model: qikt_mamba, save_dir: saved_model/peiyou_3_0.0001_42_32_200_0_1_saved_model_qikt_mamba_iekt_0.5_256_1_1_all_1\n            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1\n\nTotal Epoch Time: 286.12s | Train Phase: 260.29s | Valid Phase: 25.76s\nAvg Batch Time: 0.3359s\n------------------------------",
+      "attempts": [
+        {
+          "task_id": 154,
+          "status": "failed",
+          "overall_dataset_auc": null
+        },
+        {
+          "task_id": 155,
+          "status": "failed",
+          "overall_dataset_auc": null
+        }
+      ]
     },
     {
       "task_id": 8,
