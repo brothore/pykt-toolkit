@@ -1,0 +1,398 @@
+{
+  "experiment": "capacity_comparison_round1",
+  "description": "容量对照实验第一折结果。cap_b_akt_l1=AKT 大容量基线(d_model=384, n_blocks=4); cap_d_fairkt_s=qikt_mamba(emb_size=128, output_mode=an_irt).",
+  "groups": {
+    "cap_b_akt_l1": {
+      "model_name": "akt",
+      "emb_type": "qid",
+      "hyperparameters": {
+        "d_model": 384,
+        "d_ff": 768,
+        "n_blocks": 4,
+        "num_attn_heads": 8,
+        "dropout": 0.2,
+        "learning_rate": 1e-4,
+        "batch_size": 32,
+        "num_epochs": 200,
+        "add_uuid": 1
+      }
+    },
+    "cap_d_fairkt_s": {
+      "model_name": "qikt_mamba",
+      "emb_type": "attn",
+      "hyperparameters_common": {
+        "emb_size": 128,
+        "learning_rate": 1e-4,
+        "batch_size": 32,
+        "num_epochs": 200,
+        "version": "all",
+        "output_mode": "an_irt",
+        "add_uuid": 1
+      }
+    }
+  },
+  "runs": [
+    {
+      "group": "cap_b_akt_l1",
+      "model_name": "akt",
+      "emb_type": "qid",
+      "dataset_name": "assist2009",
+      "fold": 0,
+      "seed": 3407,
+      "tsp_id": 6,
+      "tsp_queue": "/tmp/ts_gpu1",
+      "tsp_output": "/tmp/ts-out.tDbzbJ",
+      "save_dir": "saved_model/cap_b_akt_l1/assist2009_akt_qid_saved_model/cap_b_akt_l1_3407_0_0.2_384_768_8_4_0.0001_32_200_0_1_0",
+      "param_count": {
+        "trainable": 13165995,
+        "total": 13165995
+      },
+      "runtime_seconds": {
+        "real": 1163.63,
+        "user": 16562.89,
+        "sys": 18.09
+      },
+      "metrics": {
+        "testauc": 0.840537215356664,
+        "testacc": 0.7780757301628328,
+        "window_testauc": 0.8422072210048955,
+        "window_testacc": 0.7798678272082528,
+        "oriaucconcepts": 0.7557822352625951,
+        "oriauclate_mean": 0.7742914037411357,
+        "oriauclate_vote": 0.770351392949121,
+        "oriauclate_all": 0.7738297970475843,
+        "oriaucearly_preds": 0.7744604008939797,
+        "oriaccconcepts": 0.7282228271436905,
+        "oriacclate_mean": 0.7357331496153404,
+        "oriacclate_vote": 0.7345466375779844,
+        "oriacclate_all": 0.734450951123359,
+        "oriaccearly_preds": 0.7363455429249436,
+        "windowaucconcepts": 0.7585804512354599,
+        "windowauclate_mean": 0.7767486086725304,
+        "windowauclate_vote": 0.7721121924375328,
+        "windowauclate_all": 0.7768168330489913,
+        "windowaucearly_preds": 0.7767226267561657,
+        "windowaccconcepts": 0.7314081639248893,
+        "windowacclate_mean": 0.7378670434151743,
+        "windowacclate_vote": 0.7364733284966971,
+        "windowacclate_all": 0.7379434113559128,
+        "windowaccearly_preds": 0.7383443430447898
+      },
+      "student_stats": {
+        "overall_dataset_auc": 0.759509951224492,
+        "student_stats_mean": 0.6293983450767634,
+        "student_stats_std": 0.20290796285463544,
+        "student_stats_max": 1.0,
+        "student_stats_min": 0.0,
+        "student_stats_range": 1.0,
+        "student_stats_epi": 3.101890809123486,
+        "student_stats_gini_coefficient": 0.17343669522895158,
+        "student_stats_average_auc": 0.6293983450767634,
+        "student_stats_eawi_alpha_10": 0.5202375761240783,
+        "student_stats_eawi_alpha_20": 0.4300092901871981,
+        "student_stats_eawi_alpha_30": 0.3554298999793832,
+        "student_stats_iqr": 0.25624723787651027,
+        "student_stats_q1": 0.5,
+        "student_stats_q3": 0.7562472378765103
+      }
+    },
+    {
+      "group": "cap_b_akt_l1",
+      "model_name": "akt",
+      "emb_type": "qid",
+      "dataset_name": "peiyou",
+      "fold": 1,
+      "seed": 3407,
+      "tsp_id": 7,
+      "tsp_queue": "/tmp/ts_gpu1",
+      "tsp_output": "/tmp/ts-out.VP7eQu",
+      "save_dir": "saved_model/cap_b_akt_l1/peiyou_akt_qid_saved_model/cap_b_akt_l1_3407_1_0.2_384_768_8_4_0.0001_32_200_0_1_0",
+      "param_count": {
+        "trainable": 14295622,
+        "total": 14295622
+      },
+      "runtime_seconds": {
+        "real": 16796.19,
+        "user": 219580.05,
+        "sys": 493.77
+      },
+      "metrics": {
+        "testauc": 0.8632180189663136,
+        "testacc": 0.8510404859418876,
+        "window_testauc": 0.8654063447266562,
+        "window_testacc": 0.8518795998413468,
+        "oriaucconcepts": 0.7983126609712313,
+        "oriauclate_mean": 0.8141369719324523,
+        "oriauclate_vote": 0.8123394404982215,
+        "oriauclate_all": 0.8130631536073936,
+        "oriaucearly_preds": 0.8121129266909142,
+        "oriaccconcepts": 0.8236727889305757,
+        "oriacclate_mean": 0.8255413889376133,
+        "oriacclate_vote": 0.8267171695024265,
+        "oriacclate_all": 0.8239188665731159,
+        "oriaccearly_preds": 0.8261918596152722,
+        "windowaucconcepts": 0.8009181042158973,
+        "windowauclate_mean": 0.8168979181807181,
+        "windowauclate_vote": 0.8150677962555152,
+        "windowauclate_all": 0.8158026687876115,
+        "windowaucearly_preds": 0.8148473397196978,
+        "windowaccconcepts": 0.8245445693491217,
+        "windowacclate_mean": 0.8264887913631497,
+        "windowacclate_vote": 0.8276878484930362,
+        "windowacclate_all": 0.8247930079867394,
+        "windowaccearly_preds": 0.8271620100855442
+      },
+      "student_stats": {
+        "overall_dataset_auc": 0.8246469766049489,
+        "student_stats_mean": 0.7645093895526812,
+        "student_stats_std": 0.06174100407553325,
+        "student_stats_max": 0.9732838106408628,
+        "student_stats_min": 0.4838878951137823,
+        "student_stats_range": 0.4893959155270805,
+        "student_stats_epi": 25.30164717195509,
+        "student_stats_gini_coefficient": 0.04516076904813496,
+        "student_stats_average_auc": 0.7645093895526812,
+        "student_stats_eawi_alpha_10": 0.729983557575962,
+        "student_stats_eawi_alpha_20": 0.697016938723338,
+        "student_stats_eawi_alpha_30": 0.6655391177310154,
+        "student_stats_iqr": 0.07984685113676981,
+        "student_stats_q1": 0.7251672490933263,
+        "student_stats_q3": 0.8050141002300961
+      }
+    },
+    {
+      "group": "cap_b_akt_l1",
+      "model_name": "akt",
+      "emb_type": "qid",
+      "dataset_name": "nips_task34",
+      "fold": 0,
+      "seed": 42,
+      "tsp_id": 5,
+      "tsp_queue": "/tmp/ts_gpu0",
+      "tsp_output": "/tmp/ts-out.JYqLrb",
+      "save_dir": "saved_model/cap_b_akt_l1/nips_task34_akt_qid_saved_model/cap_b_akt_l1_42_0_0.2_384_768_8_4_0.0001_32_200_0_1_0",
+      "param_count": {
+        "trainable": 13047830,
+        "total": 13047830
+      },
+      "runtime_seconds": {
+        "real": 3843.05,
+        "user": 56773.36,
+        "sys": 64.63
+      },
+      "metrics": {
+        "testauc": 0.8051140507719284,
+        "testacc": 0.7333632306615331,
+        "window_testauc": 0.8074213886957533,
+        "window_testacc": 0.735660757248668,
+        "oriaucconcepts": 0.7980807084649034,
+        "oriauclate_mean": 0.7996832499161926,
+        "oriauclate_vote": 0.7994225485850939,
+        "oriauclate_all": 0.7994736772605906,
+        "oriaucearly_preds": 0.7993576258858583,
+        "oriaccconcepts": 0.7290249185062023,
+        "oriacclate_mean": 0.7296223984764548,
+        "oriacclate_vote": 0.7295301295087231,
+        "oriacclate_all": 0.7298918238622314,
+        "oriaccearly_preds": 0.7297441935138607,
+        "windowaucconcepts": 0.8004662628511355,
+        "windowauclate_mean": 0.8020619115903017,
+        "windowauclate_vote": 0.8018040654954293,
+        "windowauclate_all": 0.8018489994695708,
+        "windowaucearly_preds": 0.8017431492956172,
+        "windowaccconcepts": 0.7312985866045436,
+        "windowacclate_mean": 0.7319383592131934,
+        "windowacclate_vote": 0.7318243186073803,
+        "windowacclate_all": 0.7322032277170174,
+        "windowaccearly_preds": 0.7320340061729076
+      },
+      "student_stats": {
+        "overall_dataset_auc": 0.8059221340257212,
+        "student_stats_mean": 0.7147960460304597,
+        "student_stats_std": 0.09867966574862501,
+        "student_stats_max": 0.9963151020331531,
+        "student_stats_min": 0.40986394557823125,
+        "student_stats_range": 0.5864511564549219,
+        "student_stats_epi": 12.351583102837274,
+        "student_stats_gini_coefficient": 0.07672880375088968,
+        "student_stats_average_auc": 0.7147960460304597,
+        "student_stats_eawi_alpha_10": 0.6599506004926766,
+        "student_stats_eawi_alpha_20": 0.6093133803821923,
+        "student_stats_eawi_alpha_30": 0.5625614935960559,
+        "student_stats_iqr": 0.12483409256863376,
+        "student_stats_q1": 0.6590555261427962,
+        "student_stats_q3": 0.7838896187114299
+      }
+    },
+    {
+      "group": "cap_d_fairkt_s",
+      "model_name": "qikt_mamba",
+      "emb_type": "attn",
+      "dataset_name": "assist2009",
+      "fold": 0,
+      "seed": 3407,
+      "hyperparameters_specific": {
+        "dropout": 0.5,
+        "mlp_layer_num": 1,
+        "loss_q_all_lambda": 2.0,
+        "loss_c_all_lambda": 2.0,
+        "loss_c_next_lambda": 2.0
+      },
+      "tsp_id": 1,
+      "tsp_queue": "/tmp/ts_gpu1",
+      "tsp_output": "/tmp/ts-out.2da93K",
+      "save_dir": "saved_model/cap_d_fairkt_s/assist2009_0_0.0001_3407_32_200_0_1_saved_model/cap_d_fairkt_s_qikt_mamba_attn_0.5_128_1_1_all_0",
+      "param_count": {
+        "trainable": 5526209,
+        "total": 5526209
+      },
+      "runtime_seconds": {
+        "real": 250.26,
+        "user": 269.80,
+        "sys": 8.11
+      },
+      "metrics": {
+        "testauc": 0.7881853948459938,
+        "testacc": 0.7386937557392103,
+        "window_testauc": 0.7891540330735127,
+        "window_testacc": 0.7389171026003284
+      },
+      "student_stats": {
+        "overall_dataset_auc": 0.7847872748862503,
+        "student_stats_mean": 0.6479574976109659,
+        "student_stats_std": 0.19602936021850367,
+        "student_stats_max": 1.0,
+        "student_stats_min": 0.0,
+        "student_stats_range": 1.0,
+        "student_stats_epi": 3.3054104593756852,
+        "student_stats_gini_coefficient": 0.16418291742748833,
+        "student_stats_average_auc": 0.6479574976109659,
+        "student_stats_eawi_alpha_10": 0.5415739452841827,
+        "student_stats_eawi_alpha_20": 0.45265675494471064,
+        "student_stats_eawi_alpha_30": 0.37833824832462837,
+        "student_stats_iqr": 0.2728877005347594,
+        "student_stats_q1": 0.5,
+        "student_stats_q3": 0.7728877005347594
+      }
+    },
+    {
+      "group": "cap_d_fairkt_s",
+      "model_name": "qikt_mamba",
+      "emb_type": "attn",
+      "dataset_name": "peiyou",
+      "fold": 1,
+      "seed": 3407,
+      "hyperparameters_specific": {
+        "dropout": 0.3,
+        "mlp_layer_num": 2,
+        "loss_q_all_lambda": 0.0,
+        "loss_c_all_lambda": 0.5,
+        "loss_c_next_lambda": 0.0
+      },
+      "tsp_id": 3,
+      "tsp_queue": "/tmp/ts_gpu0",
+      "tsp_output": "/tmp/ts-out.fsRqJA",
+      "save_dir": "saved_model/cap_d_fairkt_s/peiyou_1_0.0001_3407_32_200_0_1_saved_model/cap_d_fairkt_s_qikt_mamba_attn_0.3_128_2_1_all_0",
+      "param_count": {
+        "trainable": 3805224,
+        "total": 3805224
+      },
+      "runtime_seconds": {
+        "real": 3291.97,
+        "user": 3151.14,
+        "sys": 137.50
+      },
+      "metrics": {
+        "testauc": 0.8233155079222312,
+        "testacc": 0.8303619211134349,
+        "window_testauc": 0.8256660096790874,
+        "window_testacc": 0.8311067078967647
+      },
+      "student_stats": {
+        "overall_dataset_auc": 0.8329877986203533,
+        "student_stats_mean": 0.7782429298509352,
+        "student_stats_std": 0.06051485046603656,
+        "student_stats_max": 0.985925129508357,
+        "student_stats_min": 0.4525749294673378,
+        "student_stats_range": 0.5333502000410192,
+        "student_stats_epi": 24.11241763313711,
+        "student_stats_gini_coefficient": 0.043578132456429816,
+        "student_stats_average_auc": 0.7782429298509352,
+        "student_stats_eawi_alpha_10": 0.7443285563706111,
+        "student_stats_eawi_alpha_20": 0.7118921079499895,
+        "student_stats_eawi_alpha_30": 0.6808691793750579,
+        "student_stats_iqr": 0.07895268569233893,
+        "student_stats_q1": 0.7391553024791511,
+        "student_stats_q3": 0.81810798817149
+      }
+    },
+    {
+      "group": "cap_d_fairkt_s",
+      "model_name": "qikt_mamba",
+      "emb_type": "attn",
+      "dataset_name": "nips_task34",
+      "fold": 0,
+      "seed": 42,
+      "hyperparameters_specific": {
+        "dropout": 0.3,
+        "mlp_layer_num": 1,
+        "loss_q_all_lambda": 1.0,
+        "loss_c_all_lambda": 0.5,
+        "loss_c_next_lambda": 1.5
+      },
+      "tsp_id": 1,
+      "tsp_queue": "/tmp/ts_gpu0",
+      "tsp_output": "/tmp/ts-out.pysJwc",
+      "save_dir": "saved_model/cap_d_fairkt_s/nips_task34_0_0.0001_42_32_200_0_1_saved_model/cap_d_fairkt_s_qikt_mamba_attn_0.3_128_1_1_all_0",
+      "param_count": {
+        "trainable": 1169064,
+        "total": 1169064
+      },
+      "runtime_seconds": {
+        "real": 490.07,
+        "user": 570.84,
+        "sys": 34.05
+      },
+      "metrics": {
+        "testauc": 0.8034508006702528,
+        "testacc": 0.7316123556113223,
+        "window_testauc": 0.8053629459493716,
+        "window_testacc": 0.7331229100219621
+      },
+      "student_stats": {
+        "overall_dataset_auc": 0.8083815661570808,
+        "student_stats_mean": 0.7219940535927074,
+        "student_stats_std": 0.09350551181991332,
+        "student_stats_max": 0.9889430471780819,
+        "student_stats_min": 0.4450210844833436,
+        "student_stats_range": 0.5439219626947382,
+        "student_stats_epi": 14.195798090248298,
+        "student_stats_gini_coefficient": 0.0721084469009167,
+        "student_stats_average_auc": 0.7219940535927074,
+        "student_stats_eawi_alpha_10": 0.66993218371644,
+        "student_stats_eawi_alpha_20": 0.621624414419708,
+        "student_stats_eawi_alpha_30": 0.5768000433402111,
+        "student_stats_iqr": 0.11814041609686787,
+        "student_stats_q1": 0.669737984101548,
+        "student_stats_q3": 0.7878784001984158
+      }
+    }
+  ],
+  "param_count_pairs": {
+    "assist2009": {
+      "akt_cap_b": 13165995,
+      "qikt_mamba_cap_d": 5526209,
+      "ratio_akt_over_qikt": 2.38
+    },
+    "peiyou": {
+      "akt_cap_b": 14295622,
+      "qikt_mamba_cap_d": 3805224,
+      "ratio_akt_over_qikt": 3.76
+    },
+    "nips_task34": {
+      "akt_cap_b": 13047830,
+      "qikt_mamba_cap_d": 1169064,
+      "ratio_akt_over_qikt": 11.16
+    }
+  }
+}

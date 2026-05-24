@@ -14,6 +14,8 @@ collect_tsp_results.py
 - 增量: 旧 tsp_results.json 里 status="success" 的记录直接保留 (避免重算); 其余
   按 task_id 重新计算后写回。
 - 整脚本只做 IO + 解析, 无副作用; 任何单条解析异常被吞掉并记到 record.error。
+- 多 socket: --socket 可多次或逗号分隔, "default" 代表系统默认 socket
+  (不设置 TS_SOCKET 环境变量). 例: --socket default,/tmp/ts_gpu0,/tmp/ts_gpu1
 """
 from __future__ import annotations
 
@@ -46,10 +48,24 @@ STATUS_FAIL_RE = re.compile(r"运行历史状态已更新为失败|训练过程�
 
 # ───────────────────────── tsp 队列读取 ─────────────────────────
 
-def list_tsp_ids() -> list[str]:
-    """返回 tsp 队列中所有 task id (字符串, 含 finished/running/queued)。"""
+DEFAULT_SOCKET = "default"  # 占位: 表示不设置 TS_SOCKET 环境变量, 即系统默认队列
+
+
+def _tsp_env(socket: str) -> dict[str, str]:
+    env = os.environ.copy()
+    if socket and socket != DEFAULT_SOCKET:
+        env["TS_SOCKET"] = socket
+    else:
+        env.pop("TS_SOCKET", None)
+    return env
+
+
+def list_tsp_ids(socket: str = DEFAULT_SOCKET) -> list[str]:
+    """返回某个 tsp socket 队列中所有 task id (字符串, 含 finished/running/queued)。"""
     try:
-        out = subprocess.check_output(["tsp", "-l"], text=True, stderr=subprocess.DEVNULL)
+        out = subprocess.check_output(
+            ["tsp", "-l"], text=True, stderr=subprocess.DEVNULL, env=_tsp_env(socket)
+        )
     except (FileNotFoundError, subprocess.CalledProcessError):
         return []
     ids = []
@@ -60,11 +76,13 @@ def list_tsp_ids() -> list[str]:
     return ids
 
 
-def inspect_tsp(task_id: str) -> dict[str, Any]:
+def inspect_tsp(task_id: str, socket: str = DEFAULT_SOCKET) -> dict[str, Any]:
     """tsp -i <id> 解析, 返回 dict。"""
-    info: dict[str, Any] = {"task_id": int(task_id)}
+    info: dict[str, Any] = {"task_id": int(task_id), "tsp_socket": socket}
     try:
-        out = subprocess.check_output(["tsp", "-i", task_id], text=True, stderr=subprocess.DEVNULL)
+        out = subprocess.check_output(
+            ["tsp", "-i", task_id], text=True, stderr=subprocess.DEVNULL, env=_tsp_env(socket)
+        )
     except subprocess.CalledProcessError:
         info["error"] = "tsp -i failed"
         return info
@@ -86,25 +104,26 @@ def inspect_tsp(task_id: str) -> dict[str, Any]:
             info["time_sec"] = float(m.group(1)) if m else None
 
     # 取 output 文件路径需要从 -l 拿
-    info["output_file"] = _output_file_for(task_id)
-    info["state"] = _state_for(task_id)
+    info["output_file"] = _output_file_for(task_id, socket)
+    info["state"] = _state_for(task_id, socket)
     return info
 
 
-_tsp_l_cache: list[str] | None = None
-def _tsp_l_lines() -> list[str]:
-    global _tsp_l_cache
-    if _tsp_l_cache is None:
+_tsp_l_cache: dict[str, list[str]] = {}
+def _tsp_l_lines(socket: str = DEFAULT_SOCKET) -> list[str]:
+    if socket not in _tsp_l_cache:
         try:
-            out = subprocess.check_output(["tsp", "-l"], text=True, stderr=subprocess.DEVNULL)
-            _tsp_l_cache = out.splitlines()[1:]
+            out = subprocess.check_output(
+                ["tsp", "-l"], text=True, stderr=subprocess.DEVNULL, env=_tsp_env(socket)
+            )
+            _tsp_l_cache[socket] = out.splitlines()[1:]
         except Exception:
-            _tsp_l_cache = []
-    return _tsp_l_cache
+            _tsp_l_cache[socket] = []
+    return _tsp_l_cache[socket]
 
 
-def _output_file_for(task_id: str) -> str | None:
-    for ln in _tsp_l_lines():
+def _output_file_for(task_id: str, socket: str = DEFAULT_SOCKET) -> str | None:
+    for ln in _tsp_l_lines(socket):
         parts = ln.split()
         if parts and parts[0] == task_id:
             for p in parts[1:]:
@@ -114,8 +133,8 @@ def _output_file_for(task_id: str) -> str | None:
     return None
 
 
-def _state_for(task_id: str) -> str | None:
-    for ln in _tsp_l_lines():
+def _state_for(task_id: str, socket: str = DEFAULT_SOCKET) -> str | None:
+    for ln in _tsp_l_lines(socket):
         parts = ln.split()
         if parts and parts[0] == task_id:
             return parts[1] if len(parts) > 1 else None
@@ -285,7 +304,8 @@ def derive_status(tsp_info: dict, ts_out_info: dict, saved: dict) -> str:
 # ───────────────────────── 汇聚 / 去重 ─────────────────────────
 
 def make_combo_key(rec: dict) -> tuple:
-    """同一参数组合的去重 key。仅取关键超参, 忽略 task_id/timestamp。"""
+    """同一参数组合的去重 key。仅取关键超参, 忽略 task_id/timestamp/socket。
+    跨 socket 也会被合并: 同一组超参在 gpu0/gpu1 各跑一份, 视为 attempts。"""
     p = rec.get("params") or {}
     return (
         p.get("_inferred_model") or p.get("model_name"),
@@ -311,58 +331,62 @@ def rec_score(rec: dict) -> float:
     return float(stats.get("overall_dataset_auc", -1.0))
 
 
-def collect() -> dict:
-    ids = list_tsp_ids()
+def collect(sockets: list[str]) -> dict:
     records: list[dict] = []
-    for tid in ids:
-        try:
-            tsp_info = inspect_tsp(tid)
-            params = parse_train_cmd(tsp_info.get("cmd", ""))
-            ts_out_info = parse_ts_out(tsp_info.get("output_file"))
-            save_dir = ts_out_info.get("save_dir")
-            saved = parse_saved_dir(save_dir)
-            status = derive_status(tsp_info, ts_out_info, saved)
+    for socket in sockets:
+        ids = list_tsp_ids(socket)
+        for tid in ids:
+            try:
+                tsp_info = inspect_tsp(tid, socket)
+                params = parse_train_cmd(tsp_info.get("cmd", ""))
+                ts_out_info = parse_ts_out(tsp_info.get("output_file"))
+                save_dir = ts_out_info.get("save_dir")
+                saved = parse_saved_dir(save_dir)
+                status = derive_status(tsp_info, ts_out_info, saved)
 
-            rec = {
-                "task_id": tsp_info["task_id"],
-                "status": status,
-                "model": params.get("_inferred_model"),
-                "dataset": params.get("dataset_name"),
-                "fold": params.get("fold"),
-                "emb_type": params.get("emb_type"),
-                "version": params.get("version"),
-                "params": {k: v for k, v in params.items() if not k.startswith("_")} | {
-                    "_inferred_model": params.get("_inferred_model"),
-                    "_script": params.get("_script"),
-                },
-                "tsp": {
-                    "state": tsp_info.get("state"),
-                    "exit_code": tsp_info.get("exit_code"),
-                    "enqueue_time": tsp_info.get("enqueue_time"),
-                    "start_time": tsp_info.get("start_time"),
-                    "end_time": tsp_info.get("end_time"),
-                    "time_sec": tsp_info.get("time_sec"),
-                    "output_file": tsp_info.get("output_file"),
-                },
-                "save_dir": save_dir,
-                "save_dir_abs": saved.get("save_dir_abs"),
-                "save_dir_exists": saved.get("save_dir_exists", False),
-                "run_id": ts_out_info.get("run_id"),
-                "log_status": ts_out_info.get("log_status"),
-                "param_count": ts_out_info.get("param_count"),
-                "overall_stats": saved.get("overall_stats"),
-                "all_results": saved.get("all_results"),
-            }
-            # 失败任务才留 tail, 成功任务略过避免文件膨胀
-            if status not in ("success",):
-                rec["log_tail"] = ts_out_info.get("tail")
-            records.append(rec)
-        except Exception as e:
-            records.append({
-                "task_id": int(tid) if tid.isdigit() else tid,
-                "status": "collect_error",
-                "error": f"{type(e).__name__}: {e}",
-            })
+                rec = {
+                    "task_id": tsp_info["task_id"],
+                    "tsp_socket": socket,
+                    "status": status,
+                    "model": params.get("_inferred_model"),
+                    "dataset": params.get("dataset_name"),
+                    "fold": params.get("fold"),
+                    "emb_type": params.get("emb_type"),
+                    "version": params.get("version"),
+                    "params": {k: v for k, v in params.items() if not k.startswith("_")} | {
+                        "_inferred_model": params.get("_inferred_model"),
+                        "_script": params.get("_script"),
+                    },
+                    "tsp": {
+                        "socket": socket,
+                        "state": tsp_info.get("state"),
+                        "exit_code": tsp_info.get("exit_code"),
+                        "enqueue_time": tsp_info.get("enqueue_time"),
+                        "start_time": tsp_info.get("start_time"),
+                        "end_time": tsp_info.get("end_time"),
+                        "time_sec": tsp_info.get("time_sec"),
+                        "output_file": tsp_info.get("output_file"),
+                    },
+                    "save_dir": save_dir,
+                    "save_dir_abs": saved.get("save_dir_abs"),
+                    "save_dir_exists": saved.get("save_dir_exists", False),
+                    "run_id": ts_out_info.get("run_id"),
+                    "log_status": ts_out_info.get("log_status"),
+                    "param_count": ts_out_info.get("param_count"),
+                    "overall_stats": saved.get("overall_stats"),
+                    "all_results": saved.get("all_results"),
+                }
+                # 失败任务才留 tail, 成功任务略过避免文件膨胀
+                if status not in ("success",):
+                    rec["log_tail"] = ts_out_info.get("tail")
+                records.append(rec)
+            except Exception as e:
+                records.append({
+                    "task_id": int(tid) if tid.isdigit() else tid,
+                    "tsp_socket": socket,
+                    "status": "collect_error",
+                    "error": f"{type(e).__name__}: {e}",
+                })
 
     # 同组多次运行: 保留 best, 其它放 attempts
     groups: dict[tuple, list[dict]] = {}
@@ -381,7 +405,8 @@ def collect() -> dict:
         if len(recs) > 1:
             best = dict(best)
             best["attempts"] = [
-                {"task_id": r["task_id"], "status": r["status"],
+                {"task_id": r["task_id"], "tsp_socket": r.get("tsp_socket"),
+                 "status": r["status"],
                  "overall_dataset_auc": (r.get("overall_stats") or {}).get("overall_dataset_auc")}
                 for r in recs[1:]
             ]
@@ -390,19 +415,24 @@ def collect() -> dict:
     deduped.sort(key=lambda r: (r.get("model") or "", r.get("dataset") or "",
                                 r.get("fold") if r.get("fold") is not None else -1,
                                 r.get("emb_type") or "", r.get("version") or "",
-                                r.get("task_id", 0)))
+                                r.get("tsp_socket") or "", r.get("task_id", 0)))
 
     summary = {
+        "sockets": sockets,
         "total_tasks": len(records),
         "total_groups": len(deduped),
         "by_status": _count_by(deduped, "status"),
         "by_model": _count_by(deduped, "model"),
         "by_dataset": _count_by(deduped, "dataset"),
+        "by_socket": _count_by(records, "tsp_socket"),  # 注意: by_socket 用未去重的 records
     }
     return {
         "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "summary": summary,
-        "pending": [r["task_id"] for r in deduped if r.get("status") in ("running", "queued")],
+        "pending": [
+            {"task_id": r["task_id"], "tsp_socket": r.get("tsp_socket"), "status": r["status"]}
+            for r in deduped if r.get("status") in ("running", "queued")
+        ],
         "results": deduped,
         "collect_errors": orphans,
     }
@@ -422,6 +452,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--output", default=str(OUTPUT_JSON),
                     help="输出 JSON 路径 (默认: %(default)s)")
+    ap.add_argument("--socket", action="append", default=None,
+                    help="tsp socket 路径, 可多次或逗号分隔. 'default' 表示系统默认 socket. "
+                         "默认: default,/tmp/ts_gpu0,/tmp/ts_gpu1")
     ap.add_argument("--quiet", action="store_true",
                     help="不打印摘要")
     ap.add_argument("--exit-when-done", action="store_true",
@@ -429,7 +462,18 @@ def main():
                          "否则以 75 (待续) 退出, 供 cron 判断")
     args = ap.parse_args()
 
-    data = collect()
+    # 解析 sockets: 多次 --socket 累加, 每个值再按逗号拆分
+    if args.socket:
+        sockets: list[str] = []
+        for s in args.socket:
+            sockets.extend(p.strip() for p in s.split(",") if p.strip())
+    else:
+        sockets = [DEFAULT_SOCKET, "/tmp/ts_gpu0", "/tmp/ts_gpu1"]
+    # 去重保序
+    seen: set[str] = set()
+    sockets = [s for s in sockets if not (s in seen or seen.add(s))]
+
+    data = collect(sockets)
     out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     # 原子写入: 先写临时文件再 rename
@@ -441,10 +485,12 @@ def main():
     if not args.quiet:
         s = data["summary"]
         print(f"[{data['generated_at']}] -> {out_path}")
+        print(f"  sockets    : {s['sockets']}")
         print(f"  total tasks: {s['total_tasks']}   total groups: {s['total_groups']}")
         print(f"  by status  : {s['by_status']}")
         print(f"  by model   : {s['by_model']}")
-        print(f"  pending ids: {data['pending']}")
+        print(f"  by socket  : {s['by_socket']}")
+        print(f"  pending    : {data['pending']}")
 
     if args.exit_when_done:
         if data["pending"]:
