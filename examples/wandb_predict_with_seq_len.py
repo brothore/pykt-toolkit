@@ -48,13 +48,47 @@ def parse_seq_lens(s):
     return [int(x.strip()) for x in str(s).split(",") if x.strip()]
 
 
+def load_student_lengths_from_csv(test_csv):
+    """读 pykt 的 test.csv, 返回 {orirow: L}, L=responses 列逗号分隔元素数。
+
+    orirow 等于 csv 行号 (pykt generate_question_sequences 设 orirow = list(range(df.shape[0])))。
+    这是所有 baseline 共有的 L 金标准, 解决 que_type_models (FairKT/IEKT) 走
+    test_window_file 时 L 与普通模型不一致的问题。
+    """
+    df = pd.read_csv(test_csv)
+    if "responses" not in df.columns:
+        raise ValueError(f"{test_csv} 缺 responses 列, 实际列: {list(df.columns)}")
+    lengths = {}
+    for i, resp in enumerate(df["responses"].astype(str).tolist()):
+        tokens = [t for t in resp.split(",") if t != ""]
+        lengths[i] = len(tokens)
+    return lengths
+
+
+def load_student_lengths_from_csv(test_csv):
+    """读 pykt 的 test.csv, 返回 {orirow: L}, L=responses 列逗号分隔元素数。
+
+    orirow 等于 csv 行号 (pykt generate_question_sequences 设 orirow = list(range(df.shape[0])))。
+    这是所有 baseline 共有的 L 金标准, 解决 que_type_models (FairKT/IEKT) 走
+    test_window_file 时 L 与普通模型不一致的问题。
+    """
+    df = pd.read_csv(test_csv)
+    if "responses" not in df.columns:
+        raise ValueError(f"{test_csv} 缺 responses 列, 实际列: {list(df.columns)}")
+    lengths = {}
+    for i, resp in enumerate(df["responses"].astype(str).tolist()):
+        tokens = [t for t in resp.split(",") if t != ""]
+        lengths[i] = len(tokens)
+    return lengths
+
+
 # ────────────────────────── 学生级指标解析 ──────────────────────────
 
-def build_student_records(file_path):
+def build_student_records(file_path, length_source=None):
     """
     读 txt -> 返回 {orirow: dict(L=, trues=np.array, scores=np.array, auc=)}。
-    L = 该学生在 txt 里的行数 = 学生真实交互长度 (orirow 来自原 test.csv 的行号,
-    1 学生 1 行, 所以 orirow 等价于 uid; 见 split_datasets.generate_question_sequences:392)。
+    若 length_source 给出 (dict orirow->L), L 取自金标准 (test.csv 的 responses 长度),
+    保证 que_type_models 与普通模型在同口径上分桶; 否则退回 txt 内行数。
 
     AUC 的计算口径与 cal_unbalance.parse_and_calculate_aucs_from_file 保持一致:
     ENABLE_SLIDING_WINDOW=True 时对该学生序列做 stride=1 的窗口汇集后再算 AUC。
@@ -71,10 +105,19 @@ def build_student_records(file_path):
     data = data.dropna(subset=["late_trues", "late_mean"])
 
     students = {}
+    missing_in_source = []
     for orirow, group in data.groupby("orirow"):
         trues = group["late_trues"].values
         scores = group["late_mean"].values
-        L = len(trues)
+        if length_source is not None:
+            key = int(orirow)
+            if key in length_source:
+                L = int(length_source[key])
+            else:
+                missing_in_source.append(key)
+                L = len(trues)
+        else:
+            L = len(trues)
 
         if ENABLE_SLIDING_WINDOW:
             ct, cs = sliding_window_collect(trues, scores, window_size=WINDOW_SIZE)
@@ -92,6 +135,9 @@ def build_student_records(file_path):
             "trues": np.asarray(ct),
             "scores": np.asarray(cs),
         }
+    if length_source is not None and missing_in_source:
+        print(f"[seq-len-eval] WARN: {len(missing_in_source)} orirow 在 length_source 中缺失, "
+              f"已退回 txt 长度; 示例: {missing_in_source[:5]}")
     return students
 
 
@@ -150,8 +196,15 @@ def bucket_metrics(students, target_L, tol):
 
 
 def evaluate_seq_len_buckets(file_path, target_seq_lens, tolerance,
-                             out_json=None, out_csv=None):
-    students = build_student_records(file_path)
+                             out_json=None, out_csv=None, length_source_csv=None):
+    length_source = None
+    if length_source_csv:
+        if not os.path.exists(length_source_csv):
+            raise FileNotFoundError(f"未找到 length_source_csv: {length_source_csv}")
+        length_source = load_student_lengths_from_csv(length_source_csv)
+        print(f"[seq-len-eval] L 取自金标准 test.csv: {length_source_csv} "
+              f"({len(length_source)} 学生)")
+    students = build_student_records(file_path, length_source=length_source)
     buckets = [bucket_metrics(students, L, tolerance) for L in target_seq_lens]
 
     # 学生级 AUC 落盘 (含 L), 给后续画图/复查
@@ -313,9 +366,17 @@ def main(params):
     t4 = time.time()
     out_json = os.path.join(save_dir, "seq_len_bucket_stats.json")
     out_csv = os.path.join(save_dir, "student_auc_with_length.csv")
+    if params.get("length_csv"):
+        length_csv = params["length_csv"]
+    elif "test_original_file" in data_config:
+        length_csv = os.path.join(data_config["dpath"], data_config["test_original_file"])
+    else:
+        length_csv = None
+        print("[seq-len-eval] WARN: data_config 无 test_original_file, 将退回 txt 行数作为 L")
     payload = evaluate_seq_len_buckets(
         save_path, target_seq_lens, tolerance,
         out_json=out_json, out_csv=out_csv,
+        length_source_csv=length_csv,
     )
     print(f"[Time] seq_len bucketing  : {time.time() - t4:.2f}s")
 
@@ -357,6 +418,10 @@ if __name__ == "__main__":
         "--from_txt", type=str, default=None,
         help="跳过推理, 直接读已有 *_test_question_window_predictions.txt 算桶指标",
     )
+    parser.add_argument(
+        "--length_csv", type=str, default=None,
+        help="金标准 L 来源 (pykt test.csv 路径); 默认自动取 data_config.test_original_file",
+    )
 
     args = parser.parse_args()
     print(args)
@@ -367,6 +432,7 @@ if __name__ == "__main__":
             args.from_txt,
             parse_seq_lens(args.seq_lens),
             args.tolerance,
+            length_source_csv=args.length_csv,
         )
     else:
         main(vars(args))
