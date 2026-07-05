@@ -4,4 +4,9 @@ from .train_model import train_model
 from .init_model import init_model,load_model
 from .lpkt_utils import lpkt_evaluate_multi_ahead
 # from .init_model4promptkt import init_model4promptkt,load_model4promptkt
-from mamba2 import Mamba2Config, Mamba2
+# Optional dependency: import lazily only when needed by mamba-based models.
+try:
+    from mamba2 import Mamba2Config, Mamba2
+except Exception:
+    Mamba2Config = None
+    Mamba2 = None

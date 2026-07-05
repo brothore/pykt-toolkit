@@ -82,15 +82,12 @@ def _prepare_also_group_ids(data, grouping_mode, device, n_groups=None):
             uid = uid.to(device)
         if uid.ndim > 1:
             uid = uid.view(-1)
-        unique_uids = torch.unique(uid)
+        # Use a stable mapping: uid % n_groups ensures indices never exceed n_groups
         if n_groups is None:
-            n_groups = max(1, int(unique_uids.numel()))
+            n_groups = max(1, int(torch.unique(uid).numel()))
         else:
             n_groups = max(1, int(n_groups))
-            if unique_uids.numel() > n_groups:
-                n_groups = int(unique_uids.numel())
-        mapping = {int(item.item()): idx for idx, item in enumerate(unique_uids)}
-        group_ids = torch.tensor([mapping[int(item)] for item in uid.tolist()], device=device, dtype=torch.long)
+        group_ids = uid.long() % n_groups
         return group_ids, n_groups
 
     raise ValueError(f"Unsupported ALSO grouping mode: {grouping_mode}")

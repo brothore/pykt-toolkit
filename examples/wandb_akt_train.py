@@ -1,5 +1,9 @@
 import argparse
-from wandb_train import main
+
+try:
+    from .wandb_train import main
+except ImportError:
+    from wandb_train import main
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -22,6 +26,9 @@ if __name__ == "__main__":
     parser.add_argument("--random_rev", type=float, default=0.0, help="Probability of label reversal (poisoning)")
 
     parser.add_argument("--use_wandb", type=int, default=1)
+    parser.add_argument("--use_trained", type=int, default=0)
+    parser.add_argument("--use_also", type=int, default=0)
+    parser.add_argument("--also_grouping_mode", type=str, default="none")
     parser.add_argument("--add_uuid", type=int, default=1)
    
     args = parser.parse_args()

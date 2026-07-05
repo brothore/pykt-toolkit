@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 import datetime
+from pathlib import Path
 sys.stdout.reconfigure(line_buffering=True)
 sys.stderr.reconfigure(line_buffering=True)
 from pykt.models.cuda_retry import retry_decorator
@@ -11,7 +12,12 @@ import torch
 # torch.set_num_threads(4) 
 from torch.optim import SGD, Adam
 import copy
-from wandb_multi_predict import main as predict_main
+
+try:
+    from .wandb_multi_predict import main as predict_main
+except ImportError:
+    from wandb_multi_predict import main as predict_main
+
 from pykt.models import train_model,evaluate,init_model
 from pykt.utils import debug_print,set_seed
 from pykt.datasets import init_dataset4train
@@ -23,6 +29,22 @@ os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 os.environ['CUBLAS_WORKSPACE_CONFIG']=':4096:2'
 import runpy
+REPO_ROOT = Path(__file__).resolve().parents[1]
+CONFIG_DIR = REPO_ROOT / "configs"
+
+def _resolve_repo_path(path):
+    if path is None:
+        return None
+    path = str(path)
+    if os.path.isabs(path):
+        return path
+    for base in [Path.cwd(), REPO_ROOT, REPO_ROOT / "examples"]:
+        candidate = (base / path).resolve()
+        if candidate.exists():
+            return str(candidate)
+    return str((REPO_ROOT / path).resolve())
+
+
 def save_config(train_config, model_config, data_config, params, save_dir):
     d = {"train_config": train_config, 'model_config': model_config, "data_config": data_config, "params": params}
     save_path = os.path.join(save_dir, "config.json")
@@ -208,13 +230,19 @@ def main(params):
         print(f"✅ 参数已保存至: {os.path.join(save_dir, save_path_param)}")    
         debug_print(text = "load config files.",fuc_name="main")
         
-        with open("../configs/kt_config.json") as f:
+        kt_config_path = CONFIG_DIR / "kt_config.json"
+        data_config_path = CONFIG_DIR / "data_config.json"
+        if not kt_config_path.exists():
+            raise FileNotFoundError(f"配置文件不存在: {kt_config_path}")
+        with open(kt_config_path) as f:
             config = json.load(f)
             train_config = config["train_config"]
             
             model_config = copy.deepcopy(params)
             for key in ["model_name", "dataset_name", "emb_type", "save_dir", "fold", "seed","use_trained"]:
                 del model_config[key]
+            for key in ["batch_size", "num_epochs", "use_wandb", "add_uuid", "use_trained", "random_rev", "use_also", "also_grouping_mode"]:
+                model_config.pop(key, None)
             if 'batch_size' in params:
                 train_config["batch_size"] = params['batch_size']
             if 'num_epochs' in params:
@@ -222,8 +250,13 @@ def main(params):
             # model_config = {"d_model": params["d_model"], "n_blocks": params["n_blocks"], "dropout": params["dropout"], "d_ff": params["d_ff"]}
         batch_size, num_epochs, optimizer = train_config["batch_size"], train_config["num_epochs"], train_config["optimizer"]
 
-        with open("../configs/data_config.json") as fin:
+        with open(data_config_path) as fin:
             data_config = json.load(fin)
+        dataset_cfg = data_config[dataset_name]
+        if isinstance(dataset_cfg, dict) and "dpath" in dataset_cfg:
+            resolved_dpath = _resolve_repo_path(dataset_cfg["dpath"])
+            dataset_cfg["dpath"] = resolved_dpath
+            print(f"[DATA_PATH] dataset={dataset_name} resolved_dpath={resolved_dpath}")
         if 'maxlen' in data_config[dataset_name]:#prefer to use the maxlen in data config
             train_config["seq_len"] = data_config[dataset_name]['maxlen']
         seq_len = train_config["seq_len"]
@@ -343,6 +376,7 @@ def main(params):
         else:
             testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = train_model(
                 model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model,
+                data_config=data_config[dataset_name],
                 use_trained=use_trained,accumulation_steps=accumulation_steps,
                 also_config=also_config
             )
@@ -401,7 +435,9 @@ def main(params):
                 }
                 
                 # 定义要运行的脚本的路径
-                script_path = "wandb_predict_with_unbalance.py"
+                script_path = str((Path(__file__).resolve().parent / "wandb_predict_with_unbalance.py").resolve())
+                if not os.path.exists(script_path):
+                    script_path = str((Path(__file__).resolve().parent.parent / "wandb_predict_with_unbalance.py").resolve())
                 
                 # 保存当前的 sys.argv，以便后续恢复
                 original_argv = sys.argv
@@ -424,7 +460,15 @@ def main(params):
 
                     # 3. 使用 runpy 运行脚本
                     # run_name="__main__" 会让脚本认为它是主程序
-                    runpy.run_path(script_path, run_name="__main__")
+                    script_dir = os.path.dirname(script_path)
+                    if script_dir not in sys.path:
+                        sys.path.insert(0, script_dir)
+                    old_cwd = os.getcwd()
+                    os.chdir(script_dir)
+                    try:
+                        runpy.run_path(script_path, run_name="__main__")
+                    finally:
+                        os.chdir(old_cwd)
                     
                     # --- 运行成功后的原始逻辑 ---
                     prediction_success = True
