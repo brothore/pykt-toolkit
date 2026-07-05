@@ -22,7 +22,42 @@ if str(REPO_ROOT) not in sys.path:
 from ALSO.also import ALSO
 
 
-def _prepare_also_group_ids(data, grouping_mode, device):
+def _resolve_also_n_groups(data, grouping_mode, also_config, data_config=None):
+    """Resolve a stable upper bound for the number of ALSO groups."""
+    if also_config and also_config.get("n_groups") is not None:
+        return int(also_config["n_groups"])
+
+    if "qseqs" in data:
+        batch_size = data["qseqs"].shape[0]
+    elif "cseqs" in data:
+        batch_size = data["cseqs"].shape[0]
+    else:
+        batch_size = 1
+
+    if grouping_mode == "seq":
+        return max(1, int(batch_size))
+
+    if grouping_mode == "student_id":
+        if isinstance(data_config, dict):
+            for key in ["students_num_train", "num_students", "student_num", "num_uids"]:
+                value = data_config.get(key)
+                if value not in (None, "", 0):
+                    return max(1, int(value))
+
+        if "uid" in data:
+            uid = data["uid"]
+            if isinstance(uid, (list, tuple)):
+                uid = torch.tensor(uid)
+            else:
+                uid = uid.detach().cpu()
+            if uid.ndim > 1:
+                uid = uid.view(-1)
+            return max(1, int(torch.unique(uid).numel()))
+
+    return max(1, int(batch_size))
+
+
+def _prepare_also_group_ids(data, grouping_mode, device, n_groups=None):
     """Prepare group indices for ALSO based on the configured grouping mode."""
     if grouping_mode == "none":
         return None, None
@@ -35,7 +70,7 @@ def _prepare_also_group_ids(data, grouping_mode, device):
         batch_size = 1
 
     if grouping_mode == "seq":
-        return torch.arange(batch_size, device=device, dtype=torch.long), batch_size
+        return torch.arange(batch_size, device=device, dtype=torch.long), max(1, int(batch_size))
 
     if grouping_mode == "student_id":
         if "uid" not in data:
@@ -48,9 +83,15 @@ def _prepare_also_group_ids(data, grouping_mode, device):
         if uid.ndim > 1:
             uid = uid.view(-1)
         unique_uids = torch.unique(uid)
+        if n_groups is None:
+            n_groups = max(1, int(unique_uids.numel()))
+        else:
+            n_groups = max(1, int(n_groups))
+            if unique_uids.numel() > n_groups:
+                n_groups = int(unique_uids.numel())
         mapping = {int(item.item()): idx for idx, item in enumerate(unique_uids)}
         group_ids = torch.tensor([mapping[int(item)] for item in uid.tolist()], device=device, dtype=torch.long)
-        return group_ids, len(unique_uids)
+        return group_ids, n_groups
 
     raise ValueError(f"Unsupported ALSO grouping mode: {grouping_mode}")
 
@@ -677,12 +718,14 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
                 model.train()
 
             if also_enable and also_grouping_mode != "none":
-                group_ids, n_groups = _prepare_also_group_ids(data, also_grouping_mode, device)
+                resolved_n_groups = _resolve_also_n_groups(data, also_grouping_mode, also_config, data_config)
+                group_ids, n_groups = _prepare_also_group_ids(data, also_grouping_mode, device, resolved_n_groups)
                 if group_ids is None:
                     raise ValueError("Failed to prepare group ids for ALSO")
                 if also_optimizer is None:
                     batch_size = getattr(train_loader, "batch_size", None) or 1
                     also_optimizer = _create_also_optimizer(model, batch_size, n_groups, also_config)
+                    print(f"ALSO initialized with n_groups={n_groups} for grouping_mode={also_grouping_mode}")
                 if also_optimizer is None:
                     raise RuntimeError("Failed to initialize ALSO optimizer")
 
