@@ -1,4 +1,5 @@
 import os, sys
+from pathlib import Path
 import torch
 import torch.nn as nn
 from torch.nn.functional import one_hot, binary_cross_entropy, cross_entropy
@@ -14,6 +15,75 @@ import torch.nn.functional as F
 import time
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 from pykt.models.long_dkt import StudentHiddenStateManager
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+from ALSO.also import ALSO
+
+
+def _prepare_also_group_ids(data, grouping_mode, device):
+    """Prepare group indices for ALSO based on the configured grouping mode."""
+    if grouping_mode == "none":
+        return None, None
+
+    if "qseqs" in data:
+        batch_size = data["qseqs"].shape[0]
+    elif "cseqs" in data:
+        batch_size = data["cseqs"].shape[0]
+    else:
+        batch_size = 1
+
+    if grouping_mode == "seq":
+        return torch.arange(batch_size, device=device, dtype=torch.long), batch_size
+
+    if grouping_mode == "student_id":
+        if "uid" not in data:
+            raise ValueError("student_id grouping requires uid in the batch data")
+        uid = data["uid"]
+        if isinstance(uid, (list, tuple)):
+            uid = torch.tensor(uid, device=device)
+        else:
+            uid = uid.to(device)
+        if uid.ndim > 1:
+            uid = uid.view(-1)
+        unique_uids = torch.unique(uid)
+        mapping = {int(item.item()): idx for idx, item in enumerate(unique_uids)}
+        group_ids = torch.tensor([mapping[int(item)] for item in uid.tolist()], device=device, dtype=torch.long)
+        return group_ids, len(unique_uids)
+
+    raise ValueError(f"Unsupported ALSO grouping mode: {grouping_mode}")
+
+
+def _create_also_optimizer(model, batch_size, n_groups, also_config):
+    """Create an ALSO optimizer from config if enabled."""
+    if not also_config or not also_config.get("enable", False):
+        return None
+
+    also_mode = also_config.get("mode", "optimistic")
+    alpha = also_config.get("alpha", 1.0)
+    lr = also_config.get("lr", 1e-3)
+    weight_decay = also_config.get("weight_decay", 1e-3)
+    pi_lr = also_config.get("pi_lr", 1e-3)
+    pi_decay = also_config.get("pi_decay", 1e-2)
+    loss_scale = also_config.get("loss_scale", None)
+
+    return ALSO(
+        params=model.parameters(),
+        n_groups=max(1, int(n_groups)),
+        batch_size=batch_size,
+        loss_scale=loss_scale,
+        mode=also_mode,
+        alpha=alpha,
+        lr=lr,
+        weight_decay=weight_decay,
+        pi_lr=pi_lr,
+        pi_decay=pi_decay,
+        pi_reg=also_config.get("pi_reg", None),
+        pi_init=also_config.get("pi_init", None),
+    )
+
+
 #成对排序损失函数（近似AUC计算）
 def pairwise_ranking_loss(predictions, targets):
     """
@@ -99,9 +169,17 @@ def student_auc_discrepancy(predictions, targets, uids, weights=None):
     # 计算平均差异
     return pair_diffs.mean()
 
-def cal_loss(model, ys, r, rshft, sm, preloss=[]):
+def cal_loss(model, ys, r, rshft, sm, preloss=[], return_per_sample=False):
     model_name = model.model_name
     # print(f"[DEBUG] ys.shape: {ys} )")
+    if return_per_sample:
+        if model_name in ["dkt", "dkt_forget", "dkvmn", "deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "mamba_atakt", "long_dkt", "at_dkt", "TransformerKT", "mult_dataset_dkt", "hawkes_lstm", "hawkes_mamba", "mamba_dkt", "mamba_hawkes_dkt", "balance_dkt", "simplekt", "stablekt", "sparsekt", "cskt", "rekt"]:
+            y = ys[0]
+            t = rshft
+            losses = F.binary_cross_entropy(y.double(), t.double(), reduction='none')
+            losses = losses * sm.float()
+            denom = sm.sum(dim=1).clamp(min=1).to(losses.dtype)
+            return losses.sum(dim=1) / denom
     if model_name in ["atdkt", "simplekt", "stablekt", "bakt_time", "sparsekt", "cskt", "hcgkt", "dbakt", "abqr"]:
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
@@ -172,7 +250,7 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[]):
     return loss
 
 
-def model_forward(model, data, rel=None):
+def model_forward(model, data, rel=None, return_per_sample=False):
     model_name = model.model_name
     
     # if model_name in ["dkt_forget", "lpkt"]:
@@ -525,14 +603,22 @@ def model_forward(model, data, rel=None):
         ys.append(y) 
 
     if model_name not in ["atkt", "atktfix","mamba_atakt", "at_dkt","abqr"]+que_type_models or model_name in ["lpkt", "rkt"]:
+        if return_per_sample:
+            return cal_loss(model, ys, r, rshft, sm, preloss, return_per_sample=True)
         loss = cal_loss(model, ys, r, rshft, sm, preloss)
     if model_name in ["ukt"] and model.use_CL != 0:
         return loss,temp
     return loss
 
 
-def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, test_loader=None, test_window_loader=None, save_model=False, data_config=None, fold=None,use_trained=0, accumulation_steps=1):
+def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, test_loader=None, test_window_loader=None, save_model=False, data_config=None, fold=None,use_trained=0, accumulation_steps=1, also_config=None):
     start_train_time = time.time()
+
+    also_enable = bool(also_config and also_config.get("enable", False))
+    also_grouping_mode = also_config.get("grouping_mode", "none") if also_config else "none"
+    also_optimizer = None
+    if also_enable:
+        print(f"ALSO enabled with grouping_mode={also_grouping_mode}")
 
     max_auc, best_epoch = 0, -1
     train_step = 0
@@ -589,17 +675,39 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
                 model.model.train()
             else:
                 model.train()
-            if model.model_name=='rkt':
-                loss = model_forward(model, data, rel)
-            elif model.model_name in ["ukt"] and model.use_CL != 0:
-                loss,temp = model_forward(model, data)
-            elif model.model_name == "long_dkt":
-                loss = model_forward(model, data,student_state_manager)
-            elif model.model_name == "abqr":
-                loss = model_forward(model, data,opt)
+
+            if also_enable and also_grouping_mode != "none":
+                group_ids, n_groups = _prepare_also_group_ids(data, also_grouping_mode, device)
+                if group_ids is None:
+                    raise ValueError("Failed to prepare group ids for ALSO")
+                if also_optimizer is None:
+                    batch_size = getattr(train_loader, "batch_size", None) or 1
+                    also_optimizer = _create_also_optimizer(model, batch_size, n_groups, also_config)
+                if also_optimizer is None:
+                    raise RuntimeError("Failed to initialize ALSO optimizer")
+
+                def closure(w, scale):
+                    model.zero_grad(set_to_none=True)
+                    losses = model_forward(model, data, rel=rel, return_per_sample=True)
+                    losses = losses.to(device)
+                    losses = losses * scale
+                    loss = (w * losses).sum()
+                    loss.backward()
+                    return losses, losses.mean().item()
+
+                loss = also_optimizer.step(closure=closure, groups_indexes=group_ids)
             else:
-                loss = model_forward(model, data)
-            if model.model_name not in ["hcgkt","abqr"]:
+                if model.model_name=='rkt':
+                    loss = model_forward(model, data, rel)
+                elif model.model_name in ["ukt"] and model.use_CL != 0:
+                    loss,temp = model_forward(model, data)
+                elif model.model_name == "long_dkt":
+                    loss = model_forward(model, data,student_state_manager)
+                elif model.model_name == "abqr":
+                    loss = model_forward(model, data,opt)
+                else:
+                    loss = model_forward(model, data)
+            if model.model_name not in ["hcgkt","abqr"] and not also_enable:
 
                 opt.zero_grad()
                 loss_scaled = loss / accumulation_steps
@@ -653,7 +761,7 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
 
 
         train_phase_end = time.time()
-        if model.model_name not in ["hcgkt", "abqr"] and (batch_idx + 1) % accumulation_steps != 0:
+        if model.model_name not in ["hcgkt", "abqr"] and (batch_idx + 1) % accumulation_steps != 0 and not also_enable:
             if model.model_name == "rkt":
                 clip_grad_norm_(model.parameters(), model.grad_clip)
             if model.model_name == "dtransformer":

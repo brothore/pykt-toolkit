@@ -311,23 +311,40 @@ def main(params):
 
         model.cuda()  # 确保模型在GPU上
 
+        also_config = {
+            "enable": bool(params.get("use_also", 0)),
+            "grouping_mode": params.get("also_grouping_mode", "none"),
+            "mode": params.get("also_mode", "optimistic"),
+            "alpha": params.get("also_alpha", 1.0),
+            "lr": params.get("also_lr", learning_rate),
+            "weight_decay": params.get("also_weight_decay", params.get("l2", 1e-3)),
+            "pi_lr": params.get("also_pi_lr", 1e-3),
+            "pi_decay": params.get("also_pi_decay", 1e-2),
+            "loss_scale": params.get("also_loss_scale", None),
+            "pi_reg": params.get("also_pi_reg", None),
+            "pi_init": params.get("also_pi_init", None),
+        }
+
         existing_ckpt = os.path.join(ckpt_path, emb_type + "_model.ckpt")
         if use_trained == 1 and os.path.exists(existing_ckpt):
             print(f"⏭️  use_trained=1 且检测到已训练模型 {existing_ckpt}，跳过训练阶段。")
         elif model_name == "rkt":
             testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = train_model(
                 model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model,
-                data_config[dataset_name], fold, use_trained=use_trained,accumulation_steps=accumulation_steps
+                data_config[dataset_name], fold, use_trained=use_trained,accumulation_steps=accumulation_steps,
+                also_config=also_config
             )
         elif model_name == "long_dkt":
             testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = train_model(
                 model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model,
-                data_config[dataset_name], use_trained=use_trained,accumulation_steps=accumulation_steps
+                data_config[dataset_name], use_trained=use_trained,accumulation_steps=accumulation_steps,
+                also_config=also_config
             )
         else:
             testauc, testacc, window_testauc, window_testacc, validauc, validacc, best_epoch = train_model(
                 model, train_loader, valid_loader, num_epochs, opt, ckpt_path, None, None, save_model,
-                use_trained=use_trained,accumulation_steps=accumulation_steps
+                use_trained=use_trained,accumulation_steps=accumulation_steps,
+                also_config=also_config
             )
 
 
