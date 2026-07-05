@@ -1,0 +1,230 @@
+================================================================================
+[EXP_START] DKT baseline experiment
+dataset_name=assist2009
+model_name=dkt
+emb_type=qid
+seed=42
+fold=0
+dropout=0.2
+emb_size=200
+learning_rate=0.001
+batch_size=16
+num_epochs=100
+use_wandb=0
+add_uuid=0
+================================================================================
+✅ 初始运行记录已写入: saved_model/dkt_abl_a6_n3082_bs16/run_history.txt (ID: 3e99d1ea-baeb-4b40-a9f9-fd435dca92d5)
+✅ 参数已保存至: saved_model/dkt_abl_a6_n3082_bs16/saved_params_dkt.json
+✅ 参数已保存至: saved_model/dkt_abl_a6_n3082_bs16/saved_params_dkt.json
+2026-07-06 04:20:30 - main - said: load config files.
+[DATA_PATH] dataset=assist2009 resolved_dpath=/root/autodl-tmp/pykt-toolkit/data/assist2009
+assist2009 dkt {'assist2015': {'dpath': '../data/assist2015', 'num_q': 0, 'num_c': 100, 'input_type': ['concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'algebra2005': {'dpath': '../data/algebra2005', 'num_q': 173113, 'num_c': 112, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_train': 460, 'students_num_eval': 114}, 'assist2009': {'dpath': '/root/autodl-tmp/pykt-toolkit/data/assist2009', 'num_q': 17737, 'num_c': 123, 'input_type': ['questions', 'concepts'], 'max_concepts': 4, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_eval': 770, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'students_num_train': 3082}, 'slepemapy': {'dpath': '../data/slepemapy', 'num_q': 2913, 'num_c': 1458, 'input_type': ['questions', 'concepts'], 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'assist2017': {'dpath': '../data/assist2017', 'num_q': 3162, 'num_c': 102, 'input_type': ['questions', 'concepts'], 'min_seq_len': 3, 'maxlen': 500, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'assist2012': {'dpath': '../data/assist2012', 'num_q': 53070, 'num_c': 265, 'input_type': ['questions', 'concepts'], 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'statics2011': {'dpath': '../data/statics2011', 'num_q': 0, 'num_c': 1223, 'input_type': ['concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'junyi2015': {'dpath': '../data/junyi2015', 'num_q': 721, 'num_c': 39, 'input_type': ['questions', 'concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'bridge2algebra2006': {'dpath': '../data/bridge2algebra2006', 'num_q': 129263, 'num_c': 493, 'input_type': ['questions', 'concepts'], 'max_concepts': 5, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_train': 916, 'students_num_eval': 229, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv'}, 'ednet': {'dpath': '../data/ednet', 'num_q': 11901, 'num_c': 188, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'nips_task34': {'dpath': '../data/nips_task34', 'num_q': 948, 'num_c': 57, 'students_num_eval': 983, 'students_num_train': 3935, 'input_type': ['questions', 'concepts'], 'max_concepts': 2, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'student_summary_file': 'student_summary.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'seq_len_10000_students_num_eval': 23, 'seq_len_20000_students_num_eval': 38, 'seq_len_30000_students_num_eval': 37, 'seq_len_18000_students_num_eval': 16, 'seq_len_22000_students_num_eval': 47}, 'poj': {'dpath': '../data/poj', 'num_q': 0, 'num_c': 2748, 'input_type': ['concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'peiyou': {'dpath': '../data/peiyou', 'num_q': 7652, 'num_c': 865, 'input_type': ['questions', 'concepts'], 'max_concepts': 6, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'students_num_eval': 0, 'train_valid_original_file': 'train_valid.csv', 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_train': 14453, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'seq_len_500_students_num_eval': 0, 'seq_len_300_students_num_eval': 0, 'seq_len_400_students_num_eval': 0}, 'ednet5w': {'dpath': '../data/ednet5w', 'num_q': 12235, 'num_c': 188, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'pretrain': {'dpath': '../data/pretrain', 'num_q': 340614, 'num_c': 1838, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 1024, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel_200.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'assist2009Anips_task34Abridge2algebra2006': {'dpath': '../data/assist2009Anips_task34Abridge2algebra2006', 'num_q': 147948, 'num_c': 673, 'input_type': ['concepts', 'questions'], 'max_concepts': 5, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_eval': 770, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'students_num_train': 7933}, 'peiyouAnips_task34Abridge2algebra2006': {'dpath': '../data/peiyouAnips_task34Abridge2algebra2006', 'num_q': 137863, 'num_c': 1415, 'input_type': ['questions', 'concepts'], 'max_concepts': 6, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'train_valid_original_file': 'train_valid.csv', 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_eval': 983, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'student_summary_file': 'student_summary.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'students_num_train': 15181}} 0 16
+2026-07-06 04:20:30 - main - said: init_dataset
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv_0.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv, qlen: 741, clen: 741, rlen: 741, uidlen: 741
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv_1_2_3_4.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv, qlen: 3016, clen: 3016, rlen: 3016, uidlen: 3016
+params: {'dataset_name': 'assist2009', 'model_name': 'dkt', 'emb_type': 'qid', 'save_dir': 'saved_model/dkt_abl_a6_n3082_bs16', 'seed': 42, 'fold': 0, 'dropout': 0.2, 'emb_size': 200, 'learning_rate': 0.001, 'batch_size': 16, 'num_epochs': 100, 'use_wandb': 0, 'use_trained': 0, 'use_also': 1, 'also_grouping_mode': 'student_id', 'also_n_groups': 3082, 'also_pi_lr': 0.001, 'also_pi_decay': 0.01, 'add_uuid': 0}, params_str: assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+Start training model: dkt, embtype: qid, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0, dataset_name: assist2009
+model_config: {'dropout': 0.2, 'emb_size': 200, 'learning_rate': 0.001}
+train_config: {'batch_size': 16, 'num_epochs': 100, 'optimizer': 'adam', 'seq_len': 200}
+2026-07-06 04:20:30 - main - said: init_model
+[PARAM_COUNT] model=dkt emb_type=qid dataset=assist2009 trainable=395,523 total=395,523
+2026-07-06 04:20:31 - main - said: train model
+ALSO enabled with grouping_mode=student_id
+未找到预训练模型文件，将从头开始训练。
+ALSO initialized with n_groups=3082 for grouping_mode=student_id
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 1, validauc: 0.7968, validacc: 0.7608, best epoch: 1, best auc: 0.7968, train loss: 106.68155837555511, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 49.98s | Train Phase: 45.83s | Valid Phase: 4.14s
+Avg Batch Time: 0.2425s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 2, validauc: 0.8044, validacc: 0.7629, best epoch: 2, best auc: 0.8044, train loss: 99.22667018626316, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 50.74s | Train Phase: 46.53s | Valid Phase: 4.20s
+Avg Batch Time: 0.2462s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 3, validauc: 0.8069, validacc: 0.7637, best epoch: 3, best auc: 0.8069, train loss: 98.33707378285054, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 51.36s | Train Phase: 47.29s | Valid Phase: 4.06s
+Avg Batch Time: 0.2502s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 4, validauc: 0.8087, validacc: 0.7627, best epoch: 4, best auc: 0.8087, train loss: 98.1521400583443, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 50.36s | Train Phase: 46.45s | Valid Phase: 3.90s
+Avg Batch Time: 0.2457s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 5, validauc: 0.8087, validacc: 0.7627, best epoch: 4, best auc: 0.8087, train loss: 98.13612630678027, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 50.98s | Train Phase: 46.85s | Valid Phase: 4.12s
+Avg Batch Time: 0.2479s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 6, validauc: 0.8087, validacc: 0.7627, best epoch: 4, best auc: 0.8087, train loss: 98.30591993496267, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 44.57s | Train Phase: 40.65s | Valid Phase: 3.92s
+Avg Batch Time: 0.2151s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 7, validauc: 0.8087, validacc: 0.7627, best epoch: 4, best auc: 0.8087, train loss: 98.5702776801634, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 52.18s | Train Phase: 47.95s | Valid Phase: 4.23s
+Avg Batch Time: 0.2537s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 8, validauc: 0.8087, validacc: 0.7627, best epoch: 4, best auc: 0.8087, train loss: 98.6691095752756, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 23.88s | Train Phase: 23.34s | Valid Phase: 0.54s
+Avg Batch Time: 0.1235s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 9, validauc: 0.8087, validacc: 0.7627, best epoch: 4, best auc: 0.8087, train loss: 99.13065798595919, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 8.36s | Train Phase: 7.85s | Valid Phase: 0.51s
+Avg Batch Time: 0.0415s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 10, validauc: 0.8087, validacc: 0.7627, best epoch: 4, best auc: 0.8087, train loss: 99.78351856870162, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 8.23s | Train Phase: 7.70s | Valid Phase: 0.54s
+Avg Batch Time: 0.0407s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 11, validauc: 0.8087, validacc: 0.7627, best epoch: 4, best auc: 0.8087, train loss: 99.84075605165172, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 8.53s | Train Phase: 7.96s | Valid Phase: 0.57s
+Avg Batch Time: 0.0421s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 12, validauc: 0.8087, validacc: 0.7627, best epoch: 4, best auc: 0.8087, train loss: 100.86664788478153, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 8.40s | Train Phase: 7.90s | Valid Phase: 0.50s
+Avg Batch Time: 0.0418s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 13, validauc: 0.8087, validacc: 0.7627, best epoch: 4, best auc: 0.8087, train loss: 101.33726843269827, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 8.91s | Train Phase: 8.36s | Valid Phase: 0.56s
+Avg Batch Time: 0.0442s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 14, validauc: 0.8087, validacc: 0.7627, best epoch: 4, best auc: 0.8087, train loss: 101.83603766803198, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 9.29s | Train Phase: 8.62s | Valid Phase: 0.67s
+Avg Batch Time: 0.0456s
+------------------------------
+Early stopping at epoch 14
+✅ Training Finished! Total Time Cost: 425.77 s
+fold	modelname	embtype	testauc	testacc	window_testauc	window_testacc	validauc	validacc	best_epoch
+0	dkt	qid	-1	-1	-1	-1	0.8087119637907905	0.7627449124467581	4
+end:2026-07-06 04:27:37.569177
+
+==================================================
+Training completed. Starting prediction with predict_after_train=2
+==================================================
+--- 正在调用外部脚本 (subprocess): /root/autodl-tmp/pykt-toolkit/examples/wandb_predict_with_unbalance.py
+--- 完整运行指令: /root/miniconda3/bin/python /root/autodl-tmp/pykt-toolkit/examples/wandb_predict_with_unbalance.py --bz 16 --save_dir /root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0 --use_wandb 0
+Namespace(bz=16, save_dir='/root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0', fusion_type='late_fusion', use_wandb=0)
+--- [Time] Start: 2026-07-06 04:27:39 ---
+[DATA_PATH] dataset=assist2009 resolved_dpath=/root/autodl-tmp/pykt-toolkit/data/assist2009
+model_name is dkt, dataset_name is assist2009
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv, qlen: 904, clen: 904, rlen: 904, uidlen: 904
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv, qlen: 20362, clen: 20362, rlen: 20362, uidlen: 20362
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv, qlen: 18292, clen: 18292, rlen: 18292, uidlen: 18292
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv, qlen: 30610, clen: 30610, rlen: 30610, uidlen: 30610
+has test_question_file!
+Start predicting model: dkt, embtype: qid, save_dir: /root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0, dataset_name: assist2009
+--- [Time] Data Loading: 0.66s (started 04:27:39) ---
+--- [Time] Model Loading: 0.20s (started 04:27:40) ---
+testauc: 0.7994454703640173, testacc: 0.7503069268544844
+--- [Time] Basic Evaluation: 1.98s (started 04:27:40) ---
+testauc: 0.7994454703640173, testacc: 0.7503069268544844, window_testauc: 0.799960803393735, window_testacc: 0.7504190844616376
+--- [Time] Window Evaluation: 18.57s (started 04:27:42) ---
+[DEBUG] auc: 0.7101820753236591 (type: <class 'float'>)
+[DEBUG] auc: 0.7105794811821322 (type: <class 'float'>)
+--- [Time] Question Evaluation: 77.09s (started 04:28:01) ---
+{'testauc': 0.7994454703640173, 'testacc': 0.7503069268544844, 'window_testauc': 0.799960803393735, 'window_testacc': 0.7504190844616376, 'oriaucconcepts': 0.7101820753236591, 'oriauclate_mean': 0.7207295362145295, 'oriauclate_vote': 0.7212723220820085, 'oriauclate_all': 0.7189616564504256, 'oriaccconcepts': 0.6976472875753451, 'oriacclate_mean': 0.7031806177517511, 'oriacclate_vote': 0.7047881501894592, 'oriacclate_all': 0.7012286140773912, 'windowaucconcepts': 0.7105794811821322, 'windowauclate_mean': 0.7212928759744226, 'windowauclate_vote': 0.7218298242444154, 'windowauclate_all': 0.7195285532047964, 'windowaccconcepts': 0.6976180472512201, 'windowacclate_mean': 0.703310550231013, 'windowacclate_vote': 0.7048570010309672, 'windowacclate_all': 0.7013440757569972}
+dres saved to /root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0/all_results.json
+late_trues 的唯一值: [0 1]
+late_trues 的值计数:
+late_trues
+1    33510
+0    18868
+Name: count, dtype: int64
+已保存每个学生AUC → /root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0/qid_test_question_window_predictions_per_student_aucs.json
+✅ 学生AUC结果已保存至: /root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0/student_auc_output.csv
+📊 总体统计指标: {
+    "overall_dataset_auc": 0.676552661901261,
+    "student_stats_mean": 0.5638330812771639,
+    "student_stats_std": 0.2033695414756009,
+    "student_stats_max": 1.0,
+    "student_stats_min": 0.0,
+    "student_stats_range": 1.0,
+    "student_stats_epi": 2.772455880984564,
+    "student_stats_gini_coefficient": 0.19483156561162246,
+    "student_stats_average_auc": 0.5638330812771639,
+    "student_stats_eawi_alpha_10": 0.4539805993083089,
+    "student_stats_eawi_alpha_20": 0.3655308483877685,
+    "student_stats_eawi_alpha_30": 0.29431390091703497,
+    "student_stats_iqr": 0.1874222029237227,
+    "student_stats_q1": 0.5,
+    "student_stats_q3": 0.6874222029237227
+}
+✅ 总体统计结果已保存至: /root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a6_n3082_bs16/assist2009_dkt_qid_saved_model/dkt_abl_a6_n3082_bs16_42_0_0.2_200_0.001_16_100_0_0_1_student_id_3082_0.001_0.01_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 2.45s (started 04:29:18) ---
+------------------------------
+Total Prediction Time: 100.95s (end 2026-07-06 04:29:20)
+------------------------------
+Prediction completed successfully!
+训练过程中发生错误: name 'original_argv' is not defined
+⚠️ 运行历史状态已更新为失败 (ID: 3e99d1ea-baeb-4b40-a9f9-fd435dca92d5)
+💡 正在执行最终资源清理...
+💡 CUDA 缓存已释放。
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/root/autodl-tmp/pykt-toolkit/examples/wandb_dkt_train.py", line 52, in <module>
+    main(params)
+  File "/root/autodl-tmp/pykt-toolkit/examples/wandb_train.py", line 515, in main
+    raise e
+  File "/root/autodl-tmp/pykt-toolkit/examples/wandb_train.py", line 494, in main
+    sys.argv = original_argv
+               ^^^^^^^^^^^^^
+NameError: name 'original_argv' is not defined

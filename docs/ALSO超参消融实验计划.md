@@ -196,4 +196,65 @@ Phase B 完成后：
 
 ## 7. 执行状态
 
-> ⏳ 待执行 - 需要先在 `wandb_dkt_train.py` 中添加 `--also_n_groups`、`--also_pi_lr`、`--also_pi_decay` CLI 参数
+> ✅ Phase A 完成 (2026-07-06)
+> ⏳ Phase A2 (batch_size 消融) 待执行
+
+---
+
+## 8. Phase A 实验结果
+
+| 实验 | n_groups | bs | loss_scale | Val AUC | Overall AUC | Mean ↑ | Std ↓ | IQR ↓ | Gini ↓ |
+|---|---|---|---|---|---|---|---|---|---|
+| **Baseline** | - | 32 | - | **0.8309** | **0.7184** | **0.5803** | 0.2010 | 0.2091 | 0.1876 |
+| R1 (student_id) | 3082 | 32 | 96.3 | 0.8141 | 0.6868 | 0.5695 | 0.2016 | 0.1915 | 0.1912 |
+| A1 | 50 | 32 | 1.56 | 0.8085 | 0.6827 | 0.5671 | 0.1986 | 0.1868 | 0.1892 |
+| A2 | 100 | 32 | 3.13 | 0.8087 | 0.6827 | 0.5662 | 0.2020 | 0.1877 | 0.1927 |
+| A3 | 200 | 32 | 6.25 | 0.8100 | 0.6846 | 0.5663 | 0.1994 | 0.1874 | 0.1902 |
+| A4 | 500 | 32 | 15.6 | 0.8101 | 0.6860 | 0.5668 | 0.1989 | **0.1837** | 0.1894 |
+| **A5** | 3082 | **64** | 48.2 | **0.8188** | **0.6987** | **0.5750** | **0.1983** | 0.1923 | **0.1856** |
+
+### 关键发现
+- A5 (bs=64) 五项指标在 ALSO 中最佳，说明增大 batch_size 比缩 n_groups 更有效
+- n_groups 从 50→500，指标差异不大，说明 loss_scale 在 1.5~15 区间内 ALSO 表现接近
+- Baseline 仍全面碾压所有 ALSO 配置（差距约 2pp Overall AUC）
+
+---
+
+## 9. Phase A2: batch_size 消融
+
+基于 Phase A 发现 bs 对 ALSO 影响显著，在 Phase B (pi_lr) 之前先做 batch_size 消融。
+
+固定 n_groups=3082（原始学生数），变化 batch_size：
+
+| 实验 | n_groups | bs | loss_scale | 假设 |
+|---|---|---|---|---|
+| A5 (已有) | 3082 | 64 | 48.2 | Phase A 最优 |
+| A6 | 3082 | 16 | 192.6 | 极端 scale，预计最差 |
+| A7 | 3082 | 128 | 24.1 | 更大 bs，scale 更低 |
+
+增加一组 n_groups=500 配合大 bs（消融 n_groups×bs 交互）：
+
+| 实验 | n_groups | bs | loss_scale | 假设 |
+|---|---|---|---|---|
+| A8 | 500 | 128 | 3.91 | 最佳组合候选 |
+
+### 启动命令
+
+```bash
+cd /root/autodl-tmp/pykt-toolkit
+LOGDIR="logs/dkt_ablation"
+mkdir -p "$LOGDIR"
+
+BASE="--dataset_name assist2009 --model_name dkt --emb_type qid --seed 42 --fold 0 --dropout 0.2 --emb_size 200 --learning_rate 1e-3 --num_epochs 100 --use_wandb 0 --add_uuid 0 --use_trained 0 --use_also 1 --also_grouping_mode student_id --also_n_groups 3082"
+
+# A6: bs=16
+nohup python -m examples.wandb_dkt_train $BASE --batch_size 16 --save_dir saved_model/dkt_abl_a6_n3082_bs16 > "$LOGDIR/a6_n3082_bs16.log" 2>&1 &
+
+# A7: bs=128
+nohup python -m examples.wandb_dkt_train $BASE --batch_size 128 --save_dir saved_model/dkt_abl_a7_n3082_bs128 > "$LOGDIR/a7_n3082_bs128.log" 2>&1 &
+
+# A8: n=500, bs=128
+nohup python -m examples.wandb_dkt_train $BASE --also_n_groups 500 --batch_size 128 --save_dir saved_model/dkt_abl_a8_n500_bs128 > "$LOGDIR/a8_n500_bs128.log" 2>&1 &
+
+echo "Phase A2 launched: A6 A7 A8"
+```
