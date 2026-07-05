@@ -4,17 +4,38 @@ import json
 import copy
 import torch
 import pandas as pd
+from pathlib import Path
+_EXAMPLES_DIR = Path(__file__).resolve().parent
+_REPO_ROOT = _EXAMPLES_DIR.parent
+import sys
+if str(_EXAMPLES_DIR) not in sys.path:
+    sys.path.insert(0, str(_EXAMPLES_DIR))
 from cal_unbalance import save_auc_results_from_file
 from pykt.models import evaluate,evaluate_question,load_model
 from pykt.datasets import init_test_datasets
 import time
 from datetime import datetime
+
+def _resolve_repo_path(path):
+    """Resolve relative paths (like ../data/xxx) to absolute paths."""
+    if path is None:
+        return None
+    path = str(path)
+    if os.path.isabs(path):
+        return path
+    for base in [Path.cwd(), _REPO_ROOT, _REPO_ROOT / "examples"]:
+        candidate = (base / path).resolve()
+        if candidate.exists():
+            return str(candidate)
+    return str((_REPO_ROOT / path).resolve())
+
 def _now():
     return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 os.environ['CUBLAS_WORKSPACE_CONFIG']=':4096:2'
 
-with open("../configs/wandb.json") as fin:
+wandb_json = _REPO_ROOT / "configs" / "wandb.json"
+with open(wandb_json) as fin:
     wandb_config = json.load(fin)
 
 def main(params):
@@ -42,10 +63,15 @@ def main(params):
             seq_len = train_config["seq_len"]
             model_config["seq_len"] = seq_len   
 
-    with open("../configs/data_config.json") as fin:
+    data_config_json = _REPO_ROOT / "configs" / "data_config.json"
+    with open(data_config_json) as fin:
         curconfig = copy.deepcopy(json.load(fin))
         data_config = curconfig[dataset_name]
         data_config["dataset_name"] = dataset_name
+        # Resolve relative paths in data_config (mimics wandb_train.py)
+        if isinstance(data_config, dict) and "dpath" in data_config:
+            data_config["dpath"] = _resolve_repo_path(data_config["dpath"])
+            print(f"[DATA_PATH] dataset={dataset_name} resolved_dpath={data_config['dpath']}")
         if model_name in ["dkt_forget", "bakt_time","dbakt"]:
             data_config["num_rgap"] = config["data_config"]["num_rgap"]
             data_config["num_sgap"] = config["data_config"]["num_sgap"]

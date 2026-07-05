@@ -241,7 +241,7 @@ def main(params):
             model_config = copy.deepcopy(params)
             for key in ["model_name", "dataset_name", "emb_type", "save_dir", "fold", "seed","use_trained"]:
                 del model_config[key]
-            for key in ["batch_size", "num_epochs", "use_wandb", "add_uuid", "use_trained", "random_rev", "use_also", "also_grouping_mode"]:
+            for key in ["batch_size", "num_epochs", "use_wandb", "add_uuid", "use_trained", "random_rev", "use_also", "also_grouping_mode", "also_n_groups", "also_pi_lr", "also_pi_decay"]:
                 model_config.pop(key, None)
             if 'batch_size' in params:
                 train_config["batch_size"] = params['batch_size']
@@ -347,6 +347,7 @@ def main(params):
         also_config = {
             "enable": bool(params.get("use_also", 0)),
             "grouping_mode": params.get("also_grouping_mode", "none"),
+            "n_groups": params.get("also_n_groups", None),
             "mode": params.get("also_mode", "optimistic"),
             "alpha": params.get("also_alpha", 1.0),
             "lr": params.get("also_lr", learning_rate),
@@ -429,52 +430,34 @@ def main(params):
                         wandb.log({"prediction_status": "failed"})
             elif predict_after_train == 2:
                 predict_params = {
-                    "bz": batch_size,  # 来自原cmd的--bz 16
-                    "save_dir": ckpt_path,
+                    "bz": batch_size,
+                    "save_dir": os.path.abspath(ckpt_path),
                     "use_wandb": params['use_wandb'],
                 }
                 
-                # 定义要运行的脚本的路径
                 script_path = str((Path(__file__).resolve().parent / "wandb_predict_with_unbalance.py").resolve())
                 if not os.path.exists(script_path):
                     script_path = str((Path(__file__).resolve().parent.parent / "wandb_predict_with_unbalance.py").resolve())
                 
-                # 保存当前的 sys.argv，以便后续恢复
-                original_argv = sys.argv
+                cmd = [sys.executable, script_path]
+                for key, value in predict_params.items():
+                    cmd.append(f"--{key}")
+                    cmd.append(str(value))
+                
+                print(f"--- 正在调用外部脚本 (subprocess): {script_path}")
+                print(f"--- 完整运行指令: {' '.join(cmd)}")
                 
                 try:
-                    # 1. 构建新的 sys.argv 列表
-                    # sys.argv[0] 必须是脚本的路径
-                    new_argv = [script_path]
-                    for key, value in predict_params.items():
-                        new_argv.append(f"--{key}")
-                        new_argv.append(str(value))
-                    
-                    # 2. 临时替换 sys.argv
-                    sys.argv = new_argv
-                    
-                    print(f"--- 正在调用外部脚本 (runpy): {script_path}")
-                    print(f"--- 模拟参数: {' '.join(new_argv[1:])}")
-                    print(f"--- 完整运行指令: python {script_path} {' '.join(new_argv[1:])}")
-
-
-                    # 3. 使用 runpy 运行脚本
-                    # run_name="__main__" 会让脚本认为它是主程序
-                    script_dir = os.path.dirname(script_path)
-                    if script_dir not in sys.path:
-                        sys.path.insert(0, script_dir)
-                    old_cwd = os.getcwd()
-                    os.chdir(script_dir)
-                    try:
-                        runpy.run_path(script_path, run_name="__main__")
-                    finally:
-                        os.chdir(old_cwd)
-                    
-                    # --- 运行成功后的原始逻辑 ---
-                    prediction_success = True
-                    print("Prediction completed successfully!")
-                    if params['use_wandb']==1:
-                        wandb.log({"prediction_status": "success"})
+                    import subprocess as sp
+                    result = sp.run(cmd, cwd=os.path.dirname(script_path))
+                    if result.returncode == 0:
+                        prediction_success = True
+                        print("Prediction completed successfully!")
+                    else:
+                        print(f"Prediction failed with exit code: {result.returncode}")
+                except Exception as e:
+                    prediction_success = False
+                    print(f"Prediction failed: {str(e)}")
 
                     # # --- (你之前添加的 AUC 解析逻辑应放在这里) ---
                     # print("="*30)
