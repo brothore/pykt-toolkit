@@ -1,4 +1,14 @@
 #!/bin/bash
+set -e
+
+echo "--- 0. 启用网络 / VPN ---"
+if [ -f /etc/network_turbo ]; then
+    # shellcheck disable=SC1091
+    source /etc/network_turbo
+    echo "网络环境已启用。"
+else
+    echo "未找到 /etc/network_turbo，继续使用当前网络。"
+fi
 
 echo "--- 1. 安装 Zsh ---"
 # 安装 zsh
@@ -13,7 +23,7 @@ fi
 echo "--- 2. 安装 Oh-My-Zsh ---"
 # 使用 Gitee 官方镜像安装，并设置 RUNZSH=no 和 CHSH=no 防止脚本中断
 echo "尝试安装 Oh-My-Zsh..."
-if RUNZSH=no CHSH=no REMOTE=https://gitee.com/mirrors/oh-my-zsh.git sh -c "$(curl -fsSL https://gitee.com/mirrors/oh-my-zsh/raw/master/tools/install.sh)"; then
+if RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"; then
     echo "Oh-My-Zsh 安装成功。"
 else
     echo "Oh-My-Zsh 安装失败。"
@@ -32,7 +42,7 @@ ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 P10K_DIR="${ZSH_CUSTOM}/themes/powerlevel10k"
 
 echo "尝试克隆 Powerlevel10k 到 $P10K_DIR..."
-if git clone --depth=1 https://gitee.com/romkatv/powerlevel10k.git "$P10K_DIR"; then
+if git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$P10K_DIR"; then
     echo "Powerlevel10k 克隆成功。"
 else
     echo "Powerlevel10k 克隆失败，请检查网络连接。"
@@ -41,8 +51,11 @@ fi
 echo "--- 4. 安装必备插件 ---"
 # 将原本的 GitHub 地址替换为 Gitee 镜像，防止 AutoDL 连 GitHub 超时报错
 echo "正在安装 zsh-autosuggestions 和 zsh-syntax-highlighting..."
-git clone https://gitee.com/phatboy/zsh-autosuggestions.git ${ZSH_CUSTOM}/plugins/zsh-autosuggestions
-git clone https://gitee.com/hjkl01/zsh-syntax-highlighting.git ${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting
+git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git \
+  "${ZSH_CUSTOM}/plugins/zsh-autosuggestions"
+
+git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git \
+  "${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting"
 
 echo "--- 5. 修改 ~/.zshrc 配置 ---"
 # 替换主题
