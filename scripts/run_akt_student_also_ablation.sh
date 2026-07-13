@@ -13,18 +13,18 @@ COMMON=(
   --use_wandb 0 --add_uuid 0 --use_trained 0
 )
 
-python -m examples.wandb_akt_train "${COMMON[@]}" \
+python examples/wandb_akt_train.py "${COMMON[@]}" \
   --use_also 0 \
   --save_dir saved_model/akt_student_also_v2_baseline_bs64 \
   > "$LOGDIR/baseline_bs64.log" 2>&1
 
-python -m examples.wandb_akt_train "${COMMON[@]}" \
+python examples/wandb_akt_train.py "${COMMON[@]}" \
   --use_also 1 --also_grouping_mode student_id \
   --also_pi_lr 1e-4 --also_pi_decay 1e-2 \
   --save_dir saved_model/akt_student_also_v2_pilr1e4_bs64 \
   > "$LOGDIR/also_student_pilr1e4_bs64.log" 2>&1
 
-python -m examples.wandb_akt_train "${COMMON[@]}" \
+python examples/wandb_akt_train.py "${COMMON[@]}" \
   --use_also 1 --also_grouping_mode student_id \
   --also_pi_lr 3e-4 --also_pi_decay 1e-2 \
   --save_dir saved_model/akt_student_also_v2_pilr3e4_bs64 \
