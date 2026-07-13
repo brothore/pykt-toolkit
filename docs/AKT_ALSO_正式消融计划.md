@@ -20,7 +20,7 @@
 | 4 | `loss_scale` | 默认值的 `0.5x, 1x, 2x`，bs=64 | 检验论文 mini-batch 缩放在 KT 上的适配性。 |
 | 5 | `alpha`、`mode` | `alpha=0/0.5/1.0`，以及 `descent-ascent` | 比较 optimistic 更新及其负动量。 |
 
-阶段 1 的 `1e-4`、`3e-4` 与阶段 0 baseline 已由 `scripts/run_akt_student_also_ablation.sh` 排队。`scripts/run_akt_also_full_ablation.sh` 会等待该队列结束后继续其余配置。
+阶段 1 当前正在运行 `3e-5` 与 `1e-3`；中间值由 `scripts/run_akt_also_stage1_pi_lr_remaining.sh` 提供。为避免长合集因单点故障而丢失后续工作，阶段 0–5 都已拆成独立脚本。
 
 ## 并行策略
 
@@ -32,8 +32,13 @@
 ## 启动与监控
 
 ```bash
-setsid bash scripts/run_akt_also_full_ablation.sh </dev/null \
-  > logs/akt_also_full_launcher.log 2>&1 &
+# 每个阶段独立执行；只有确认前一阶段结果后才启动下一阶段。
+bash scripts/run_akt_also_stage0_baseline.sh
+bash scripts/run_akt_also_stage1_pi_lr_remaining.sh
+bash scripts/run_akt_also_stage2_batch.sh
+bash scripts/run_akt_also_stage3_pi_decay.sh
+bash scripts/run_akt_also_stage4_loss_scale.sh
+bash scripts/run_akt_also_stage5_optimizer.sh
 
 setsid bash scripts/monitor_akt_also.sh </dev/null \
   > logs/akt_also_monitor_launcher.log 2>&1 &
