@@ -3,6 +3,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 RUN_ID="${1:-$(date +%Y%m%d_%H%M%S)_$$}"
+if [[ "$#" -gt 0 ]]; then
+  shift
+fi
 LOGDIR="logs/akt_also_tsp_enqueue_${RUN_ID}"
 export TS_SOCKET="$PWD/logs/akt_also_tsp.socket"
 mkdir -p "$LOGDIR"
@@ -29,8 +32,13 @@ barrier() {
 }
 
 # Stage 2: safe pair at bs=32, then the two memory-heavy bs=128 jobs.
-s2_base32="$(enqueue s2-baseline-bs32 bash scripts/tsp_run_akt_also_config.sh stage2_batch "tsp_${RUN_ID}_s2" baseline_bs32 --batch_size 32 --use_also 0)"
-s2_also32="$(enqueue s2-also-bs32 bash scripts/tsp_run_akt_also_config.sh stage2_batch "tsp_${RUN_ID}_s2" also_bs32 --batch_size 32 --use_also 1 --also_grouping_mode student_id --also_pi_lr 1e-4 --also_pi_decay 1e-2)"
+if [[ "${1:-}" == "--seed-bs32" ]]; then
+  s2_base32="${2:?baseline bs32 TSP id is required}"
+  s2_also32="${3:?ALSO bs32 TSP id is required}"
+else
+  s2_base32="$(enqueue s2-baseline-bs32 bash scripts/tsp_run_akt_also_config.sh stage2_batch "tsp_${RUN_ID}_s2" baseline_bs32 --batch_size 32 --use_also 0)"
+  s2_also32="$(enqueue s2-also-bs32 bash scripts/tsp_run_akt_also_config.sh stage2_batch "tsp_${RUN_ID}_s2" also_bs32 --batch_size 32 --use_also 1 --also_grouping_mode student_id --also_pi_lr 1e-4 --also_pi_decay 1e-2)"
+fi
 s2_pair_done="$(barrier s2-bs32-done "$s2_base32" "$s2_base32" "$s2_also32")"
 s2_base128="$(enqueue_after "$s2_pair_done" s2-baseline-bs128 bash scripts/tsp_run_akt_also_config.sh stage2_batch "tsp_${RUN_ID}_s2" baseline_bs128 --batch_size 128 --use_also 0)"
 s2_also128="$(enqueue_after "$s2_base128" s2-also-bs128 bash scripts/tsp_run_akt_also_config.sh stage2_batch "tsp_${RUN_ID}_s2" also_bs128 --batch_size 128 --use_also 1 --also_grouping_mode student_id --also_pi_lr 1e-4 --also_pi_decay 1e-2)"
