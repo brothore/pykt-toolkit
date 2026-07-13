@@ -54,6 +54,10 @@ def main() -> None:
         if params.get("model_name") != "akt" or params.get("dataset_name") != "assist2009":
             continue
 
+        run = config_path.parent.parents[2].name
+        if not (run.startswith("akt_also_") or run.startswith("akt_student_also_v2")):
+            continue
+
         metrics = load_json(config_path.parent / "overall_stats_output.json")
         results = load_json(config_path.parent / "all_results.json")
         if metrics and results:
@@ -64,7 +68,7 @@ def main() -> None:
             status = "training_or_incomplete"
 
         row = {
-            "run": config_path.parent.parents[2].name,
+            "run": run,
             "checkpoint_dir": str(config_path.parent),
             "status": status,
             "use_also": params.get("use_also"),
