@@ -22,42 +22,36 @@ if str(REPO_ROOT) not in sys.path:
 from ALSO.also import ALSO
 
 
-def _resolve_also_n_groups(data, grouping_mode, also_config, data_config=None):
-    """Resolve a stable upper bound for the number of ALSO groups."""
-    if also_config and also_config.get("n_groups") is not None:
-        return int(also_config["n_groups"])
+def _build_student_group_metadata(train_loader, configured_n_groups=None):
+    """Build an injective, train-fold-only mapping from raw UIDs to ALSO groups."""
+    dataset = train_loader.dataset
+    raw_uids = getattr(dataset, "dori", {}).get("uid")
+    if raw_uids is None:
+        raise ValueError("student_id grouping requires a dataset with uid metadata")
 
-    if "qseqs" in data:
-        batch_size = data["qseqs"].shape[0]
-    elif "cseqs" in data:
-        batch_size = data["cseqs"].shape[0]
-    else:
-        batch_size = 1
+    if isinstance(raw_uids, torch.Tensor):
+        raw_uids = raw_uids.detach().cpu().view(-1).tolist()
+    raw_uids = [int(uid) for uid in raw_uids]
+    if not raw_uids or any(uid < 0 for uid in raw_uids):
+        raise ValueError("student_id grouping requires non-negative UIDs for every training sequence")
 
-    if grouping_mode == "seq":
-        return max(1, int(batch_size))
+    unique_uids = sorted(set(raw_uids))
+    n_groups = len(unique_uids)
+    if configured_n_groups is not None and int(configured_n_groups) != n_groups:
+        raise ValueError(
+            "student_id grouping uses one ALSO group per training-fold student: "
+            f"expected also_n_groups={n_groups}, got {configured_n_groups}. "
+            "Omit --also_n_groups to infer the correct value."
+        )
 
-    if grouping_mode == "student_id":
-        if isinstance(data_config, dict):
-            for key in ["students_num_train", "num_students", "student_num", "num_uids"]:
-                value = data_config.get(key)
-                if value not in (None, "", 0):
-                    return max(1, int(value))
-
-        if "uid" in data:
-            uid = data["uid"]
-            if isinstance(uid, (list, tuple)):
-                uid = torch.tensor(uid)
-            else:
-                uid = uid.detach().cpu()
-            if uid.ndim > 1:
-                uid = uid.view(-1)
-            return max(1, int(torch.unique(uid).numel()))
-
-    return max(1, int(batch_size))
+    uid_to_group = {uid: group_id for group_id, uid in enumerate(unique_uids)}
+    sequence_counts = torch.zeros(n_groups, dtype=torch.float64)
+    for uid in raw_uids:
+        sequence_counts[uid_to_group[uid]] += 1
+    return uid_to_group, sequence_counts
 
 
-def _prepare_also_group_ids(data, grouping_mode, device, n_groups=None):
+def _prepare_also_group_ids(data, grouping_mode, device, uid_to_group=None):
     """Prepare group indices for ALSO based on the configured grouping mode."""
     if grouping_mode == "none":
         return None, None
@@ -75,20 +69,23 @@ def _prepare_also_group_ids(data, grouping_mode, device, n_groups=None):
     if grouping_mode == "student_id":
         if "uid" not in data:
             raise ValueError("student_id grouping requires uid in the batch data")
+        if uid_to_group is None:
+            raise ValueError("student_id grouping requires train-fold group metadata")
         uid = data["uid"]
         if isinstance(uid, (list, tuple)):
-            uid = torch.tensor(uid, device=device)
+            uid = torch.tensor(uid)
         else:
-            uid = uid.to(device)
+            uid = uid.detach().cpu()
         if uid.ndim > 1:
             uid = uid.view(-1)
-        # Use a stable mapping: uid % n_groups ensures indices never exceed n_groups
-        if n_groups is None:
-            n_groups = max(1, int(torch.unique(uid).numel()))
-        else:
-            n_groups = max(1, int(n_groups))
-        group_ids = uid.long() % n_groups
-        return group_ids, n_groups
+        raw_uids = [int(value) for value in uid.tolist()]
+        unknown_uids = sorted(set(raw_uids) - uid_to_group.keys())
+        if unknown_uids:
+            raise ValueError(f"Found UIDs outside the training-fold mapping: {unknown_uids[:5]}")
+        group_ids = torch.tensor(
+            [uid_to_group[value] for value in raw_uids], device=device, dtype=torch.long
+        )
+        return group_ids, len(uid_to_group)
 
     raise ValueError(f"Unsupported ALSO grouping mode: {grouping_mode}")
 
@@ -655,8 +652,20 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
     also_enable = bool(also_config and also_config.get("enable", False))
     also_grouping_mode = also_config.get("grouping_mode", "none") if also_config else "none"
     also_optimizer = None
+    student_group_mapping = None
+    student_sequence_counts = None
     if also_enable:
         print(f"ALSO enabled with grouping_mode={also_grouping_mode}")
+        if also_grouping_mode == "student_id":
+            student_group_mapping, student_sequence_counts = _build_student_group_metadata(
+                train_loader, also_config.get("n_groups")
+            )
+            print(
+                "ALSO student groups initialized from the training fold: "
+                f"n_groups={len(student_group_mapping)}, "
+                f"sequences/student=[{int(student_sequence_counts.min())}, "
+                f"{int(student_sequence_counts.max())}]"
+            )
 
     max_auc, best_epoch = 0, -1
     train_step = 0
@@ -715,8 +724,9 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
                 model.train()
 
             if also_enable and also_grouping_mode != "none":
-                resolved_n_groups = _resolve_also_n_groups(data, also_grouping_mode, also_config, data_config)
-                group_ids, n_groups = _prepare_also_group_ids(data, also_grouping_mode, device, resolved_n_groups)
+                group_ids, n_groups = _prepare_also_group_ids(
+                    data, also_grouping_mode, device, student_group_mapping
+                )
                 if group_ids is None:
                     raise ValueError("Failed to prepare group ids for ALSO")
                 if also_optimizer is None:
@@ -730,6 +740,10 @@ def train_model(model, train_loader, valid_loader, num_epochs, opt, ckpt_path, t
                     model.zero_grad(set_to_none=True)
                     losses = model_forward(model, data, rel=rel, return_per_sample=True)
                     losses = losses.to(device)
+                    if student_sequence_counts is not None:
+                        # Equalize total contribution across students with split sequences.
+                        counts = student_sequence_counts.to(device=device)[group_ids]
+                        losses = losses / counts
                     losses = losses * scale
                     loss = (w * losses).sum()
                     loss.backward()

@@ -16,9 +16,11 @@ A10	3082	512	6.0	0.8228	0.7041	0.5730	0.2012	0.1892
 | 实验 | Val AUC | Overall AUC | Mean | Std | Gini |
 |---|---|---|---|---|---|
 | AKT Baseline | 0.8512 | 0.7625 | 0.6303 | 0.2037 | 0.1740 |
-| AKT + ALSO bs=32 | (running) | - | - | - | - |
-| AKT + ALSO bs=64 | (running) | - | - | - | - |
-| AKT + ALSO bs=128 | (running) | - | - | - | - |
+| AKT + ALSO bs=32 (legacy) | invalid | - | - | - | - |
+| AKT + ALSO bs=64 (legacy) | invalid | - | - | - | - |
+| AKT + ALSO bs=128 (legacy) | OOM | - | - | - | - |
+
+> 2026-07-13: 上述 legacy ALSO 实验的原始 UID 被 `uid % 3082` 映射，造成不同学生共享组权重；已停止且不参与比较。修复后的正式结果由 `scripts/run_akt_student_also_ablation.sh` 生成。
 A3	200	32	6.25	0.8100	0.6846	0.5663	0.1994	0.1902
 A4	500	32	15.6	0.8101	0.6860	0.5668	0.1989	0.1894
 A5	3082	64	48.2	0.8188	0.6987	0.5750	0.1983	0.1856

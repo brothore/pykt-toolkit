@@ -6,6 +6,14 @@ ALSO（Adaptive Loss Scaling Optimizer）是一种面向分布鲁棒优化的训
 
 在知识追踪（Knowledge Tracing）场景中，我们使用 **pyKT 框架** + **DKT 模型** + **assist2009 数据集** 进行实验，目标是观察 ALSO 能否提升学生级别的 AUC 均值（`student_stats_mean`），同时降低学生间 AUC 的标准差（`student_stats_std`）和极差（`student_stats_range`）。
 
+### 1.1 学生级分组的实现约束（2026-07-13）
+
+原始 ALSO 将 `groups_indexes` 作为优化器中 `pi` 向量的直接下标，因此学生级实验必须保证每位训练学生对应唯一且稳定的组编号。原始 UID 不是连续编号，不能使用取模或配置文件中的全数据计数作为下标上界。
+
+当前实现会从**当前训练折**读取 UID，构造 `raw_uid -> [0, n_train_students)` 的一对一映射；若显式传入的 `--also_n_groups` 不等于训练折实际学生数，训练会立即报错。对 assist2009/fold=0，`n_train_students=2465`。
+
+训练样本是序列而评估目标是学生平均 AUC。少数学生会拆成多条序列，因此 ALSO 闭包会将每条序列损失除以该学生的训练序列数。这样一个 epoch 内每名学生的总贡献相同，避免长序列学生因出现次数更多而主导 `pi` 更新；`pi_reg/pi_init` 仍保持论文默认的均匀先验。
+
 ### 实验配置矩阵
 
 | 配置名 | 优化器 | 分组方式 | 说明 |
@@ -123,6 +131,14 @@ nohup python -m examples.wandb_dkt_train \
 
 echo "三组实验已启动，查看进度: tail -f $LOGDIR/*.log"
 ```
+
+AKT 的正式学生级消融由脚本顺序执行，避免共享单张 GPU 时的显存不足和吞吐干扰：
+
+```bash
+bash scripts/run_akt_student_also_ablation.sh
+```
+
+该脚本固定 AKT、assist2009、fold=0、batch size=64，依次运行 `Baseline`、`ALSO(pi_lr=1e-4)`、`ALSO(pi_lr=3e-4)`；不传 `--also_n_groups`，由训练折自动推断。
 
 ### 3.3 监控运行状态
 

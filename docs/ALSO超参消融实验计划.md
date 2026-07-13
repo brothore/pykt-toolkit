@@ -1,5 +1,7 @@
 # ALSO 超参消融实验计划
 
+> **历史方案说明（2026-07-13）**：本文件中以 `n_groups=50/100/200/500` 代替学生数的方案仅适用于人为聚合组，不能作为“学生级”实验。学生级 ALSO 现已改为从训练折 UID 构造一对一映射，并要求 `n_groups` 等于训练折实际学生数（assist2009/fold=0 为 2465）。此前的取模映射会合并不同学生，所有 legacy 学生级结果仅作排查记录，不用于结论。新的 AKT 正式消融请运行 `scripts/run_akt_student_also_ablation.sh`，说明见 `docs/ALSO实验流程与分析方法.md`。
+
 ## 1. 问题诊断
 
 ### 第一轮 Student ID 结果 vs Baseline
