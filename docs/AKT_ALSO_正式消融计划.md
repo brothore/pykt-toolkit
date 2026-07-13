@@ -22,6 +22,8 @@
 
 阶段 1 当前正在运行 `3e-5` 与 `1e-3`；中间值由 `scripts/run_akt_also_stage1_pi_lr_remaining.sh` 提供。为避免长合集因单点故障而丢失后续工作，阶段 0–5 都已拆成独立脚本。
 
+当前已经启动的旧总调度器会自然完成阶段 2–5。其结束后，`scripts/auto_schedule_akt_also_remaining.sh` 会自动补齐没有被旧队列实际执行的阶段 1 中间两个 `pi_lr` 配置；历史旧代码的 `akt_abl_*` 不参与补测或汇总。
+
 ## 并行策略
 
 - `bs=64` 单任务约占 9.6 GiB 显存，可两项并行；
