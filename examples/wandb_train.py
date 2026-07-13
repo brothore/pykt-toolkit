@@ -241,7 +241,7 @@ def main(params):
             model_config = copy.deepcopy(params)
             for key in ["model_name", "dataset_name", "emb_type", "save_dir", "fold", "seed","use_trained"]:
                 del model_config[key]
-            for key in ["batch_size", "num_epochs", "use_wandb", "add_uuid", "use_trained", "random_rev", "use_also", "also_grouping_mode", "also_n_groups", "also_pi_lr", "also_pi_decay"]:
+            for key in ["batch_size", "num_epochs", "use_wandb", "add_uuid", "use_trained", "random_rev", "use_also", "also_grouping_mode", "also_n_groups", "also_mode", "also_alpha", "also_lr", "also_weight_decay", "also_pi_lr", "also_pi_decay", "also_loss_scale"]:
                 model_config.pop(key, None)
             if 'batch_size' in params:
                 train_config["batch_size"] = params['batch_size']
@@ -350,8 +350,8 @@ def main(params):
             "n_groups": params.get("also_n_groups", None),
             "mode": params.get("also_mode", "optimistic"),
             "alpha": params.get("also_alpha", 1.0),
-            "lr": params.get("also_lr", learning_rate),
-            "weight_decay": params.get("also_weight_decay", params.get("l2", 1e-3)),
+            "lr": params.get("also_lr") or learning_rate,
+            "weight_decay": params.get("also_weight_decay") if params.get("also_weight_decay") is not None else params.get("l2", 1e-3),
             "pi_lr": params.get("also_pi_lr", 1e-3),
             "pi_decay": params.get("also_pi_decay", 1e-2),
             "loss_scale": params.get("also_loss_scale", None),

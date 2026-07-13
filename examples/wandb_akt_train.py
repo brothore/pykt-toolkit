@@ -30,8 +30,13 @@ if __name__ == "__main__":
     parser.add_argument("--use_also", type=int, default=0)
     parser.add_argument("--also_grouping_mode", type=str, default="none")
     parser.add_argument("--also_n_groups", type=int, default=None)
+    parser.add_argument("--also_mode", type=str, choices=["optimistic", "descent-ascent"], default="optimistic")
+    parser.add_argument("--also_alpha", type=float, default=1.0)
+    parser.add_argument("--also_lr", type=float, default=None)
+    parser.add_argument("--also_weight_decay", type=float, default=None)
     parser.add_argument("--also_pi_lr", type=float, default=1e-3)
     parser.add_argument("--also_pi_decay", type=float, default=1e-2)
+    parser.add_argument("--also_loss_scale", type=float, default=None)
     parser.add_argument("--add_uuid", type=int, default=1)
    
     args = parser.parse_args()
