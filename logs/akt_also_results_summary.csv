@@ -1,0 +1,2 @@
+run,checkpoint_dir,status,use_also,also_grouping_mode,batch_size,also_pi_lr,also_pi_decay,also_loss_scale,also_alpha,also_mode,overall_dataset_auc,student_stats_mean,student_stats_std,student_stats_range,validauc,best_epoch
+akt_student_also_v2_baseline_bs64,saved_model/akt_student_also_v2_baseline_bs64/assist2009_akt_qid_saved_model/akt_student_also_v2_baseline_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_0_none_None_0.001_0.01_0,evaluated,0,none,64,0.001,0.01,,,,0.7614768986495963,0.6284802629519268,0.20137414616859872,1.0,,

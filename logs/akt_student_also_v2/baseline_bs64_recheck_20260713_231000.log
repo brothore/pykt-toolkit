@@ -1,0 +1,55 @@
+Namespace(bz=64, save_dir='saved_model/akt_student_also_v2_baseline_bs64/assist2009_akt_qid_saved_model/akt_student_also_v2_baseline_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_0_none_None_0.001_0.01_0', fusion_type='late_fusion', use_wandb=0)
+--- [Time] Start: 2026-07-13 23:10:52 ---
+[DATA_PATH] dataset=assist2009 resolved_dpath=/root/autodl-tmp/pykt-toolkit/data/assist2009
+model_name is akt, dataset_name is assist2009
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv, qlen: 904, clen: 904, rlen: 904, uidlen: 904
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv, qlen: 20362, clen: 20362, rlen: 20362, uidlen: 20362
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv, qlen: 18292, clen: 18292, rlen: 18292, uidlen: 18292
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv, qlen: 30610, clen: 30610, rlen: 30610, uidlen: 30610
+has test_question_file!
+Start predicting model: akt, embtype: qid, save_dir: saved_model/akt_student_also_v2_baseline_bs64/assist2009_akt_qid_saved_model/akt_student_also_v2_baseline_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_0_none_None_0.001_0.01_0, dataset_name: assist2009
+--- [Time] Data Loading: 6.58s (started 23:10:52) ---
+--- [Time] Model Loading: 0.28s (started 23:10:59) ---
+testauc: 0.8415944592966157, testacc: 0.7782049625226156
+--- [Time] Basic Evaluation: 6.54s (started 23:10:59) ---
+testauc: 0.8415944592966157, testacc: 0.7782049625226156, window_testauc: 0.8436170391862514, window_testacc: 0.779658284977434
+--- [Time] Window Evaluation: 86.31s (started 23:11:05) ---
+[DEBUG] auc: 0.7570670425838443 (type: <class 'float'>)
+[DEBUG] auc: 0.7596682540320143 (type: <class 'float'>)
+--- [Time] Question Evaluation: 270.99s (started 23:12:32) ---
+{'testauc': 0.8415944592966157, 'testacc': 0.7782049625226156, 'window_testauc': 0.8436170391862514, 'window_testacc': 0.779658284977434, 'oriaucconcepts': 0.7570670425838443, 'oriauclate_mean': 0.7752063662917368, 'oriauclate_vote': 0.7701646531211921, 'oriauclate_all': 0.7755290880090693, 'oriaccconcepts': 0.7294542744183032, 'oriacclate_mean': 0.7355226394151644, 'oriacclate_vote': 0.7348719715237111, 'oriacclate_all': 0.7353504037968385, 'windowaucconcepts': 0.7596682540320143, 'windowauclate_mean': 0.7778398001299073, 'windowauclate_vote': 0.7727147087681421, 'windowauclate_all': 0.7781702746062785, 'windowaccconcepts': 0.7311657671051356, 'windowacclate_mean': 0.7368742601855741, 'windowacclate_vote': 0.7363969605559586, 'windowacclate_all': 0.7369315361411279}
+dres saved to saved_model/akt_student_also_v2_baseline_bs64/assist2009_akt_qid_saved_model/akt_student_also_v2_baseline_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_0_none_None_0.001_0.01_0/all_results.json
+late_trues 的唯一值: [0 1]
+late_trues 的值计数:
+late_trues
+1    33510
+0    18868
+Name: count, dtype: int64
+已保存每个学生AUC → saved_model/akt_student_also_v2_baseline_bs64/assist2009_akt_qid_saved_model/akt_student_also_v2_baseline_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_0_none_None_0.001_0.01_0/qid_test_question_window_predictions_per_student_aucs.json
+✅ 学生AUC结果已保存至: saved_model/akt_student_also_v2_baseline_bs64/assist2009_akt_qid_saved_model/akt_student_also_v2_baseline_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_0_none_None_0.001_0.01_0/student_auc_output.csv
+📊 总体统计指标: {
+    "overall_dataset_auc": 0.7614768986495963,
+    "student_stats_mean": 0.6284802629519268,
+    "student_stats_std": 0.20137414616859872,
+    "student_stats_max": 1.0,
+    "student_stats_min": 0.0,
+    "student_stats_range": 1.0,
+    "student_stats_epi": 3.120958052011986,
+    "student_stats_gini_coefficient": 0.17194938276479355,
+    "student_stats_average_auc": 0.6284802629519268,
+    "student_stats_eawi_alpha_10": 0.5204134696574879,
+    "student_stats_eawi_alpha_20": 0.43092869476739826,
+    "student_stats_eawi_alpha_30": 0.35683077168650595,
+    "student_stats_iqr": 0.25,
+    "student_stats_q1": 0.5,
+    "student_stats_q3": 0.75
+}
+✅ 总体统计结果已保存至: saved_model/akt_student_also_v2_baseline_bs64/assist2009_akt_qid_saved_model/akt_student_also_v2_baseline_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_0_none_None_0.001_0.01_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 5.52s (started 23:17:03) ---
+------------------------------
+Total Prediction Time: 376.23s (end 2026-07-13 23:17:08)
+------------------------------
