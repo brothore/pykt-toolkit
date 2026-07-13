@@ -211,7 +211,7 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[], return_per_sample=False):
     model_name = model.model_name
     # print(f"[DEBUG] ys.shape: {ys} )")
     if return_per_sample:
-        if model_name in ["dkt", "dkt_forget", "dkvmn", "deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "mamba_atakt", "long_dkt", "at_dkt", "TransformerKT", "mult_dataset_dkt", "hawkes_lstm", "hawkes_mamba", "mamba_dkt", "mamba_hawkes_dkt", "balance_dkt", "simplekt", "stablekt", "sparsekt", "cskt", "rekt"]:
+        if model_name in ["dkt", "dkt_forget", "dkvmn", "deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes", "mamba_atakt", "long_dkt", "at_dkt", "TransformerKT", "mult_dataset_dkt", "hawkes_lstm", "hawkes_mamba", "mamba_dkt", "mamba_hawkes_dkt", "balance_dkt", "simplekt", "stablekt", "sparsekt", "cskt", "rekt", "akt"]:
             y = ys[0]
             t = rshft
             losses = F.binary_cross_entropy(y.double(), t.double(), reduction='none')
