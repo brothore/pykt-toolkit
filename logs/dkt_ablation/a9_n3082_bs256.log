@@ -1,0 +1,574 @@
+================================================================================
+[EXP_START] DKT baseline experiment
+dataset_name=assist2009
+model_name=dkt
+emb_type=qid
+seed=42
+fold=0
+dropout=0.2
+emb_size=200
+learning_rate=0.001
+batch_size=256
+num_epochs=100
+use_wandb=0
+add_uuid=0
+================================================================================
+✅ 初始运行记录已写入: saved_model/dkt_abl_a9_n3082_bs256/run_history.txt (ID: 5576c1b8-78ad-4ff9-9de7-93362d1129f5)
+✅ 参数已保存至: saved_model/dkt_abl_a9_n3082_bs256/saved_params_dkt.json
+✅ 参数已保存至: saved_model/dkt_abl_a9_n3082_bs256/saved_params_dkt.json
+2026-07-06 04:51:56 - main - said: load config files.
+[DATA_PATH] dataset=assist2009 resolved_dpath=/root/autodl-tmp/pykt-toolkit/data/assist2009
+assist2009 dkt {'assist2015': {'dpath': '../data/assist2015', 'num_q': 0, 'num_c': 100, 'input_type': ['concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'algebra2005': {'dpath': '../data/algebra2005', 'num_q': 173113, 'num_c': 112, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_train': 460, 'students_num_eval': 114}, 'assist2009': {'dpath': '/root/autodl-tmp/pykt-toolkit/data/assist2009', 'num_q': 17737, 'num_c': 123, 'input_type': ['questions', 'concepts'], 'max_concepts': 4, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_eval': 770, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'students_num_train': 3082}, 'slepemapy': {'dpath': '../data/slepemapy', 'num_q': 2913, 'num_c': 1458, 'input_type': ['questions', 'concepts'], 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'assist2017': {'dpath': '../data/assist2017', 'num_q': 3162, 'num_c': 102, 'input_type': ['questions', 'concepts'], 'min_seq_len': 3, 'maxlen': 500, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'assist2012': {'dpath': '../data/assist2012', 'num_q': 53070, 'num_c': 265, 'input_type': ['questions', 'concepts'], 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'statics2011': {'dpath': '../data/statics2011', 'num_q': 0, 'num_c': 1223, 'input_type': ['concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'junyi2015': {'dpath': '../data/junyi2015', 'num_q': 721, 'num_c': 39, 'input_type': ['questions', 'concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'bridge2algebra2006': {'dpath': '../data/bridge2algebra2006', 'num_q': 129263, 'num_c': 493, 'input_type': ['questions', 'concepts'], 'max_concepts': 5, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_train': 916, 'students_num_eval': 229, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv'}, 'ednet': {'dpath': '../data/ednet', 'num_q': 11901, 'num_c': 188, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'nips_task34': {'dpath': '../data/nips_task34', 'num_q': 948, 'num_c': 57, 'students_num_eval': 983, 'students_num_train': 3935, 'input_type': ['questions', 'concepts'], 'max_concepts': 2, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'student_summary_file': 'student_summary.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'seq_len_10000_students_num_eval': 23, 'seq_len_20000_students_num_eval': 38, 'seq_len_30000_students_num_eval': 37, 'seq_len_18000_students_num_eval': 16, 'seq_len_22000_students_num_eval': 47}, 'poj': {'dpath': '../data/poj', 'num_q': 0, 'num_c': 2748, 'input_type': ['concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'peiyou': {'dpath': '../data/peiyou', 'num_q': 7652, 'num_c': 865, 'input_type': ['questions', 'concepts'], 'max_concepts': 6, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'students_num_eval': 0, 'train_valid_original_file': 'train_valid.csv', 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_train': 14453, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'seq_len_500_students_num_eval': 0, 'seq_len_300_students_num_eval': 0, 'seq_len_400_students_num_eval': 0}, 'ednet5w': {'dpath': '../data/ednet5w', 'num_q': 12235, 'num_c': 188, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'pretrain': {'dpath': '../data/pretrain', 'num_q': 340614, 'num_c': 1838, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 1024, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel_200.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'assist2009Anips_task34Abridge2algebra2006': {'dpath': '../data/assist2009Anips_task34Abridge2algebra2006', 'num_q': 147948, 'num_c': 673, 'input_type': ['concepts', 'questions'], 'max_concepts': 5, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_eval': 770, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'students_num_train': 7933}, 'peiyouAnips_task34Abridge2algebra2006': {'dpath': '../data/peiyouAnips_task34Abridge2algebra2006', 'num_q': 137863, 'num_c': 1415, 'input_type': ['questions', 'concepts'], 'max_concepts': 6, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'train_valid_original_file': 'train_valid.csv', 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_eval': 983, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'student_summary_file': 'student_summary.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'students_num_train': 15181}} 0 256
+2026-07-06 04:51:56 - main - said: init_dataset
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv_0.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv, qlen: 741, clen: 741, rlen: 741, uidlen: 741
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv_1_2_3_4.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv, qlen: 3016, clen: 3016, rlen: 3016, uidlen: 3016
+params: {'dataset_name': 'assist2009', 'model_name': 'dkt', 'emb_type': 'qid', 'save_dir': 'saved_model/dkt_abl_a9_n3082_bs256', 'seed': 42, 'fold': 0, 'dropout': 0.2, 'emb_size': 200, 'learning_rate': 0.001, 'batch_size': 256, 'num_epochs': 100, 'use_wandb': 0, 'use_trained': 0, 'use_also': 1, 'also_grouping_mode': 'student_id', 'also_n_groups': 3082, 'also_pi_lr': 0.001, 'also_pi_decay': 0.01, 'add_uuid': 0}, params_str: assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+Start training model: dkt, embtype: qid, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0, dataset_name: assist2009
+model_config: {'dropout': 0.2, 'emb_size': 200, 'learning_rate': 0.001}
+train_config: {'batch_size': 256, 'num_epochs': 100, 'optimizer': 'adam', 'seq_len': 200}
+2026-07-06 04:51:56 - main - said: init_model
+[PARAM_COUNT] model=dkt emb_type=qid dataset=assist2009 trainable=395,523 total=395,523
+2026-07-06 04:51:57 - main - said: train model
+ALSO enabled with grouping_mode=student_id
+未找到预训练模型文件，将从头开始训练。
+ALSO initialized with n_groups=3082 for grouping_mode=student_id
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 1, validauc: 0.726, validacc: 0.7184, best epoch: 1, best auc: 0.726, train loss: 7.575827908649685, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.54s | Train Phase: 1.37s | Valid Phase: 0.17s
+Avg Batch Time: 0.1139s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 2, validauc: 0.7564, validacc: 0.7341, best epoch: 2, best auc: 0.7564, train loss: 6.917694596287125, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.26s | Train Phase: 1.13s | Valid Phase: 0.13s
+Avg Batch Time: 0.0938s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 3, validauc: 0.7756, validacc: 0.7472, best epoch: 3, best auc: 0.7756, train loss: 6.6079015396044625, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.20s | Train Phase: 1.06s | Valid Phase: 0.13s
+Avg Batch Time: 0.0884s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 4, validauc: 0.7876, validacc: 0.7553, best epoch: 4, best auc: 0.7876, train loss: 6.408403020264315, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.40s | Train Phase: 1.28s | Valid Phase: 0.11s
+Avg Batch Time: 0.1067s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 5, validauc: 0.7971, validacc: 0.7593, best epoch: 5, best auc: 0.7971, train loss: 6.260569731511249, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.09s | Train Phase: 0.95s | Valid Phase: 0.13s
+Avg Batch Time: 0.0794s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 6, validauc: 0.804, validacc: 0.7628, best epoch: 6, best auc: 0.804, train loss: 6.154863196383953, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.17s | Train Phase: 1.05s | Valid Phase: 0.12s
+Avg Batch Time: 0.0875s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 7, validauc: 0.8081, validacc: 0.7649, best epoch: 7, best auc: 0.8081, train loss: 6.089396619657667, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.29s | Train Phase: 1.17s | Valid Phase: 0.12s
+Avg Batch Time: 0.0972s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 8, validauc: 0.8102, validacc: 0.7656, best epoch: 8, best auc: 0.8102, train loss: 6.046377150296425, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.28s | Train Phase: 1.15s | Valid Phase: 0.12s
+Avg Batch Time: 0.0962s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 9, validauc: 0.8116, validacc: 0.7667, best epoch: 9, best auc: 0.8116, train loss: 6.019848082670754, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.20s | Train Phase: 1.03s | Valid Phase: 0.17s
+Avg Batch Time: 0.0857s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 10, validauc: 0.8116, validacc: 0.7667, best epoch: 9, best auc: 0.8116, train loss: 5.999693671522958, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.31s | Train Phase: 1.19s | Valid Phase: 0.12s
+Avg Batch Time: 0.0994s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 11, validauc: 0.8133, validacc: 0.7684, best epoch: 11, best auc: 0.8133, train loss: 5.979872883320667, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.20s | Train Phase: 1.08s | Valid Phase: 0.12s
+Avg Batch Time: 0.0902s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 12, validauc: 0.8133, validacc: 0.7684, best epoch: 11, best auc: 0.8133, train loss: 5.9656576738174225, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.42s | Train Phase: 1.29s | Valid Phase: 0.13s
+Avg Batch Time: 0.1072s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 13, validauc: 0.8144, validacc: 0.769, best epoch: 13, best auc: 0.8144, train loss: 5.9546507027712865, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.30s | Train Phase: 1.22s | Valid Phase: 0.08s
+Avg Batch Time: 0.1013s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 14, validauc: 0.8144, validacc: 0.769, best epoch: 13, best auc: 0.8144, train loss: 5.942981726022686, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.31s | Train Phase: 1.19s | Valid Phase: 0.12s
+Avg Batch Time: 0.0991s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 15, validauc: 0.8144, validacc: 0.769, best epoch: 13, best auc: 0.8144, train loss: 5.9398266359625325, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.32s | Train Phase: 1.17s | Valid Phase: 0.15s
+Avg Batch Time: 0.0975s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 16, validauc: 0.8156, validacc: 0.7705, best epoch: 16, best auc: 0.8156, train loss: 5.936031142155929, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.18s | Train Phase: 1.05s | Valid Phase: 0.13s
+Avg Batch Time: 0.0871s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 17, validauc: 0.8156, validacc: 0.7705, best epoch: 16, best auc: 0.8156, train loss: 5.9352161356090685, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.30s | Train Phase: 1.18s | Valid Phase: 0.12s
+Avg Batch Time: 0.0981s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 18, validauc: 0.8156, validacc: 0.7705, best epoch: 16, best auc: 0.8156, train loss: 5.918869751272656, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.14s | Train Phase: 1.05s | Valid Phase: 0.09s
+Avg Batch Time: 0.0877s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 19, validauc: 0.8156, validacc: 0.7705, best epoch: 16, best auc: 0.8156, train loss: 5.915564282185578, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.17s | Train Phase: 1.03s | Valid Phase: 0.13s
+Avg Batch Time: 0.0862s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 20, validauc: 0.8169, validacc: 0.7714, best epoch: 20, best auc: 0.8169, train loss: 5.906010731647563, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.28s | Train Phase: 1.09s | Valid Phase: 0.19s
+Avg Batch Time: 0.0909s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 21, validauc: 0.8169, validacc: 0.7714, best epoch: 20, best auc: 0.8169, train loss: 5.904960988659991, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.19s | Train Phase: 1.04s | Valid Phase: 0.15s
+Avg Batch Time: 0.0865s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 22, validauc: 0.8169, validacc: 0.7714, best epoch: 20, best auc: 0.8169, train loss: 5.8990576016581215, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.19s | Train Phase: 1.08s | Valid Phase: 0.11s
+Avg Batch Time: 0.0896s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 23, validauc: 0.818, validacc: 0.7712, best epoch: 23, best auc: 0.818, train loss: 5.892312019784153, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.18s | Train Phase: 1.05s | Valid Phase: 0.12s
+Avg Batch Time: 0.0879s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 24, validauc: 0.818, validacc: 0.7712, best epoch: 23, best auc: 0.818, train loss: 5.886720955637872, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.28s | Train Phase: 1.11s | Valid Phase: 0.17s
+Avg Batch Time: 0.0922s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 25, validauc: 0.818, validacc: 0.7712, best epoch: 23, best auc: 0.818, train loss: 5.90666354277942, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.26s | Train Phase: 1.19s | Valid Phase: 0.08s
+Avg Batch Time: 0.0989s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 26, validauc: 0.818, validacc: 0.7712, best epoch: 23, best auc: 0.818, train loss: 5.887875649808772, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.20s | Train Phase: 1.05s | Valid Phase: 0.15s
+Avg Batch Time: 0.0873s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 27, validauc: 0.8192, validacc: 0.772, best epoch: 27, best auc: 0.8192, train loss: 5.869322415437068, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.22s | Train Phase: 1.11s | Valid Phase: 0.11s
+Avg Batch Time: 0.0922s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 28, validauc: 0.8192, validacc: 0.772, best epoch: 27, best auc: 0.8192, train loss: 5.885056419478317, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.34s | Train Phase: 1.23s | Valid Phase: 0.11s
+Avg Batch Time: 0.1022s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 29, validauc: 0.8192, validacc: 0.772, best epoch: 27, best auc: 0.8192, train loss: 5.881194779296863, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.13s | Train Phase: 1.04s | Valid Phase: 0.09s
+Avg Batch Time: 0.0866s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 30, validauc: 0.8192, validacc: 0.772, best epoch: 27, best auc: 0.8192, train loss: 5.859702418804336, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.31s | Train Phase: 1.15s | Valid Phase: 0.17s
+Avg Batch Time: 0.0957s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 31, validauc: 0.8192, validacc: 0.772, best epoch: 27, best auc: 0.8192, train loss: 5.860117424580779, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.38s | Train Phase: 1.20s | Valid Phase: 0.18s
+Avg Batch Time: 0.1003s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 32, validauc: 0.8205, validacc: 0.7732, best epoch: 32, best auc: 0.8205, train loss: 5.854780695544979, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.01s | Train Phase: 0.92s | Valid Phase: 0.08s
+Avg Batch Time: 0.0770s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 33, validauc: 0.8205, validacc: 0.7732, best epoch: 32, best auc: 0.8205, train loss: 5.857770890063649, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.24s | Train Phase: 1.12s | Valid Phase: 0.12s
+Avg Batch Time: 0.0931s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 34, validauc: 0.8205, validacc: 0.7732, best epoch: 32, best auc: 0.8205, train loss: 5.856365459076097, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.22s | Train Phase: 1.10s | Valid Phase: 0.12s
+Avg Batch Time: 0.0920s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 35, validauc: 0.8205, validacc: 0.7732, best epoch: 32, best auc: 0.8205, train loss: 5.8553507732023355, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.15s | Train Phase: 1.02s | Valid Phase: 0.13s
+Avg Batch Time: 0.0851s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 36, validauc: 0.8205, validacc: 0.7732, best epoch: 32, best auc: 0.8205, train loss: 5.847759573973362, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.30s | Train Phase: 1.18s | Valid Phase: 0.12s
+Avg Batch Time: 0.0984s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 37, validauc: 0.8205, validacc: 0.7732, best epoch: 32, best auc: 0.8205, train loss: 5.842539438631591, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.14s | Train Phase: 1.04s | Valid Phase: 0.10s
+Avg Batch Time: 0.0866s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 38, validauc: 0.8217, validacc: 0.7733, best epoch: 38, best auc: 0.8217, train loss: 5.863273560051398, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.26s | Train Phase: 1.10s | Valid Phase: 0.15s
+Avg Batch Time: 0.0914s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 39, validauc: 0.8217, validacc: 0.7733, best epoch: 38, best auc: 0.8217, train loss: 5.8405542636233925, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.21s | Train Phase: 1.09s | Valid Phase: 0.12s
+Avg Batch Time: 0.0909s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 40, validauc: 0.8217, validacc: 0.7733, best epoch: 38, best auc: 0.8217, train loss: 5.8358904751493705, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.19s | Train Phase: 1.07s | Valid Phase: 0.12s
+Avg Batch Time: 0.0889s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 41, validauc: 0.8217, validacc: 0.7733, best epoch: 38, best auc: 0.8217, train loss: 5.84588467374839, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.29s | Train Phase: 1.17s | Valid Phase: 0.12s
+Avg Batch Time: 0.0979s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 42, validauc: 0.8217, validacc: 0.7733, best epoch: 38, best auc: 0.8217, train loss: 5.833449185342254, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.16s | Train Phase: 1.06s | Valid Phase: 0.11s
+Avg Batch Time: 0.0882s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 43, validauc: 0.8217, validacc: 0.7733, best epoch: 38, best auc: 0.8217, train loss: 5.828020558536051, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.21s | Train Phase: 1.04s | Valid Phase: 0.17s
+Avg Batch Time: 0.0867s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 44, validauc: 0.8217, validacc: 0.7733, best epoch: 38, best auc: 0.8217, train loss: 5.8267728159621415, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.32s | Train Phase: 1.20s | Valid Phase: 0.12s
+Avg Batch Time: 0.1002s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 45, validauc: 0.8217, validacc: 0.7733, best epoch: 38, best auc: 0.8217, train loss: 5.831406083070132, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.21s | Train Phase: 1.09s | Valid Phase: 0.12s
+Avg Batch Time: 0.0909s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 46, validauc: 0.8217, validacc: 0.7733, best epoch: 38, best auc: 0.8217, train loss: 5.830520383066464, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.12s | Train Phase: 1.00s | Valid Phase: 0.13s
+Avg Batch Time: 0.0831s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 47, validauc: 0.8228, validacc: 0.7735, best epoch: 47, best auc: 0.8228, train loss: 5.820077988068792, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.20s | Train Phase: 1.08s | Valid Phase: 0.10s
+Avg Batch Time: 0.0901s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 48, validauc: 0.8228, validacc: 0.7735, best epoch: 47, best auc: 0.8228, train loss: 5.82674320999013, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.18s | Train Phase: 1.05s | Valid Phase: 0.13s
+Avg Batch Time: 0.0875s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 49, validauc: 0.8228, validacc: 0.7735, best epoch: 47, best auc: 0.8228, train loss: 5.832498232329848, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.23s | Train Phase: 1.11s | Valid Phase: 0.11s
+Avg Batch Time: 0.0928s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 50, validauc: 0.8228, validacc: 0.7735, best epoch: 47, best auc: 0.8228, train loss: 5.832008039861055, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.17s | Train Phase: 1.05s | Valid Phase: 0.12s
+Avg Batch Time: 0.0876s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 51, validauc: 0.8228, validacc: 0.7735, best epoch: 47, best auc: 0.8228, train loss: 5.824172266395948, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.32s | Train Phase: 1.14s | Valid Phase: 0.17s
+Avg Batch Time: 0.0950s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 52, validauc: 0.8228, validacc: 0.7735, best epoch: 47, best auc: 0.8228, train loss: 5.814928655473319, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.24s | Train Phase: 1.11s | Valid Phase: 0.12s
+Avg Batch Time: 0.0927s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 53, validauc: 0.8228, validacc: 0.7735, best epoch: 47, best auc: 0.8228, train loss: 5.819765464759524, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.08s | Train Phase: 0.98s | Valid Phase: 0.10s
+Avg Batch Time: 0.0817s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 54, validauc: 0.8228, validacc: 0.7735, best epoch: 47, best auc: 0.8228, train loss: 5.81695866671216, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 1.23s | Train Phase: 1.09s | Valid Phase: 0.14s
+Avg Batch Time: 0.0908s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 55, validauc: 0.8228, validacc: 0.7735, best epoch: 47, best auc: 0.8228, train loss: 5.819413485853538, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 0.85s | Train Phase: 0.77s | Valid Phase: 0.08s
+Avg Batch Time: 0.0643s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 56, validauc: 0.8228, validacc: 0.7735, best epoch: 47, best auc: 0.8228, train loss: 5.813465065477586, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 0.55s | Train Phase: 0.47s | Valid Phase: 0.08s
+Avg Batch Time: 0.0389s
+------------------------------
+/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/rnn.py:1124: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:1479.)
+  result = _VF.lstm(
+Epoch: 57, validauc: 0.8228, validacc: 0.7735, best epoch: 47, best auc: 0.8228, train loss: 5.806075825713616, emb_type: qid, model: dkt, save_dir: saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 0.57s | Train Phase: 0.49s | Valid Phase: 0.08s
+Avg Batch Time: 0.0409s
+------------------------------
+Early stopping at epoch 57
+✅ Training Finished! Total Time Cost: 68.69 s
+fold	modelname	embtype	testauc	testacc	window_testauc	window_testacc	validauc	validacc	best_epoch
+0	dkt	qid	-1	-1	-1	-1	0.8227776397929822	0.7735352579271179	47
+end:2026-07-06 04:53:06.024391
+
+==================================================
+Training completed. Starting prediction with predict_after_train=2
+==================================================
+--- 正在调用外部脚本 (subprocess): /root/autodl-tmp/pykt-toolkit/examples/wandb_predict_with_unbalance.py
+--- 完整运行指令: /root/miniconda3/bin/python /root/autodl-tmp/pykt-toolkit/examples/wandb_predict_with_unbalance.py --bz 256 --save_dir /root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0 --use_wandb 0
+Namespace(bz=256, save_dir='/root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0', fusion_type='late_fusion', use_wandb=0)
+--- [Time] Start: 2026-07-06 04:53:08 ---
+[DATA_PATH] dataset=assist2009 resolved_dpath=/root/autodl-tmp/pykt-toolkit/data/assist2009
+model_name is dkt, dataset_name is assist2009
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv, qlen: 904, clen: 904, rlen: 904, uidlen: 904
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv, qlen: 20362, clen: 20362, rlen: 20362, uidlen: 20362
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv, qlen: 18292, clen: 18292, rlen: 18292, uidlen: 18292
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv, qlen: 30610, clen: 30610, rlen: 30610, uidlen: 30610
+has test_question_file!
+Start predicting model: dkt, embtype: qid, save_dir: /root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0, dataset_name: assist2009
+--- [Time] Data Loading: 0.58s (started 04:53:08) ---
+--- [Time] Model Loading: 0.22s (started 04:53:08) ---
+testauc: 0.8149032774225434, testacc: 0.7622124579994831
+--- [Time] Basic Evaluation: 2.84s (started 04:53:09) ---
+testauc: 0.8149032774225434, testacc: 0.7622124579994831, window_testauc: 0.8166840591179901, window_testacc: 0.7630722114764668
+--- [Time] Window Evaluation: 36.24s (started 04:53:11) ---
+[DEBUG] auc: 0.7296789698371449 (type: <class 'float'>)
+[DEBUG] auc: 0.7318390590824942 (type: <class 'float'>)
+--- [Time] Question Evaluation: 53.14s (started 04:53:48) ---
+{'testauc': 0.8149032774225434, 'testacc': 0.7622124579994831, 'window_testauc': 0.8166840591179901, 'window_testacc': 0.7630722114764668, 'oriaucconcepts': 0.7296789698371449, 'oriauclate_mean': 0.7407270421658138, 'oriauclate_vote': 0.7406605420920505, 'oriauclate_all': 0.7388364120415407, 'oriaccconcepts': 0.7107719230021389, 'oriacclate_mean': 0.7170551536724461, 'oriacclate_vote': 0.7179928809277759, 'oriacclate_all': 0.7143376583610824, 'windowaucconcepts': 0.7318390590824942, 'windowauclate_mean': 0.7428670746970251, 'windowauclate_vote': 0.7427532366564059, 'windowauclate_all': 0.7410233590041468, 'windowaccconcepts': 0.7118386606767719, 'windowacclate_mean': 0.7177822750009546, 'windowacclate_vote': 0.7186986902898164, 'windowacclate_all': 0.7153575928825079}
+dres saved to /root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0/all_results.json
+late_trues 的唯一值: [0 1]
+late_trues 的值计数:
+late_trues
+1    33510
+0    18868
+Name: count, dtype: int64
+已保存每个学生AUC → /root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0/qid_test_question_window_predictions_per_student_aucs.json
+✅ 学生AUC结果已保存至: /root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0/student_auc_output.csv
+📊 总体统计指标: {
+    "overall_dataset_auc": 0.706381947669361,
+    "student_stats_mean": 0.5758740843552457,
+    "student_stats_std": 0.1996555571206999,
+    "student_stats_max": 1.0,
+    "student_stats_min": 0.0,
+    "student_stats_range": 1.0,
+    "student_stats_epi": 2.8843378699802797,
+    "student_stats_gini_coefficient": 0.1867897191598183,
+    "student_stats_average_auc": 0.5758740843552457,
+    "student_stats_eawi_alpha_10": 0.46830672586711186,
+    "student_stats_eawi_alpha_20": 0.38083184406174003,
+    "student_stats_eawi_alpha_30": 0.3096963708623319,
+    "student_stats_iqr": 0.19901600010730092,
+    "student_stats_q1": 0.5,
+    "student_stats_q3": 0.6990160001073009
+}
+✅ 总体统计结果已保存至: /root/autodl-tmp/pykt-toolkit/saved_model/dkt_abl_a9_n3082_bs256/assist2009_dkt_qid_saved_model/dkt_abl_a9_n3082_bs256_42_0_0.2_200_0.001_256_100_0_0_1_student_id_3082_0.001_0.01_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 2.42s (started 04:54:41) ---
+------------------------------
+Total Prediction Time: 95.44s (end 2026-07-06 04:54:43)
+------------------------------
+Prediction completed successfully!
+训练过程中发生错误: name 'original_argv' is not defined
+⚠️ 运行历史状态已更新为失败 (ID: 5576c1b8-78ad-4ff9-9de7-93362d1129f5)
+💡 正在执行最终资源清理...
+💡 CUDA 缓存已释放。
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/root/autodl-tmp/pykt-toolkit/examples/wandb_dkt_train.py", line 52, in <module>
+    main(params)
+  File "/root/autodl-tmp/pykt-toolkit/examples/wandb_train.py", line 515, in main
+    raise e
+  File "/root/autodl-tmp/pykt-toolkit/examples/wandb_train.py", line 494, in main
+    sys.argv = original_argv
+               ^^^^^^^^^^^^^
+NameError: name 'original_argv' is not defined

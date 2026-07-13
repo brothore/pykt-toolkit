@@ -1,0 +1,13 @@
+usage: wandb_akt_train.py [-h] [--dataset_name DATASET_NAME]
+                          [--model_name MODEL_NAME] [--emb_type EMB_TYPE]
+                          [--save_dir SAVE_DIR] [--seed SEED] [--fold FOLD]
+                          [--dropout DROPOUT] [--d_model D_MODEL]
+                          [--d_ff D_FF] [--num_attn_heads NUM_ATTN_HEADS]
+                          [--n_blocks N_BLOCKS]
+                          [--learning_rate LEARNING_RATE]
+                          [--batch_size BATCH_SIZE] [--num_epochs NUM_EPOCHS]
+                          [--random_rev RANDOM_REV] [--use_wandb USE_WANDB]
+                          [--use_trained USE_TRAINED] [--use_also USE_ALSO]
+                          [--also_grouping_mode ALSO_GROUPING_MODE]
+                          [--add_uuid ADD_UUID]
+wandb_akt_train.py: error: unrecognized arguments: --emb_size 200 --also_n_groups 3082
