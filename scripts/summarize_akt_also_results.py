@@ -54,7 +54,7 @@ def main() -> None:
         if params.get("model_name") != "akt" or params.get("dataset_name") != "assist2009":
             continue
 
-        run = config_path.parent.parents[2].name
+        run = config_path.parent.parents[1].name
         if not (run.startswith("akt_also_") or run.startswith("akt_student_also_v2")):
             continue
 
