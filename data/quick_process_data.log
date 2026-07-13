@@ -1,0 +1,11 @@
+[2026-07-14 01:14:38] Processing assist2009
+Traceback (most recent call last):
+  File "/root/autodl-tmp/pykt-toolkit/examples/data_preprocess.py", line 3, in <module>
+    from pykt.preprocess.split_datasets import main as split_concept
+  File "/root/autodl-tmp/pykt-toolkit/pykt/__init__.py", line 4, in <module>
+    from .models import *
+  File "/root/autodl-tmp/pykt-toolkit/pykt/models/__init__.py", line 2, in <module>
+    from .train_model import train_model
+  File "/root/autodl-tmp/pykt-toolkit/pykt/models/train_model.py", line 22, in <module>
+    from ALSO.also import ALSO
+ModuleNotFoundError: No module named 'ALSO.also'
