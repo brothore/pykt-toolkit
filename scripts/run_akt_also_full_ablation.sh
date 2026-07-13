@@ -4,6 +4,12 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
 
+SKIP_STAGE1=0
+if [[ "${1:-}" == "--skip-stage1" ]]; then
+  SKIP_STAGE1=1
+  shift
+fi
+
 RUN_ID="${1:-$(date +%Y%m%d_%H%M%S)_$$}"
 ROOT="akt_also_full_${RUN_ID}"
 LOGDIR="logs/${ROOT}"
@@ -28,18 +34,23 @@ run_experiment() {
   local name="$1"
   shift
   printf '%s starting %s\n' "$(date '+%F %T')" "$name" >> "$LOGDIR/scheduler.log"
-  python -m examples.wandb_akt_train "${COMMON[@]}" "$@" \
-    --save_dir "$SAVEDIR/$name" > "$LOGDIR/$name.log" 2>&1
-  printf '%s finished %s\n' "$(date '+%F %T')" "$name" >> "$LOGDIR/scheduler.log"
+  if python -m examples.wandb_akt_train "${COMMON[@]}" "$@" \
+    --save_dir "$SAVEDIR/$name" > "$LOGDIR/$name.log" 2>&1; then
+    printf '%s finished %s\n' "$(date '+%F %T')" "$name" >> "$LOGDIR/scheduler.log"
+  else
+    printf '%s failed %s; continuing to the next configuration\n' "$(date '+%F %T')" "$name" >> "$LOGDIR/scheduler.log"
+  fi
 }
 
 # Stage 1 extension: v2 already covers pi_lr=1e-4 and 3e-4 at bs=64.
-run_experiment "s1_pilr3e5_bs64" --batch_size 64 "${ALSO_COMMON[@]}" --also_pi_lr 3e-5 --also_pi_decay 1e-2 &
-stage1_a=$!
-run_experiment "s1_pilr1e3_bs64" --batch_size 64 "${ALSO_COMMON[@]}" --also_pi_lr 1e-3 --also_pi_decay 1e-2 &
-stage1_b=$!
-wait "$stage1_a"
-wait "$stage1_b"
+if [[ "$SKIP_STAGE1" -eq 0 ]]; then
+  run_experiment "s1_pilr3e5_bs64" --batch_size 64 "${ALSO_COMMON[@]}" --also_pi_lr 3e-5 --also_pi_decay 1e-2 &
+  stage1_a=$!
+  run_experiment "s1_pilr1e3_bs64" --batch_size 64 "${ALSO_COMMON[@]}" --also_pi_lr 1e-3 --also_pi_decay 1e-2 &
+  stage1_b=$!
+  wait "$stage1_a"
+  wait "$stage1_b"
+fi
 
 # Stage 2: batch-size ablation. bs=64 baseline/ALSO come from v2.
 run_experiment "s2_baseline_bs32" --batch_size 32 --use_also 0 &

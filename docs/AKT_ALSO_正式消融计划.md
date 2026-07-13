@@ -40,3 +40,5 @@ setsid bash scripts/monitor_akt_also.sh </dev/null \
 ```
 
 调度器和监控器均自动生成时间戳文件名。监控器记录 GPU 显存、进程、最新 epoch、异常以及最终学生级指标。
+
+训练后公平性预测会以项目根目录加入子进程 `PYTHONPATH` 的方式运行；预测失败只记录该配置失败，不会阻断后续消融。

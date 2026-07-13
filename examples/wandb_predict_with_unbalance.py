@@ -8,8 +8,9 @@ from pathlib import Path
 _EXAMPLES_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _EXAMPLES_DIR.parent
 import sys
-if str(_EXAMPLES_DIR) not in sys.path:
-    sys.path.insert(0, str(_EXAMPLES_DIR))
+for path in (_REPO_ROOT, _EXAMPLES_DIR):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 from cal_unbalance import save_auc_results_from_file
 from pykt.models import evaluate,evaluate_question,load_model
 from pykt.datasets import init_test_datasets

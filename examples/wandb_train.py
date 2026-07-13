@@ -449,11 +449,17 @@ def main(params):
                 
                 try:
                     import subprocess as sp
-                    result = sp.run(cmd, cwd=os.path.dirname(script_path))
+                    child_env = os.environ.copy()
+                    child_pythonpath = child_env.get("PYTHONPATH", "")
+                    child_env["PYTHONPATH"] = os.pathsep.join(
+                        part for part in [str(REPO_ROOT), child_pythonpath] if part
+                    )
+                    result = sp.run(cmd, cwd=os.path.dirname(script_path), env=child_env)
                     if result.returncode == 0:
                         prediction_success = True
                         print("Prediction completed successfully!")
                     else:
+                        prediction_success = False
                         print(f"Prediction failed with exit code: {result.returncode}")
                 except Exception as e:
                     prediction_success = False
@@ -490,8 +496,6 @@ def main(params):
                         wandb.log({"prediction_status": "failed"})
                 
                 finally:
-                    # 4. 无论成功还是失败，都必须恢复原始的 sys.argv
-                    sys.argv = original_argv
                     print("--- 外部脚本执行完毕 ---")
         elif predict_after_train == 0:
             print("predict_after_train is set to 0, skipping prediction.")
