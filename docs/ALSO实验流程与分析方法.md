@@ -138,7 +138,7 @@ AKT 的正式学生级消融由脚本顺序执行，避免共享单张 GPU 时�
 bash scripts/run_akt_student_also_ablation.sh
 ```
 
-该脚本固定 AKT、assist2009、fold=0、batch size=64，依次运行 `Baseline`、`ALSO(pi_lr=1e-4)`、`ALSO(pi_lr=3e-4)`；不传 `--also_n_groups`，由训练折自动推断。所有命令均采用仓库根目录下的 `python examples/wandb_akt_train.py` 启动方式。
+该脚本固定 AKT、assist2009、fold=0、batch size=64，依次运行 `Baseline`、`ALSO(pi_lr=1e-4)`、`ALSO(pi_lr=3e-4)`；不传 `--also_n_groups`，由训练折自动推断。脚本会将仓库根目录加入 `PYTHONPATH`，并以 `python -m examples.wandb_akt_train` 启动。
 
 ### 3.3 监控运行状态
 
