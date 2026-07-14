@@ -1,10 +1,24 @@
-# pyKT
+# pyKT (Personal Fork)
 
 [![Downloads](https://pepy.tech/badge/pykt-toolkit)](https://pepy.tech/project/pykt-toolkit)
 [![GitHub Issues](https://img.shields.io/github/issues/pykt-team/pykt-toolkit.svg)](https://github.com/pykt-team/pykt-toolkit/issues)
 [![Documentation](https://img.shields.io/website/http/pykt-team.github.io/index.html?down_color=red&down_message=offline&up_message=online)](https://pykt.org/)
 
-pyKT is a python library build upon PyTorch to train deep learning based knowledge tracing models. The library consists of a standardized set of integrated data preprocessing procedures on more than 7 popular datasets across different domains, 5 detailed prediction scenarios, more than 10 frequently compared DLKT approaches for transparent and extensive experiments. More details about pyKT can see our [website](https://pykt.org/) and [docs](https://pykt-toolkit.readthedocs.io/en/latest/quick_start.html).
+This repository is a personal fork of [pyKT](https://github.com/pykt-team/pykt-toolkit), a PyTorch-based toolkit for deep learning knowledge tracing. It retains pyKT's standardized preprocessing, prediction scenarios, and model implementations, while adding the following experimental capabilities.
+
+## Fork-specific enhancements
+
+### Student-level evaluation
+
+In addition to the original dataset-wide (`overall`) evaluation, this fork supports student-level evaluation. It calculates AUC for each student and reports aggregate statistics such as the mean, standard deviation, range, interquartile range, Gini coefficient, and EAWI fairness indices. This makes it possible to assess both overall predictive performance and the consistency of performance across students. Evaluation artifacts include per-student AUC results and a JSON summary containing `overall_dataset_auc` and the student-level metrics.
+
+### ALSO optimizer integration
+
+The training pipeline supports the ALSO (Adaptive Loss Scaling Optimizer) optimizer for distributionally robust training. ALSO can group samples by student ID or by sequence, and exposes its key configuration options through the training entry points. For student-ID grouping, the training fold is used to build a stable one-to-one student-to-group mapping, so adaptive weighting is applied consistently throughout training.
+
+### Faster evaluation
+
+The evaluation path has been optimized to reduce repeated CPU/GPU transfers and Python-level row iteration. It reuses batched CPU conversions, uses efficient NumPy tensor construction where applicable, and concatenates prediction DataFrames in batches. These changes reduce evaluation overhead, especially when prediction results are saved for later analysis.
 
 
 

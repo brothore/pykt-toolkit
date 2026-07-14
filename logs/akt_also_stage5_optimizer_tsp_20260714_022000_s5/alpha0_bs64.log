@@ -414,3 +414,85 @@ Epoch: 65, validauc: 0.8145, validacc: 0.7674, best epoch: 56, best auc: 0.8145,
 Total Epoch Time: 27.69s | Train Phase: 23.70s | Valid Phase: 3.99s
 Avg Batch Time: 0.4937s
 ------------------------------
+Epoch: 66, validauc: 0.8145, validacc: 0.7674, best epoch: 56, best auc: 0.8145, train loss: 14.54601398167056, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64/assist2009_akt_qid_saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_0.0_None_None_0.0001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 19.59s | Train Phase: 16.62s | Valid Phase: 2.97s
+Avg Batch Time: 0.3463s
+------------------------------
+Early stopping at epoch 66
+✅ Training Finished! Total Time Cost: 5882.76 s
+fold	modelname	embtype	testauc	testacc	window_testauc	window_testacc	validauc	validacc	best_epoch
+0	akt	qid	-1	-1	-1	-1	0.8145191411097239	0.7673828679602461	56
+end:2026-07-14 08:28:20.768847
+
+==================================================
+Training completed. Starting prediction with predict_after_train=2
+==================================================
+--- 正在调用外部脚本 (subprocess): /root/autodl-tmp/pykt-toolkit/examples/wandb_predict_with_unbalance.py
+--- 完整运行指令: /root/miniconda3/bin/python /root/autodl-tmp/pykt-toolkit/examples/wandb_predict_with_unbalance.py --bz 64 --save_dir /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64/assist2009_akt_qid_saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_0.0_None_None_0.0001_0.01_None_0 --use_wandb 0
+
+libgomp: Invalid value for environment variable OMP_NUM_THREADS
+
+libgomp: Invalid value for environment variable OMP_NUM_THREADS
+Namespace(bz=64, save_dir='/root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64/assist2009_akt_qid_saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_0.0_None_None_0.0001_0.01_None_0', fusion_type='late_fusion', use_wandb=0)
+--- [Time] Start: 2026-07-14 08:28:22 ---
+[DATA_PATH] dataset=assist2009 resolved_dpath=/root/autodl-tmp/pykt-toolkit/data/assist2009
+model_name is akt, dataset_name is assist2009
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv, qlen: 904, clen: 904, rlen: 904, uidlen: 904
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv, qlen: 20362, clen: 20362, rlen: 20362, uidlen: 20362
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv, qlen: 18292, clen: 18292, rlen: 18292, uidlen: 18292
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv, qlen: 30610, clen: 30610, rlen: 30610, uidlen: 30610
+has test_question_file!
+Start predicting model: akt, embtype: qid, save_dir: /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64/assist2009_akt_qid_saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_0.0_None_None_0.0001_0.01_None_0, dataset_name: assist2009
+--- [Time] Data Loading: 0.51s (started 08:28:22) ---
+--- [Time] Model Loading: 0.25s (started 08:28:23) ---
+testauc: 0.8068900325860303, testacc: 0.758028560351512
+--- [Time] Basic Evaluation: 1.79s (started 08:28:23) ---
+testauc: 0.8068900325860303, testacc: 0.758028560351512, window_testauc: 0.8075796074612878, window_testacc: 0.7582688588007737
+--- [Time] Window Evaluation: 20.69s (started 08:28:25) ---
+[DEBUG] auc: 0.7158324584169047 (type: <class 'float'>)
+[DEBUG] auc: 0.7181532529601152 (type: <class 'float'>)
+--- [Time] Question Evaluation: 100.18s (started 08:28:45) ---
+{'testauc': 0.8068900325860303, 'testacc': 0.758028560351512, 'window_testauc': 0.8075796074612878, 'window_testacc': 0.7582688588007737, 'oriaucconcepts': 0.7158324584169047, 'oriauclate_mean': 0.7317670691084933, 'oriauclate_vote': 0.7314096851384022, 'oriauclate_all': 0.730290998828057, 'oriaccconcepts': 0.7063160282584743, 'oriacclate_mean': 0.7142611091973821, 'oriacclate_vote': 0.7145098939794082, 'oriacclate_all': 0.7126153021778238, 'windowaucconcepts': 0.7181532529601152, 'windowauclate_mean': 0.7339708689061395, 'windowauclate_vote': 0.733731367909503, 'windowauclate_all': 0.7324580555154353, 'windowaccconcepts': 0.7072331211014512, 'windowacclate_mean': 0.7153194089121386, 'windowacclate_vote': 0.715453052808431, 'windowacclate_all': 0.7134293023788614}
+dres saved to /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64/assist2009_akt_qid_saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_0.0_None_None_0.0001_0.01_None_0/all_results.json
+late_trues 的唯一值: [0 1]
+late_trues 的值计数:
+late_trues
+1    33510
+0    18868
+Name: count, dtype: int64
+已保存每个学生AUC → /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64/assist2009_akt_qid_saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_0.0_None_None_0.0001_0.01_None_0/qid_test_question_window_predictions_per_student_aucs.json
+✅ 学生AUC结果已保存至: /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64/assist2009_akt_qid_saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_0.0_None_None_0.0001_0.01_None_0/student_auc_output.csv
+📊 总体统计指标: {
+    "overall_dataset_auc": 0.6878325467628361,
+    "student_stats_mean": 0.585458920043744,
+    "student_stats_std": 0.20981802457257384,
+    "student_stats_max": 1.0,
+    "student_stats_min": 0.0,
+    "student_stats_range": 1.0,
+    "student_stats_epi": 2.7903175679801517,
+    "student_stats_gini_coefficient": 0.19449910158314837,
+    "student_stats_average_auc": 0.585458920043744,
+    "student_stats_eawi_alpha_10": 0.4715876860813955,
+    "student_stats_eawi_alpha_20": 0.3798643048208883,
+    "student_stats_eawi_alpha_30": 0.3059810388097184,
+    "student_stats_iqr": 0.21264076605036242,
+    "student_stats_q1": 0.5,
+    "student_stats_q3": 0.7126407660503624
+}
+✅ 总体统计结果已保存至: /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64/assist2009_akt_qid_saved_model/akt_also_stage5_optimizer_tsp_20260714_022000_s5/alpha0_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_0.0_None_None_0.0001_0.01_None_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 1.96s (started 08:30:26) ---
+------------------------------
+Total Prediction Time: 125.38s (end 2026-07-14 08:30:28)
+------------------------------
+Prediction completed successfully!
+--- 外部脚本执行完毕 ---
+Training and prediction process completed at: 2026-07-14 08:30:28.578248
+✅ 运行历史状态已更新为成功 (ID: 3def3405-ad77-458f-aa1d-532fc6711166)
+💡 正在执行最终资源清理...
+💡 CUDA 缓存已释放。

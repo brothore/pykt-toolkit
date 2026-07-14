@@ -73,9 +73,13 @@ def read_sequence_metadata(data_dir: Path) -> tuple[Counter[str], Counter[str], 
 
     with (data_dir / "test_question_window_sequences.csv").open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
+            # Student AUC artifacts are keyed by `orirow`, the original test-row
+            # index.  Use the same key for support counts; raw uid is only used
+            # for the train/test population-overlap diagnostic below.
             uid = row["uid"]
             test_uids.add(uid)
-            test_counts[uid] += sum(value == "1" for value in row["selectmasks"].split(","))
+            oriroot = row["orirow"].split(",")[0]
+            test_counts[oriroot] += sum(value == "1" for value in row["selectmasks"].split(","))
 
     with (data_dir / "train_valid_sequences.csv").open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
