@@ -1,0 +1,360 @@
+
+libgomp: Invalid value for environment variable OMP_NUM_THREADS
+
+libgomp: Invalid value for environment variable OMP_NUM_THREADS
+✅ 初始运行记录已写入: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/run_history.txt (ID: 76085544-ccd0-4581-89e7-db0c241fe46e)
+✅ 参数已保存至: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/saved_params_akt.json
+✅ 参数已保存至: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/saved_params_akt.json
+2026-07-14 05:24:27 - main - said: load config files.
+[DATA_PATH] dataset=assist2009 resolved_dpath=/root/autodl-tmp/pykt-toolkit/data/assist2009
+assist2009 akt {'assist2015': {'dpath': '../data/assist2015', 'num_q': 0, 'num_c': 100, 'input_type': ['concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'algebra2005': {'dpath': '../data/algebra2005', 'num_q': 173113, 'num_c': 112, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_train': 460, 'students_num_eval': 114}, 'assist2009': {'dpath': '/root/autodl-tmp/pykt-toolkit/data/assist2009', 'num_q': 17737, 'num_c': 123, 'input_type': ['questions', 'concepts'], 'max_concepts': 4, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_eval': 770, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'students_num_train': 3082}, 'slepemapy': {'dpath': '../data/slepemapy', 'num_q': 2913, 'num_c': 1458, 'input_type': ['questions', 'concepts'], 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'assist2017': {'dpath': '../data/assist2017', 'num_q': 3162, 'num_c': 102, 'input_type': ['questions', 'concepts'], 'min_seq_len': 3, 'maxlen': 500, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'assist2012': {'dpath': '../data/assist2012', 'num_q': 53070, 'num_c': 265, 'input_type': ['questions', 'concepts'], 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'statics2011': {'dpath': '../data/statics2011', 'num_q': 0, 'num_c': 1223, 'input_type': ['concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'junyi2015': {'dpath': '../data/junyi2015', 'num_q': 721, 'num_c': 39, 'input_type': ['questions', 'concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'bridge2algebra2006': {'dpath': '../data/bridge2algebra2006', 'num_q': 129263, 'num_c': 493, 'input_type': ['questions', 'concepts'], 'max_concepts': 5, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_train': 916, 'students_num_eval': 229, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv'}, 'ednet': {'dpath': '../data/ednet', 'num_q': 11901, 'num_c': 188, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'nips_task34': {'dpath': '../data/nips_task34', 'num_q': 948, 'num_c': 57, 'students_num_eval': 983, 'students_num_train': 3935, 'input_type': ['questions', 'concepts'], 'max_concepts': 2, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'student_summary_file': 'student_summary.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'seq_len_10000_students_num_eval': 23, 'seq_len_20000_students_num_eval': 38, 'seq_len_30000_students_num_eval': 37, 'seq_len_18000_students_num_eval': 16, 'seq_len_22000_students_num_eval': 47}, 'poj': {'dpath': '../data/poj', 'num_q': 0, 'num_c': 2748, 'input_type': ['concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'peiyou': {'dpath': '../data/peiyou', 'num_q': 7652, 'num_c': 865, 'input_type': ['questions', 'concepts'], 'max_concepts': 6, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'students_num_eval': 0, 'train_valid_original_file': 'train_valid.csv', 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_train': 14453, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'seq_len_500_students_num_eval': 0, 'seq_len_300_students_num_eval': 0, 'seq_len_400_students_num_eval': 0}, 'ednet5w': {'dpath': '../data/ednet5w', 'num_q': 12235, 'num_c': 188, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'pretrain': {'dpath': '../data/pretrain', 'num_q': 340614, 'num_c': 1838, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 1024, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel_200.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'assist2009Anips_task34Abridge2algebra2006': {'dpath': '../data/assist2009Anips_task34Abridge2algebra2006', 'num_q': 147948, 'num_c': 673, 'input_type': ['concepts', 'questions'], 'max_concepts': 5, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_eval': 770, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'students_num_train': 7933}, 'peiyouAnips_task34Abridge2algebra2006': {'dpath': '../data/peiyouAnips_task34Abridge2algebra2006', 'num_q': 137863, 'num_c': 1415, 'input_type': ['questions', 'concepts'], 'max_concepts': 6, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'train_valid_original_file': 'train_valid.csv', 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_eval': 983, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'student_summary_file': 'student_summary.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'students_num_train': 15181}} 0 64
+2026-07-14 05:24:27 - main - said: init_dataset
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv_0.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv, qlen: 741, clen: 741, rlen: 741, uidlen: 741
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv_1_2_3_4.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv, qlen: 3016, clen: 3016, rlen: 3016, uidlen: 3016
+params: {'dataset_name': 'assist2009', 'model_name': 'akt', 'emb_type': 'qid', 'save_dir': 'saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64', 'seed': 42, 'fold': 0, 'dropout': 0.2, 'd_model': 256, 'd_ff': 512, 'num_attn_heads': 8, 'n_blocks': 4, 'learning_rate': 0.0001, 'batch_size': 64, 'num_epochs': 100, 'use_wandb': 0, 'use_trained': 0, 'use_also': 1, 'also_grouping_mode': 'student_id', 'also_n_groups': None, 'also_mode': 'optimistic', 'also_alpha': 1.0, 'also_lr': None, 'also_weight_decay': None, 'also_pi_lr': 0.0001, 'also_pi_decay': 0.01, 'also_loss_scale': 77.03125, 'add_uuid': 0}, params_str: assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+Start training model: akt, embtype: qid, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0, dataset_name: assist2009
+model_config: {'dropout': 0.2, 'd_model': 256, 'd_ff': 512, 'num_attn_heads': 8, 'n_blocks': 4, 'learning_rate': 0.0001}
+train_config: {'batch_size': 64, 'num_epochs': 100, 'optimizer': 'adam', 'seq_len': 200}
+2026-07-14 05:24:27 - main - said: init_model
+[PARAM_COUNT] model=akt emb_type=qid dataset=assist2009 trainable=6,074,795 total=6,074,795
+2026-07-14 05:24:28 - main - said: train model
+ALSO enabled with grouping_mode=student_id
+ALSO student groups initialized from the training fold: n_groups=2465, sequences/student=[1, 7]
+未找到预训练模型文件，将从头开始训练。
+ALSO initialized with n_groups=2465 for grouping_mode=student_id
+Epoch: 1, validauc: 0.7553, validacc: 0.7352, best epoch: 1, best auc: 0.7553, train loss: 37.31541580439353, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 112.01s | Train Phase: 94.88s | Valid Phase: 16.93s
+Avg Batch Time: 1.9767s
+------------------------------
+Epoch: 2, validauc: 0.773, validacc: 0.7469, best epoch: 2, best auc: 0.773, train loss: 34.995041454249865, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 110.82s | Train Phase: 99.90s | Valid Phase: 10.52s
+Avg Batch Time: 2.0813s
+------------------------------
+Epoch: 3, validauc: 0.7856, validacc: 0.7556, best epoch: 3, best auc: 0.7856, train loss: 34.042107556502884, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 91.53s | Train Phase: 81.58s | Valid Phase: 9.61s
+Avg Batch Time: 1.6995s
+------------------------------
+Epoch: 4, validauc: 0.7932, validacc: 0.759, best epoch: 4, best auc: 0.7932, train loss: 33.42341994547081, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 104.19s | Train Phase: 92.76s | Valid Phase: 11.10s
+Avg Batch Time: 1.9325s
+------------------------------
+Epoch: 5, validauc: 0.7974, validacc: 0.7616, best epoch: 5, best auc: 0.7974, train loss: 32.98156621742806, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 100.98s | Train Phase: 87.93s | Valid Phase: 12.75s
+Avg Batch Time: 1.8318s
+------------------------------
+Epoch: 6, validauc: 0.8006, validacc: 0.7647, best epoch: 6, best auc: 0.8006, train loss: 32.58298247467146, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 108.82s | Train Phase: 97.92s | Valid Phase: 10.58s
+Avg Batch Time: 2.0399s
+------------------------------
+Epoch: 7, validauc: 0.8037, validacc: 0.766, best epoch: 7, best auc: 0.8037, train loss: 32.360646096391015, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 110.27s | Train Phase: 97.50s | Valid Phase: 12.47s
+Avg Batch Time: 2.0313s
+------------------------------
+Epoch: 8, validauc: 0.8055, validacc: 0.7674, best epoch: 8, best auc: 0.8055, train loss: 32.09806044340597, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 107.62s | Train Phase: 94.48s | Valid Phase: 12.92s
+Avg Batch Time: 1.9684s
+------------------------------
+Epoch: 9, validauc: 0.8055, validacc: 0.7674, best epoch: 8, best auc: 0.8055, train loss: 31.985721381097537, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 105.89s | Train Phase: 91.67s | Valid Phase: 14.22s
+Avg Batch Time: 1.9099s
+------------------------------
+Epoch: 10, validauc: 0.8083, validacc: 0.7687, best epoch: 10, best auc: 0.8083, train loss: 31.732781300037388, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 101.92s | Train Phase: 91.68s | Valid Phase: 9.90s
+Avg Batch Time: 1.9101s
+------------------------------
+Epoch: 11, validauc: 0.8093, validacc: 0.7692, best epoch: 11, best auc: 0.8093, train loss: 31.687951544890648, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 103.40s | Train Phase: 92.76s | Valid Phase: 10.39s
+Avg Batch Time: 1.9325s
+------------------------------
+Epoch: 12, validauc: 0.8093, validacc: 0.7692, best epoch: 11, best auc: 0.8093, train loss: 31.551734464964103, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 107.38s | Train Phase: 96.02s | Valid Phase: 11.36s
+Avg Batch Time: 2.0004s
+------------------------------
+Epoch: 13, validauc: 0.8108, validacc: 0.7703, best epoch: 13, best auc: 0.8108, train loss: 31.45363315390919, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 105.22s | Train Phase: 95.09s | Valid Phase: 9.79s
+Avg Batch Time: 1.9811s
+------------------------------
+Epoch: 14, validauc: 0.8108, validacc: 0.7703, best epoch: 13, best auc: 0.8108, train loss: 31.34545050097617, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 111.27s | Train Phase: 99.01s | Valid Phase: 12.25s
+Avg Batch Time: 2.0627s
+------------------------------
+Epoch: 15, validauc: 0.812, validacc: 0.7698, best epoch: 15, best auc: 0.812, train loss: 31.245502048805914, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 104.71s | Train Phase: 93.07s | Valid Phase: 11.42s
+Avg Batch Time: 1.9390s
+------------------------------
+Epoch: 16, validauc: 0.812, validacc: 0.7698, best epoch: 15, best auc: 0.812, train loss: 31.236522046033617, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 105.68s | Train Phase: 95.07s | Valid Phase: 10.61s
+Avg Batch Time: 1.9807s
+------------------------------
+Epoch: 17, validauc: 0.812, validacc: 0.7698, best epoch: 15, best auc: 0.812, train loss: 31.132146834896734, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 103.11s | Train Phase: 90.74s | Valid Phase: 12.37s
+Avg Batch Time: 1.8905s
+------------------------------
+Epoch: 18, validauc: 0.8133, validacc: 0.7712, best epoch: 18, best auc: 0.8133, train loss: 30.9926632531065, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 101.78s | Train Phase: 90.75s | Valid Phase: 10.76s
+Avg Batch Time: 1.8907s
+------------------------------
+Epoch: 19, validauc: 0.8133, validacc: 0.7712, best epoch: 18, best auc: 0.8133, train loss: 31.005593454872024, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 102.51s | Train Phase: 91.70s | Valid Phase: 10.81s
+Avg Batch Time: 1.9105s
+------------------------------
+Epoch: 20, validauc: 0.8133, validacc: 0.7712, best epoch: 18, best auc: 0.8133, train loss: 30.999993813047166, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 105.81s | Train Phase: 94.51s | Valid Phase: 11.30s
+Avg Batch Time: 1.9689s
+------------------------------
+Epoch: 21, validauc: 0.815, validacc: 0.7714, best epoch: 21, best auc: 0.815, train loss: 30.785350149849307, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 109.68s | Train Phase: 99.41s | Valid Phase: 10.00s
+Avg Batch Time: 2.0710s
+------------------------------
+Epoch: 22, validauc: 0.815, validacc: 0.7714, best epoch: 21, best auc: 0.815, train loss: 30.762383206087566, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 95.41s | Train Phase: 85.56s | Valid Phase: 9.85s
+Avg Batch Time: 1.7825s
+------------------------------
+Epoch: 23, validauc: 0.815, validacc: 0.7714, best epoch: 21, best auc: 0.815, train loss: 30.689570384232663, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 104.70s | Train Phase: 93.82s | Valid Phase: 10.89s
+Avg Batch Time: 1.9545s
+------------------------------
+Epoch: 24, validauc: 0.815, validacc: 0.7714, best epoch: 21, best auc: 0.815, train loss: 30.57537292300768, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 107.10s | Train Phase: 94.11s | Valid Phase: 12.99s
+Avg Batch Time: 1.9605s
+------------------------------
+Epoch: 25, validauc: 0.8168, validacc: 0.7724, best epoch: 25, best auc: 0.8168, train loss: 30.47607838722759, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 108.31s | Train Phase: 96.73s | Valid Phase: 11.37s
+Avg Batch Time: 2.0153s
+------------------------------
+Epoch: 26, validauc: 0.8168, validacc: 0.7724, best epoch: 25, best auc: 0.8168, train loss: 30.376003348774947, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 100.08s | Train Phase: 89.92s | Valid Phase: 10.16s
+Avg Batch Time: 1.8733s
+------------------------------
+Epoch: 27, validauc: 0.8179, validacc: 0.7725, best epoch: 27, best auc: 0.8179, train loss: 30.242860624992584, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 104.80s | Train Phase: 93.89s | Valid Phase: 10.63s
+Avg Batch Time: 1.9561s
+------------------------------
+Epoch: 28, validauc: 0.8179, validacc: 0.7725, best epoch: 27, best auc: 0.8179, train loss: 30.15649974664967, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 107.42s | Train Phase: 96.40s | Valid Phase: 11.02s
+Avg Batch Time: 2.0084s
+------------------------------
+Epoch: 29, validauc: 0.8192, validacc: 0.7732, best epoch: 29, best auc: 0.8192, train loss: 29.96030917416192, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 101.08s | Train Phase: 89.19s | Valid Phase: 11.60s
+Avg Batch Time: 1.8582s
+------------------------------
+Epoch: 30, validauc: 0.8192, validacc: 0.7732, best epoch: 29, best auc: 0.8192, train loss: 29.89542308144422, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 100.61s | Train Phase: 90.40s | Valid Phase: 10.21s
+Avg Batch Time: 1.8834s
+------------------------------
+Epoch: 31, validauc: 0.8192, validacc: 0.7732, best epoch: 29, best auc: 0.8192, train loss: 29.900293206729106, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 98.71s | Train Phase: 89.59s | Valid Phase: 9.11s
+Avg Batch Time: 1.8666s
+------------------------------
+Epoch: 32, validauc: 0.8192, validacc: 0.7732, best epoch: 29, best auc: 0.8192, train loss: 29.58771499562344, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 105.99s | Train Phase: 95.21s | Valid Phase: 10.78s
+Avg Batch Time: 1.9836s
+------------------------------
+Epoch: 33, validauc: 0.8206, validacc: 0.7725, best epoch: 33, best auc: 0.8206, train loss: 29.516894830380608, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 106.19s | Train Phase: 93.52s | Valid Phase: 12.40s
+Avg Batch Time: 1.9482s
+------------------------------
+Epoch: 34, validauc: 0.8206, validacc: 0.7725, best epoch: 33, best auc: 0.8206, train loss: 29.352211766456964, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 98.72s | Train Phase: 88.20s | Valid Phase: 10.52s
+Avg Batch Time: 1.8375s
+------------------------------
+Epoch: 35, validauc: 0.8206, validacc: 0.7725, best epoch: 33, best auc: 0.8206, train loss: 29.149024596286534, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 102.70s | Train Phase: 91.61s | Valid Phase: 11.09s
+Avg Batch Time: 1.9085s
+------------------------------
+Epoch: 36, validauc: 0.8206, validacc: 0.7725, best epoch: 33, best auc: 0.8206, train loss: 28.932756507275617, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 96.58s | Train Phase: 87.29s | Valid Phase: 9.29s
+Avg Batch Time: 1.8184s
+------------------------------
+Epoch: 37, validauc: 0.8206, validacc: 0.7725, best epoch: 33, best auc: 0.8206, train loss: 28.824470508322616, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 100.42s | Train Phase: 88.65s | Valid Phase: 11.76s
+Avg Batch Time: 1.8470s
+------------------------------
+Epoch: 38, validauc: 0.8206, validacc: 0.7725, best epoch: 33, best auc: 0.8206, train loss: 28.56327302934825, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 102.90s | Train Phase: 93.24s | Valid Phase: 9.66s
+Avg Batch Time: 1.9425s
+------------------------------
+Epoch: 39, validauc: 0.8206, validacc: 0.7725, best epoch: 33, best auc: 0.8206, train loss: 28.33490369949585, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 104.79s | Train Phase: 93.00s | Valid Phase: 11.78s
+Avg Batch Time: 1.9375s
+------------------------------
+Epoch: 40, validauc: 0.8206, validacc: 0.7725, best epoch: 33, best auc: 0.8206, train loss: 28.169954106528014, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 101.11s | Train Phase: 89.84s | Valid Phase: 11.27s
+Avg Batch Time: 1.8718s
+------------------------------
+Epoch: 41, validauc: 0.8206, validacc: 0.7725, best epoch: 33, best auc: 0.8206, train loss: 27.896673520665853, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 106.91s | Train Phase: 96.36s | Valid Phase: 10.55s
+Avg Batch Time: 2.0074s
+------------------------------
+Epoch: 42, validauc: 0.8206, validacc: 0.7725, best epoch: 33, best auc: 0.8206, train loss: 27.614240541335516, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 95.28s | Train Phase: 84.29s | Valid Phase: 10.99s
+Avg Batch Time: 1.7561s
+------------------------------
+Epoch: 43, validauc: 0.8206, validacc: 0.7725, best epoch: 33, best auc: 0.8206, train loss: 27.383852375170722, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 107.00s | Train Phase: 92.20s | Valid Phase: 14.80s
+Avg Batch Time: 1.9209s
+------------------------------
+Early stopping at epoch 43
+✅ Training Finished! Total Time Cost: 4471.43 s
+fold	modelname	embtype	testauc	testacc	window_testauc	window_testacc	validauc	validacc	best_epoch
+0	akt	qid	-1	-1	-1	-1	0.8206294363865188	0.7724562233790818	33
+end:2026-07-14 06:39:00.401181
+
+==================================================
+Training completed. Starting prediction with predict_after_train=2
+==================================================
+--- 正在调用外部脚本 (subprocess): /root/autodl-tmp/pykt-toolkit/examples/wandb_predict_with_unbalance.py
+--- 完整运行指令: /root/miniconda3/bin/python /root/autodl-tmp/pykt-toolkit/examples/wandb_predict_with_unbalance.py --bz 64 --save_dir /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0 --use_wandb 0
+
+libgomp: Invalid value for environment variable OMP_NUM_THREADS
+
+libgomp: Invalid value for environment variable OMP_NUM_THREADS
+Namespace(bz=64, save_dir='/root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0', fusion_type='late_fusion', use_wandb=0)
+--- [Time] Start: 2026-07-14 06:39:05 ---
+[DATA_PATH] dataset=assist2009 resolved_dpath=/root/autodl-tmp/pykt-toolkit/data/assist2009
+model_name is akt, dataset_name is assist2009
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv, qlen: 904, clen: 904, rlen: 904, uidlen: 904
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv, qlen: 20362, clen: 20362, rlen: 20362, uidlen: 20362
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv, qlen: 18292, clen: 18292, rlen: 18292, uidlen: 18292
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv, qlen: 30610, clen: 30610, rlen: 30610, uidlen: 30610
+has test_question_file!
+Start predicting model: akt, embtype: qid, save_dir: /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0, dataset_name: assist2009
+--- [Time] Data Loading: 1.11s (started 06:39:05) ---
+--- [Time] Model Loading: 0.45s (started 06:39:06) ---
+testauc: 0.813314405231244, testacc: 0.7631170845179633
+--- [Time] Basic Evaluation: 7.35s (started 06:39:07) ---
+testauc: 0.813314405231244, testacc: 0.7631170845179633, window_testauc: 0.8153492487638515, window_testacc: 0.7640070921985815
+--- [Time] Window Evaluation: 106.13s (started 06:39:14) ---
+[DEBUG] auc: 0.7225661218305718 (type: <class 'float'>)
+[DEBUG] auc: 0.7249812603488944 (type: <class 'float'>)
+--- [Time] Question Evaluation: 295.07s (started 06:41:00) ---
+{'testauc': 0.813314405231244, 'testacc': 0.7631170845179633, 'window_testauc': 0.8153492487638515, 'window_testacc': 0.7640070921985815, 'oriaucconcepts': 0.7225661218305718, 'oriauclate_mean': 0.7376139121729544, 'oriauclate_vote': 0.7373955522158069, 'oriauclate_all': 0.7364620119752759, 'oriaccconcepts': 0.7130727850152311, 'oriacclate_mean': 0.7204233168752632, 'oriacclate_vote': 0.7197535116928847, 'oriacclate_all': 0.7182799402916523, 'windowaucconcepts': 0.7249812603488944, 'windowauclate_mean': 0.7402580846107532, 'windowauclate_vote': 0.7401023251770915, 'windowauclate_all': 0.7390239036477456, 'windowaccconcepts': 0.7139555929026211, 'windowacclate_mean': 0.7213333842452938, 'windowacclate_vote': 0.7207606246897552, 'windowacclate_all': 0.7189468860972164}
+dres saved to /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0/all_results.json
+late_trues 的唯一值: [0 1]
+late_trues 的值计数:
+late_trues
+1    33510
+0    18868
+Name: count, dtype: int64
+已保存每个学生AUC → /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0/qid_test_question_window_predictions_per_student_aucs.json
+✅ 学生AUC结果已保存至: /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0/student_auc_output.csv
+📊 总体统计指标: {
+    "overall_dataset_auc": 0.6935038064655968,
+    "student_stats_mean": 0.5893137205948421,
+    "student_stats_std": 0.20831638336205457,
+    "student_stats_max": 1.0,
+    "student_stats_min": 0.0,
+    "student_stats_range": 1.0,
+    "student_stats_epi": 2.8289360206998837,
+    "student_stats_gini_coefficient": 0.19077468276924858,
+    "student_stats_average_auc": 0.5893137205948421,
+    "student_stats_eawi_alpha_10": 0.4768875824967955,
+    "student_stats_eawi_alpha_20": 0.3859095052293755,
+    "student_stats_eawi_alpha_30": 0.3122877417916037,
+    "student_stats_iqr": 0.20791223044862572,
+    "student_stats_q1": 0.5,
+    "student_stats_q3": 0.7079122304486257
+}
+✅ 总体统计结果已保存至: /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64/assist2009_akt_qid_saved_model/akt_also_stage4_loss_scale_tsp_20260714_022000_s4/loss_scale_double_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_77.03125_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 6.27s (started 06:45:55) ---
+------------------------------
+Total Prediction Time: 416.39s (end 2026-07-14 06:46:01)
+------------------------------
+Prediction completed successfully!
+--- 外部脚本执行完毕 ---
+Training and prediction process completed at: 2026-07-14 06:46:03.262128
+✅ 运行历史状态已更新为成功 (ID: 76085544-ccd0-4581-89e7-db0c241fe46e)
+💡 正在执行最终资源清理...
+💡 CUDA 缓存已释放。

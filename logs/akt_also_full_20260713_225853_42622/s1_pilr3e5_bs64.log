@@ -252,3 +252,162 @@ Epoch: 38, validauc: 0.8172, validacc: 0.7693, best epoch: 37, best auc: 0.8172,
 Total Epoch Time: 102.59s | Train Phase: 89.69s | Valid Phase: 12.90s
 Avg Batch Time: 1.8684s
 ------------------------------
+Epoch: 39, validauc: 0.8172, validacc: 0.7693, best epoch: 37, best auc: 0.8172, train loss: 14.771564368373356, emb_type: qid, model: akt, save_dir: saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 110.93s | Train Phase: 90.92s | Valid Phase: 20.01s
+Avg Batch Time: 1.8942s
+------------------------------
+Epoch: 40, validauc: 0.8183, validacc: 0.7697, best epoch: 40, best auc: 0.8183, train loss: 14.733104825524336, emb_type: qid, model: akt, save_dir: saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 111.01s | Train Phase: 95.58s | Valid Phase: 15.09s
+Avg Batch Time: 1.9912s
+------------------------------
+Epoch: 41, validauc: 0.8183, validacc: 0.7697, best epoch: 40, best auc: 0.8183, train loss: 14.67011793787068, emb_type: qid, model: akt, save_dir: saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 109.66s | Train Phase: 96.86s | Valid Phase: 12.80s
+Avg Batch Time: 2.0178s
+------------------------------
+Epoch: 42, validauc: 0.8183, validacc: 0.7697, best epoch: 40, best auc: 0.8183, train loss: 14.567710305720967, emb_type: qid, model: akt, save_dir: saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 109.22s | Train Phase: 97.64s | Valid Phase: 11.58s
+Avg Batch Time: 2.0341s
+------------------------------
+Epoch: 43, validauc: 0.8183, validacc: 0.7697, best epoch: 40, best auc: 0.8183, train loss: 14.471283101859532, emb_type: qid, model: akt, save_dir: saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 107.18s | Train Phase: 95.38s | Valid Phase: 11.80s
+Avg Batch Time: 1.9871s
+------------------------------
+Epoch: 44, validauc: 0.8183, validacc: 0.7697, best epoch: 40, best auc: 0.8183, train loss: 14.448184436725606, emb_type: qid, model: akt, save_dir: saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 104.02s | Train Phase: 94.41s | Valid Phase: 9.61s
+Avg Batch Time: 1.9669s
+------------------------------
+Epoch: 45, validauc: 0.8183, validacc: 0.7697, best epoch: 40, best auc: 0.8183, train loss: 14.335413735741424, emb_type: qid, model: akt, save_dir: saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 100.50s | Train Phase: 89.69s | Valid Phase: 10.81s
+Avg Batch Time: 1.8686s
+------------------------------
+Epoch: 46, validauc: 0.8183, validacc: 0.7697, best epoch: 40, best auc: 0.8183, train loss: 14.257167298382997, emb_type: qid, model: akt, save_dir: saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 76.80s | Train Phase: 73.82s | Valid Phase: 2.97s
+Avg Batch Time: 1.5380s
+------------------------------
+Epoch: 47, validauc: 0.8183, validacc: 0.7697, best epoch: 40, best auc: 0.8183, train loss: 14.112337154967008, emb_type: qid, model: akt, save_dir: saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 50.50s | Train Phase: 44.01s | Valid Phase: 6.49s
+Avg Batch Time: 0.9168s
+------------------------------
+Epoch: 48, validauc: 0.8183, validacc: 0.7697, best epoch: 40, best auc: 0.8183, train loss: 14.000211344648408, emb_type: qid, model: akt, save_dir: saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 58.19s | Train Phase: 51.88s | Valid Phase: 6.31s
+Avg Batch Time: 1.0809s
+------------------------------
+Epoch: 49, validauc: 0.8183, validacc: 0.7697, best epoch: 40, best auc: 0.8183, train loss: 13.940757188284666, emb_type: qid, model: akt, save_dir: saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 31.19s | Train Phase: 27.33s | Valid Phase: 3.86s
+Avg Batch Time: 0.5693s
+------------------------------
+Epoch: 50, validauc: 0.8183, validacc: 0.7697, best epoch: 40, best auc: 0.8183, train loss: 13.847768327158432, emb_type: qid, model: akt, save_dir: saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 27.01s | Train Phase: 22.83s | Valid Phase: 4.19s
+Avg Batch Time: 0.4756s
+------------------------------
+Early stopping at epoch 50
+✅ Training Finished! Total Time Cost: 5221.84 s
+fold	modelname	embtype	testauc	testacc	window_testauc	window_testacc	validauc	validacc	best_epoch
+0	akt	qid	-1	-1	-1	-1	0.8182819603403098	0.7696734500709891	40
+end:2026-07-14 00:25:58.171860
+
+==================================================
+Training completed. Starting prediction with predict_after_train=2
+==================================================
+--- 正在调用外部脚本 (subprocess): /root/autodl-tmp/pykt-toolkit/examples/wandb_predict_with_unbalance.py
+--- 完整运行指令: /root/miniconda3/bin/python /root/autodl-tmp/pykt-toolkit/examples/wandb_predict_with_unbalance.py --bz 64 --save_dir /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0 --use_wandb 0
+
+libgomp: Invalid value for environment variable OMP_NUM_THREADS
+
+libgomp: Invalid value for environment variable OMP_NUM_THREADS
+Namespace(bz=64, save_dir='/root/autodl-tmp/pykt-toolkit/saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0', fusion_type='late_fusion', use_wandb=0)
+--- [Time] Start: 2026-07-14 00:26:00 ---
+[DATA_PATH] dataset=assist2009 resolved_dpath=/root/autodl-tmp/pykt-toolkit/data/assist2009
+model_name is akt, dataset_name is assist2009
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv, qlen: 904, clen: 904, rlen: 904, uidlen: 904
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv, qlen: 20362, clen: 20362, rlen: 20362, uidlen: 20362
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv, qlen: 18292, clen: 18292, rlen: 18292, uidlen: 18292
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv, qlen: 30610, clen: 30610, rlen: 30610, uidlen: 30610
+has test_question_file!
+Start predicting model: akt, embtype: qid, save_dir: /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0, dataset_name: assist2009
+--- [Time] Data Loading: 0.57s (started 00:26:00) ---
+--- [Time] Model Loading: 0.26s (started 00:26:00) ---
+testauc: 0.810830187467134, testacc: 0.7607747479968984
+--- [Time] Basic Evaluation: 2.66s (started 00:26:00) ---
+testauc: 0.810830187467134, testacc: 0.7607747479968984, window_testauc: 0.8123491706539658, window_testacc: 0.7616215344938749
+--- [Time] Window Evaluation: 35.60s (started 00:26:03) ---
+[DEBUG] auc: 0.7196022769165018 (type: <class 'float'>)
+[DEBUG] auc: 0.7217039381886956 (type: <class 'float'>)
+--- [Time] Question Evaluation: 114.62s (started 00:26:39) ---
+{'testauc': 0.810830187467134, 'testacc': 0.7607747479968984, 'window_testauc': 0.8123491706539658, 'window_testacc': 0.7616215344938749, 'oriaucconcepts': 0.7196022769165018, 'oriauclate_mean': 0.7354337106590363, 'oriauclate_vote': 0.7351850724756895, 'oriauclate_all': 0.7339771166430202, 'oriaccconcepts': 0.7089409553438331, 'oriacclate_mean': 0.7171508401270716, 'oriacclate_vote': 0.7169211926359704, 'oriacclate_all': 0.7144333448157079, 'windowaucconcepts': 0.7217039381886956, 'windowauclate_mean': 0.7377714803822969, 'windowauclate_vote': 0.7375787152028951, 'windowauclate_all': 0.7362108659592814, 'windowaccconcepts': 0.7097378882389063, 'windowacclate_mean': 0.7174386192676314, 'windowacclate_vote': 0.7178586429416931, 'windowacclate_all': 0.7153003169269541}
+dres saved to /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0/all_results.json
+late_trues 的唯一值: [0 1]
+late_trues 的值计数:
+late_trues
+1    33510
+0    18868
+Name: count, dtype: int64
+已保存每个学生AUC → /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0/qid_test_question_window_predictions_per_student_aucs.json
+✅ 学生AUC结果已保存至: /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0/student_auc_output.csv
+📊 总体统计指标: {
+    "overall_dataset_auc": 0.6928703697076843,
+    "student_stats_mean": 0.5937577305492759,
+    "student_stats_std": 0.21251359465897948,
+    "student_stats_max": 1.0,
+    "student_stats_min": 0.0,
+    "student_stats_range": 1.0,
+    "student_stats_epi": 2.79397528192057,
+    "student_stats_gini_coefficient": 0.19464181570813366,
+    "student_stats_average_auc": 0.5937577305492759,
+    "student_stats_eawi_alpha_10": 0.4781876477844241,
+    "student_stats_eawi_alpha_20": 0.3851123357704623,
+    "student_stats_eawi_alpha_30": 0.3101533714844991,
+    "student_stats_iqr": 0.22451016865079365,
+    "student_stats_q1": 0.5,
+    "student_stats_q3": 0.7245101686507937
+}
+✅ 总体统计结果已保存至: /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64/assist2009_akt_qid_saved_model/akt_also_full_20260713_225853_42622/s1_pilr3e5_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_3e-05_0.01_None_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 1.94s (started 00:28:33) ---
+------------------------------
+Total Prediction Time: 155.65s (end 2026-07-14 00:28:35)
+------------------------------
+Prediction completed successfully!
+训练过程中发生错误: name 'original_argv' is not defined
+⚠️ 运行历史状态已更新为失败 (ID: 5363402b-5835-42e0-9bc9-6890441b44bc)
+💡 正在执行最终资源清理...
+💡 CUDA 缓存已释放。
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/root/autodl-tmp/pykt-toolkit/examples/wandb_akt_train.py", line 45, in <module>
+    main(params)
+  File "/root/autodl-tmp/pykt-toolkit/examples/wandb_train.py", line 515, in main
+    update_run_history(run_history_path, run_id, 'False')
+^^^^^^^
+  File "/root/autodl-tmp/pykt-toolkit/examples/wandb_train.py", line 494, in main
+    traceback.print_exc() 
+               ^^^^^^^^^^^^
+NameError: name 'original_argv' is not defined

@@ -1,0 +1,5 @@
+stage2_bs32=0,1
+stage2_bs128=18,19
+stage3=20,21
+stage4=23,24
+stage5=26,27,29

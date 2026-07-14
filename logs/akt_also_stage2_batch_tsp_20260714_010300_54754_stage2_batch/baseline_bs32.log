@@ -1,0 +1,291 @@
+
+libgomp: Invalid value for environment variable OMP_NUM_THREADS
+
+libgomp: Invalid value for environment variable OMP_NUM_THREADS
+✅ 初始运行记录已写入: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/run_history.txt (ID: 100c2dea-a622-47f2-a4f2-d2c1868bdf65)
+✅ 参数已保存至: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/saved_params_akt.json
+✅ 参数已保存至: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/saved_params_akt.json
+2026-07-14 02:07:12 - main - said: load config files.
+[DATA_PATH] dataset=assist2009 resolved_dpath=/root/autodl-tmp/pykt-toolkit/data/assist2009
+assist2009 akt {'assist2015': {'dpath': '../data/assist2015', 'num_q': 0, 'num_c': 100, 'input_type': ['concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'algebra2005': {'dpath': '../data/algebra2005', 'num_q': 173113, 'num_c': 112, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_train': 460, 'students_num_eval': 114}, 'assist2009': {'dpath': '/root/autodl-tmp/pykt-toolkit/data/assist2009', 'num_q': 17737, 'num_c': 123, 'input_type': ['questions', 'concepts'], 'max_concepts': 4, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_eval': 770, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'students_num_train': 3082}, 'slepemapy': {'dpath': '../data/slepemapy', 'num_q': 2913, 'num_c': 1458, 'input_type': ['questions', 'concepts'], 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'assist2017': {'dpath': '../data/assist2017', 'num_q': 3162, 'num_c': 102, 'input_type': ['questions', 'concepts'], 'min_seq_len': 3, 'maxlen': 500, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'assist2012': {'dpath': '../data/assist2012', 'num_q': 53070, 'num_c': 265, 'input_type': ['questions', 'concepts'], 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'statics2011': {'dpath': '../data/statics2011', 'num_q': 0, 'num_c': 1223, 'input_type': ['concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'junyi2015': {'dpath': '../data/junyi2015', 'num_q': 721, 'num_c': 39, 'input_type': ['questions', 'concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv'}, 'bridge2algebra2006': {'dpath': '../data/bridge2algebra2006', 'num_q': 129263, 'num_c': 493, 'input_type': ['questions', 'concepts'], 'max_concepts': 5, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_train': 916, 'students_num_eval': 229, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv'}, 'ednet': {'dpath': '../data/ednet', 'num_q': 11901, 'num_c': 188, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'nips_task34': {'dpath': '../data/nips_task34', 'num_q': 948, 'num_c': 57, 'students_num_eval': 983, 'students_num_train': 3935, 'input_type': ['questions', 'concepts'], 'max_concepts': 2, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'student_summary_file': 'student_summary.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'seq_len_10000_students_num_eval': 23, 'seq_len_20000_students_num_eval': 38, 'seq_len_30000_students_num_eval': 37, 'seq_len_18000_students_num_eval': 16, 'seq_len_22000_students_num_eval': 47}, 'poj': {'dpath': '../data/poj', 'num_q': 0, 'num_c': 2748, 'input_type': ['concepts'], 'max_concepts': 1, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'peiyou': {'dpath': '../data/peiyou', 'num_q': 7652, 'num_c': 865, 'input_type': ['questions', 'concepts'], 'max_concepts': 6, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'students_num_eval': 0, 'train_valid_original_file': 'train_valid.csv', 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_train': 14453, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'seq_len_500_students_num_eval': 0, 'seq_len_300_students_num_eval': 0, 'seq_len_400_students_num_eval': 0}, 'ednet5w': {'dpath': '../data/ednet5w', 'num_q': 12235, 'num_c': 188, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'pretrain': {'dpath': '../data/pretrain', 'num_q': 340614, 'num_c': 1838, 'input_type': ['questions', 'concepts'], 'max_concepts': 7, 'min_seq_len': 3, 'maxlen': 1024, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel_200.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv'}, 'assist2009Anips_task34Abridge2algebra2006': {'dpath': '../data/assist2009Anips_task34Abridge2algebra2006', 'num_q': 147948, 'num_c': 673, 'input_type': ['concepts', 'questions'], 'max_concepts': 5, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_original_file': 'train_valid.csv', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_eval': 770, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'students_num_train': 7933}, 'peiyouAnips_task34Abridge2algebra2006': {'dpath': '../data/peiyouAnips_task34Abridge2algebra2006', 'num_q': 137863, 'num_c': 1415, 'input_type': ['questions', 'concepts'], 'max_concepts': 6, 'min_seq_len': 3, 'maxlen': 200, 'emb_path': '', 'train_valid_file': 'train_valid_sequences.csv', 'folds': [0, 1, 2, 3, 4], 'train_valid_original_file': 'train_valid.csv', 'test_original_file': 'test.csv', 'test_file': 'test_sequences.csv', 'test_window_file': 'test_window_sequences.csv', 'test_question_file': 'test_question_sequences.csv', 'test_question_window_file': 'test_question_window_sequences.csv', 'train_valid_original_file_quelevel': 'train_valid_quelevel.csv', 'train_valid_file_quelevel': 'train_valid_sequences_quelevel.csv', 'test_file_quelevel': 'test_sequences_quelevel.csv', 'test_window_file_quelevel': 'test_window_sequences_quelevel.csv', 'test_original_file_quelevel': 'test_quelevel.csv', 'students_num_eval': 983, 'global_question_stats_file': 'global_question_stats.csv', 'global_concept_stats_file': 'global_concept_stats.csv', 'student_summary_file': 'student_summary.csv', 'total_questions_low_interval_file': 'total_questions_low_interval.csv', 'total_questions_medium_interval_file': 'total_questions_medium_interval.csv', 'total_questions_high_interval_file': 'total_questions_high_interval.csv', 'overall_accuracy_low_interval_file': 'overall_accuracy_low_interval.csv', 'overall_accuracy_medium_interval_file': 'overall_accuracy_medium_interval.csv', 'overall_accuracy_high_interval_file': 'overall_accuracy_high_interval.csv', 'accuracy_range_low_interval_file': 'accuracy_range_low_interval.csv', 'accuracy_range_medium_interval_file': 'accuracy_range_medium_interval.csv', 'accuracy_range_high_interval_file': 'accuracy_range_high_interval.csv', 'accuracy_variance_low_interval_file': 'accuracy_variance_low_interval.csv', 'accuracy_variance_medium_interval_file': 'accuracy_variance_medium_interval.csv', 'accuracy_variance_high_interval_file': 'accuracy_variance_high_interval.csv', 'questions_range_low_interval_file': 'questions_range_low_interval.csv', 'questions_range_medium_interval_file': 'questions_range_medium_interval.csv', 'questions_range_high_interval_file': 'questions_range_high_interval.csv', 'students_num_train': 15181}} 0 32
+2026-07-14 02:07:12 - main - said: init_dataset
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv_0.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv, qlen: 741, clen: 741, rlen: 741, uidlen: 741
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv_1_2_3_4.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/train_valid_sequences.csv, qlen: 3016, clen: 3016, rlen: 3016, uidlen: 3016
+params: {'dataset_name': 'assist2009', 'model_name': 'akt', 'emb_type': 'qid', 'save_dir': 'saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32', 'seed': 42, 'fold': 0, 'dropout': 0.2, 'd_model': 256, 'd_ff': 512, 'num_attn_heads': 8, 'n_blocks': 4, 'learning_rate': 0.0001, 'batch_size': 32, 'num_epochs': 100, 'use_wandb': 0, 'use_trained': 0, 'use_also': 0, 'also_grouping_mode': 'none', 'also_n_groups': None, 'also_mode': 'optimistic', 'also_alpha': 1.0, 'also_lr': None, 'also_weight_decay': None, 'also_pi_lr': 0.001, 'also_pi_decay': 0.01, 'also_loss_scale': None, 'add_uuid': 0}, params_str: assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+Start training model: akt, embtype: qid, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0, dataset_name: assist2009
+model_config: {'dropout': 0.2, 'd_model': 256, 'd_ff': 512, 'num_attn_heads': 8, 'n_blocks': 4, 'learning_rate': 0.0001}
+train_config: {'batch_size': 32, 'num_epochs': 100, 'optimizer': 'adam', 'seq_len': 200}
+2026-07-14 02:07:12 - main - said: init_model
+[PARAM_COUNT] model=akt emb_type=qid dataset=assist2009 trainable=6,074,795 total=6,074,795
+2026-07-14 02:07:13 - main - said: train model
+未找到预训练模型文件，将从头开始训练。
+Epoch: 1, validauc: 0.7986, validacc: 0.7645, best epoch: 1, best auc: 0.7986, train loss: 0.554194670197363, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 110.21s | Train Phase: 90.31s | Valid Phase: 19.69s
+Avg Batch Time: 0.9507s
+------------------------------
+Epoch: 2, validauc: 0.8147, validacc: 0.7711, best epoch: 2, best auc: 0.8147, train loss: 0.4998976664726676, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 126.94s | Train Phase: 105.58s | Valid Phase: 21.12s
+Avg Batch Time: 1.1113s
+------------------------------
+Epoch: 3, validauc: 0.8194, validacc: 0.7739, best epoch: 3, best auc: 0.8194, train loss: 0.48398692235909807, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 112.71s | Train Phase: 97.16s | Valid Phase: 15.30s
+Avg Batch Time: 1.0227s
+------------------------------
+Epoch: 4, validauc: 0.8224, validacc: 0.7749, best epoch: 4, best auc: 0.8224, train loss: 0.476298851260708, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 112.65s | Train Phase: 96.43s | Valid Phase: 15.90s
+Avg Batch Time: 1.0151s
+------------------------------
+Epoch: 5, validauc: 0.8244, validacc: 0.7749, best epoch: 5, best auc: 0.8244, train loss: 0.4730571883624481, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 123.03s | Train Phase: 100.69s | Valid Phase: 22.10s
+Avg Batch Time: 1.0599s
+------------------------------
+Epoch: 6, validauc: 0.8264, validacc: 0.7758, best epoch: 6, best auc: 0.8264, train loss: 0.46944288936910433, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 107.32s | Train Phase: 88.07s | Valid Phase: 18.99s
+Avg Batch Time: 0.9270s
+------------------------------
+Epoch: 7, validauc: 0.828, validacc: 0.777, best epoch: 7, best auc: 0.828, train loss: 0.4668673533300066, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 118.05s | Train Phase: 100.32s | Valid Phase: 17.41s
+Avg Batch Time: 1.0560s
+------------------------------
+Epoch: 8, validauc: 0.828, validacc: 0.777, best epoch: 7, best auc: 0.828, train loss: 0.4649787238980309, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 107.18s | Train Phase: 88.37s | Valid Phase: 18.80s
+Avg Batch Time: 0.9303s
+------------------------------
+Epoch: 9, validauc: 0.8307, validacc: 0.7775, best epoch: 9, best auc: 0.8307, train loss: 0.46277351411843864, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 129.80s | Train Phase: 111.12s | Valid Phase: 18.51s
+Avg Batch Time: 1.1697s
+------------------------------
+Epoch: 10, validauc: 0.8323, validacc: 0.7783, best epoch: 10, best auc: 0.8323, train loss: 0.4601735111654541, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 107.12s | Train Phase: 88.34s | Valid Phase: 18.57s
+Avg Batch Time: 0.9299s
+------------------------------
+Epoch: 11, validauc: 0.8342, validacc: 0.7791, best epoch: 11, best auc: 0.8342, train loss: 0.45784496561006616, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 114.51s | Train Phase: 96.38s | Valid Phase: 17.81s
+Avg Batch Time: 1.0145s
+------------------------------
+Epoch: 12, validauc: 0.8362, validacc: 0.7804, best epoch: 12, best auc: 0.8362, train loss: 0.4555311299692153, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 115.98s | Train Phase: 94.18s | Valid Phase: 21.52s
+Avg Batch Time: 0.9913s
+------------------------------
+Epoch: 13, validauc: 0.838, validacc: 0.7812, best epoch: 13, best auc: 0.838, train loss: 0.452360147922967, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 108.09s | Train Phase: 90.11s | Valid Phase: 17.69s
+Avg Batch Time: 0.9485s
+------------------------------
+Epoch: 14, validauc: 0.8397, validacc: 0.7826, best epoch: 14, best auc: 0.8397, train loss: 0.4498181400882671, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 123.61s | Train Phase: 101.71s | Valid Phase: 21.51s
+Avg Batch Time: 1.0707s
+------------------------------
+Epoch: 15, validauc: 0.8414, validacc: 0.7837, best epoch: 15, best auc: 0.8414, train loss: 0.44662741438343473, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 109.10s | Train Phase: 90.29s | Valid Phase: 18.50s
+Avg Batch Time: 0.9504s
+------------------------------
+Epoch: 16, validauc: 0.8437, validacc: 0.7848, best epoch: 16, best auc: 0.8437, train loss: 0.4438187830707799, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 123.25s | Train Phase: 103.90s | Valid Phase: 19.10s
+Avg Batch Time: 1.0937s
+------------------------------
+Epoch: 17, validauc: 0.8447, validacc: 0.7862, best epoch: 17, best auc: 0.8447, train loss: 0.439870512460679, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 104.14s | Train Phase: 87.28s | Valid Phase: 16.58s
+Avg Batch Time: 0.9187s
+------------------------------
+Epoch: 18, validauc: 0.8466, validacc: 0.7871, best epoch: 18, best auc: 0.8466, train loss: 0.4366837581461794, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 119.97s | Train Phase: 99.99s | Valid Phase: 19.72s
+Avg Batch Time: 1.0525s
+------------------------------
+Epoch: 19, validauc: 0.8476, validacc: 0.7883, best epoch: 19, best auc: 0.8476, train loss: 0.4332672312939793, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 115.96s | Train Phase: 86.35s | Valid Phase: 29.30s
+Avg Batch Time: 0.9089s
+------------------------------
+Epoch: 20, validauc: 0.8476, validacc: 0.7883, best epoch: 19, best auc: 0.8476, train loss: 0.42935176015500737, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 114.69s | Train Phase: 93.58s | Valid Phase: 21.11s
+Avg Batch Time: 0.9851s
+------------------------------
+Epoch: 21, validauc: 0.8497, validacc: 0.79, best epoch: 21, best auc: 0.8497, train loss: 0.42611519098554546, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 118.52s | Train Phase: 99.00s | Valid Phase: 19.29s
+Avg Batch Time: 1.0421s
+------------------------------
+Epoch: 22, validauc: 0.8512, validacc: 0.7898, best epoch: 22, best auc: 0.8512, train loss: 0.4220923776641302, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 108.71s | Train Phase: 92.12s | Valid Phase: 16.30s
+Avg Batch Time: 0.9697s
+------------------------------
+Epoch: 23, validauc: 0.8512, validacc: 0.7898, best epoch: 22, best auc: 0.8512, train loss: 0.4169292489107365, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 115.60s | Train Phase: 98.63s | Valid Phase: 16.97s
+Avg Batch Time: 1.0382s
+------------------------------
+Epoch: 24, validauc: 0.8512, validacc: 0.7898, best epoch: 22, best auc: 0.8512, train loss: 0.4135453458872803, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 105.82s | Train Phase: 87.94s | Valid Phase: 17.88s
+Avg Batch Time: 0.9257s
+------------------------------
+Epoch: 25, validauc: 0.8512, validacc: 0.7898, best epoch: 22, best auc: 0.8512, train loss: 0.40987594794057663, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 131.49s | Train Phase: 113.61s | Valid Phase: 17.88s
+Avg Batch Time: 1.1959s
+------------------------------
+Epoch: 26, validauc: 0.8512, validacc: 0.7898, best epoch: 22, best auc: 0.8512, train loss: 0.4063886782187859, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 114.19s | Train Phase: 90.59s | Valid Phase: 23.60s
+Avg Batch Time: 0.9536s
+------------------------------
+Epoch: 27, validauc: 0.8512, validacc: 0.7898, best epoch: 22, best auc: 0.8512, train loss: 0.4031221718311036, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 107.40s | Train Phase: 89.92s | Valid Phase: 17.48s
+Avg Batch Time: 0.9465s
+------------------------------
+Epoch: 28, validauc: 0.8512, validacc: 0.7898, best epoch: 22, best auc: 0.8512, train loss: 0.4009767423420233, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 119.70s | Train Phase: 102.02s | Valid Phase: 17.69s
+Avg Batch Time: 1.0739s
+------------------------------
+Epoch: 29, validauc: 0.8512, validacc: 0.7898, best epoch: 22, best auc: 0.8512, train loss: 0.3988518458261657, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 99.79s | Train Phase: 83.89s | Valid Phase: 15.90s
+Avg Batch Time: 0.8830s
+------------------------------
+Epoch: 30, validauc: 0.8512, validacc: 0.7898, best epoch: 22, best auc: 0.8512, train loss: 0.39503080297858073, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 111.00s | Train Phase: 93.81s | Valid Phase: 17.19s
+Avg Batch Time: 0.9875s
+------------------------------
+Epoch: 31, validauc: 0.8512, validacc: 0.7898, best epoch: 22, best auc: 0.8512, train loss: 0.3934688655920482, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 111.30s | Train Phase: 93.32s | Valid Phase: 17.98s
+Avg Batch Time: 0.9824s
+------------------------------
+Epoch: 32, validauc: 0.8512, validacc: 0.7898, best epoch: 22, best auc: 0.8512, train loss: 0.39137143252872786, emb_type: qid, model: akt, save_dir: saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 113.40s | Train Phase: 93.50s | Valid Phase: 19.89s
+Avg Batch Time: 0.9843s
+------------------------------
+Early stopping at epoch 32
+✅ Training Finished! Total Time Cost: 3661.30 s
+fold	modelname	embtype	testauc	testacc	window_testauc	window_testacc	validauc	validacc	best_epoch
+0	akt	qid	-1	-1	-1	-1	0.8512063337024462	0.7898154283009938	22
+end:2026-07-14 03:08:15.173312
+
+==================================================
+Training completed. Starting prediction with predict_after_train=2
+==================================================
+--- 正在调用外部脚本 (subprocess): /root/autodl-tmp/pykt-toolkit/examples/wandb_predict_with_unbalance.py
+--- 完整运行指令: /root/miniconda3/bin/python /root/autodl-tmp/pykt-toolkit/examples/wandb_predict_with_unbalance.py --bz 32 --save_dir /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0 --use_wandb 0
+
+libgomp: Invalid value for environment variable OMP_NUM_THREADS
+
+libgomp: Invalid value for environment variable OMP_NUM_THREADS
+Namespace(bz=32, save_dir='/root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0', fusion_type='late_fusion', use_wandb=0)
+--- [Time] Start: 2026-07-14 03:08:20 ---
+[DATA_PATH] dataset=assist2009 resolved_dpath=/root/autodl-tmp/pykt-toolkit/data/assist2009
+model_name is akt, dataset_name is assist2009
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_sequences.csv, qlen: 904, clen: 904, rlen: 904, uidlen: 904
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv_-1.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_window_sequences.csv, qlen: 20362, clen: 20362, rlen: 20362, uidlen: 20362
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_sequences.csv, qlen: 18292, clen: 18292, rlen: 18292, uidlen: 18292
+Read data from processed file: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv_-1_qtest.pkl
+file path: /root/autodl-tmp/pykt-toolkit/data/assist2009/test_question_window_sequences.csv, qlen: 30610, clen: 30610, rlen: 30610, uidlen: 30610
+has test_question_file!
+Start predicting model: akt, embtype: qid, save_dir: /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0, dataset_name: assist2009
+--- [Time] Data Loading: 3.85s (started 03:08:20) ---
+--- [Time] Model Loading: 0.59s (started 03:08:24) ---
+testauc: 0.8436997662054164, testacc: 0.7795942103902818
+--- [Time] Basic Evaluation: 7.28s (started 03:08:25) ---
+testauc: 0.8436997662054164, testacc: 0.7795942103902818, window_testauc: 0.8454603938296192, window_testacc: 0.7805286911669891
+--- [Time] Window Evaluation: 129.53s (started 03:08:32) ---
+[DEBUG] auc: 0.7597303891388563 (type: <class 'float'>)
+[DEBUG] auc: 0.7620839927090551 (type: <class 'float'>)
+--- [Time] Question Evaluation: 327.82s (started 03:10:42) ---
+{'testauc': 0.8436997662054164, 'testacc': 0.7795942103902818, 'window_testauc': 0.8454603938296192, 'window_testacc': 0.7805286911669891, 'oriaucconcepts': 0.7597303891388563, 'oriauclate_mean': 0.7784177904821079, 'oriauclate_vote': 0.7729300443201885, 'oriauclate_all': 0.7788545874624732, 'oriaccconcepts': 0.7313986648519023, 'oriacclate_mean': 0.7371875837256477, 'oriacclate_vote': 0.7365369158341946, 'oriacclate_all': 0.737417231216749, 'windowaucconcepts': 0.7620839927090551, 'windowauclate_mean': 0.7806493812073095, 'windowauclate_vote': 0.7752586550978774, 'windowauclate_all': 0.7811094940192008, 'windowaccconcepts': 0.7324262305678549, 'windowacclate_mean': 0.738535262896636, 'windowacclate_vote': 0.7375233876818511, 'windowacclate_all': 0.738535262896636}
+dres saved to /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0/all_results.json
+late_trues 的唯一值: [0 1]
+late_trues 的值计数:
+late_trues
+1    33510
+0    18868
+Name: count, dtype: int64
+已保存每个学生AUC → /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0/qid_test_question_window_predictions_per_student_aucs.json
+✅ 学生AUC结果已保存至: /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0/student_auc_output.csv
+📊 总体统计指标: {
+    "overall_dataset_auc": 0.7625229299755614,
+    "student_stats_mean": 0.6303275735781703,
+    "student_stats_std": 0.20365896689093613,
+    "student_stats_max": 1.0,
+    "student_stats_min": 0.0,
+    "student_stats_range": 1.0,
+    "student_stats_epi": 3.0950150793788747,
+    "student_stats_gini_coefficient": 0.17403330783292456,
+    "student_stats_average_auc": 0.6303275735781703,
+    "student_stats_eawi_alpha_10": 0.5206295809300602,
+    "student_stats_eawi_alpha_20": 0.43002269280513244,
+    "student_stats_eawi_alpha_30": 0.35518442113303367,
+    "student_stats_iqr": 0.26315789473684215,
+    "student_stats_q1": 0.5,
+    "student_stats_q3": 0.7631578947368421
+}
+✅ 总体统计结果已保存至: /root/autodl-tmp/pykt-toolkit/saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32/assist2009_akt_qid_saved_model/akt_also_stage2_batch_tsp_20260714_010300_54754_stage2_batch/baseline_bs32_42_0_0.2_256_512_8_4_0.0001_32_100_0_0_0_none_None_optimistic_1.0_None_None_0.001_0.01_None_0/overall_stats_output.json
+--- [Time] Fairness Calculation: 3.96s (started 03:16:09) ---
+------------------------------
+Total Prediction Time: 473.05s (end 2026-07-14 03:16:13)
+------------------------------
+Prediction completed successfully!
+--- 外部脚本执行完毕 ---
+Training and prediction process completed at: 2026-07-14 03:16:14.772636
+✅ 运行历史状态已更新为成功 (ID: 100c2dea-a622-47f2-a4f2-d2c1868bdf65)
+💡 正在执行最终资源清理...
+💡 CUDA 缓存已释放。

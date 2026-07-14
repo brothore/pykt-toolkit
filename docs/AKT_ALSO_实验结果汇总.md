@@ -1,26 +1,60 @@
-# AKT + ALSO Experiment Results
+# AKT + ALSO 阶段性实验报告
 
-Generated (UTC): 2026-07-13 17:41:36
+Generated (UTC): 2026-07-14 00:17:43
 
-## Evaluation Criteria
+本实验已将 ALSO 适配到 AKT 的训练流程：按真实学生 ID 建立无碰撞分组，并按每名学生的序列数归一化 ALSO 损失与学生级评测。
 
-Rank evaluated configurations by higher student-level mean AUC, then lower student-level standard deviation, while monitoring overall dataset AUC and range.
+## AKT 运行 ALSO 的代码适配说明
 
-## Completed Runs
+1. **逐序列损失接口**：AKT 原训练流程使用 batch 标量损失；为满足 ALSO 对组损失向量与 closure 的要求，训练前向新增逐序列 BCE loss 输出，并由 ALSO 对该向量进行加权更新。
+2. **学生级无碰撞分组**：从训练折的 `uid` 构建 `uid -> group_id` 一一映射，一名学生对应一个 ALSO group；不再使用可能碰撞的取模分组，也不会把验证或测试学生并入训练 group。
+3. **序列切分归一化**：同一学生被切为多条序列时，每条序列损失除以该学生的训练序列数，使学生总贡献近似相等，避免长序列学生在 min-max 目标中被重复放大。
+4. **训练参数贯通**：AKT 启动器和通用训练器接入 `use_also`、`grouping_mode`、`n_groups`、`mode`、`alpha`、`pi_lr`、`pi_decay` 与 `loss_scale`，保留 `PYTHONPATH=$PWD python -m examples.wandb_akt_train ...` 的启动方式。
+5. **论文超参数与变体**：`n_groups` 由训练学生数推断，loss scale 可按 `n_groups / batch_size` 设置；同时支持 optimistic 的 `alpha` 消融与 `descent-ascent` 变体。
+6. **一条龙评测修复**：预测子进程继承项目 `PYTHONPATH`，并修复预测结束后错误恢复旧参数的问题，使训练、预测和学生级统计可连续完成。
+7. **学生级结果追踪**：自动汇总 overall AUC、学生 AUC 均值、标准差和极差，并检测缺失 `all_results.json` 或 `overall_stats_output.json` 的实验。
 
-| Run | ALSO | Batch | pi_lr | pi_decay | Loss scale | Alpha | Mode | Overall AUC | Student mean | Student std | Student range |
-|---|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|
-| akt_student_also_v2_baseline_bs64 | 0 | 64 | 0.001 | 0.01 | - | - | - | 0.761477 | 0.628480 | 0.201374 | 1.000000 |
-| akt_also_full_20260713_225853_42622 | 1 | 64 | 3e-05 | 0.01 | - | 1.0 | optimistic | 0.692870 | 0.593758 | 0.212514 | 1.000000 |
-| akt_also_full_20260713_225853_42622 | 1 | 64 | 0.001 | 0.01 | - | 1.0 | optimistic | 0.689596 | 0.593041 | 0.208252 | 1.000000 |
+## 状态与评价目标
 
-## Pending Or Incomplete Runs
+当前已完成 **13** 个新代码实验的学生级评测；另有 **2** 个实验仍在训练或评测中，不能将其视为负结果。
 
-- `akt_also_stage1_pi_lr_auto_20260713_232100_42622` / `pilr1e4_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0001_0.01_None_0`: evaluation_missing
-- `akt_also_stage1_pi_lr_auto_20260713_232100_42622` / `pilr3e4_bs64_42_0_0.2_256_512_8_4_0.0001_64_100_0_0_1_student_id_None_optimistic_1.0_None_None_0.0003_0.01_None_0`: evaluation_missing
+排序优先级为更高的学生级平均 AUC，其次为更低的学生级标准差；同时监控 overall AUC。学生级极差仅用于诊断异常值，不单独作为优劣依据。
 
-## Notes
+## 已完成学生级评测
 
-- `overall_dataset_auc` is calculated from the saved student-level prediction artifact and is tracked alongside the model-level test AUC in `all_results.json`.
-- A student range of 1.0 indicates that at least one student has AUC 0.0 and another has AUC 1.0; interpret it together with sample counts and IQR.
-- Historical `akt_abl_*` runs from the old implementation are deliberately excluded.
+| 配置 | Overall AUC | 学生平均 AUC | 学生 AUC 标准差 | 学生 AUC 极差 |
+|---|---:|---:|---:|---:|
+| Baseline, batch=32 | **0.762523** | **0.630328** | 0.203659 | **1.000000** |
+| Baseline, batch=64 | 0.761477 | 0.628480 | **0.201374** | **1.000000** |
+| Baseline, batch=128 | 0.755064 | 0.614480 | 0.203103 | **1.000000** |
+| ALSO, batch=64, pi_lr=3e-05, pi_decay=0.01 | 0.692870 | 0.593758 | 0.212514 | **1.000000** |
+| ALSO, batch=64, pi_lr=0.0001, pi_decay=0.1 | 0.692963 | 0.593340 | 0.212019 | **1.000000** |
+| ALSO, batch=64, pi_lr=0.0001, pi_decay=0.01 | 0.692818 | 0.593202 | 0.208616 | **1.000000** |
+| ALSO, batch=64, pi_lr=0.001, pi_decay=0.01 | 0.689596 | 0.593041 | 0.208252 | **1.000000** |
+| ALSO, batch=64, pi_lr=0.0003, pi_decay=0.01 | 0.693693 | 0.592376 | 0.208976 | **1.000000** |
+| ALSO, batch=64, pi_lr=0.0001, pi_decay=0.001 | 0.690074 | 0.590163 | 0.211270 | **1.000000** |
+| ALSO, batch=64, pi_lr=0.0001, pi_decay=0.01, loss_scale=77.03125 | 0.693504 | 0.589314 | 0.208316 | **1.000000** |
+| ALSO, batch=64, pi_lr=0.0001, pi_decay=0.01, loss_scale=19.2578125 | 0.690655 | 0.587046 | 0.211389 | **1.000000** |
+| ALSO, batch=128, pi_lr=0.0001, pi_decay=0.01 | 0.690525 | 0.586778 | 0.207777 | **1.000000** |
+| ALSO, batch=32, pi_lr=0.0001, pi_decay=0.01 | 0.690298 | 0.586049 | 0.208487 | **1.000000** |
+
+加粗数值为当前已完成实验中该列的最优值：Overall AUC 与学生平均 AUC 取最大，学生标准差与极差取最小；并列最优值均加粗。
+
+## 阶段性分析
+
+- **当前最高学生平均 AUC**：Baseline, batch=32，学生平均 AUC=0.630328。
+- **当前最低学生标准差**：Baseline, batch=64，标准差=0.201374。
+- **已完成 ALSO 中的取舍**：最高学生平均 AUC 来自 ALSO, batch=64, pi_lr=3e-05, pi_decay=0.01 (0.593758)；最低标准差来自 ALSO, batch=128, pi_lr=0.0001, pi_decay=0.01 (0.207777)。
+- **与当前最佳 baseline 的比较**：已完成 ALSO 的最佳学生平均 AUC 仍低 0.036570，overall AUC 低 0.069653；因此现有结果尚未证明 ALSO 达到“提高学生平均 AUC 且降低离散度”的目标。
+- **极差诊断**：所有已完成配置的学生级 AUC 极差均为 1.0，说明极端学生 AUC 仍同时出现 0 与 1；本轮消融尚未改善该指标。
+
+## 待完成实验
+
+- `ALSO, batch=64, pi_lr=0.0001, pi_decay=0.01, alpha=0.5`（evaluation_missing）
+- `ALSO, batch=64, pi_lr=0.0001, pi_decay=0.01, alpha=0.0`（evaluation_missing）
+
+## 口径说明
+
+- `overall_dataset_auc` 从保存的学生级预测产物计算，并与 `all_results.json` 中的模型级测试指标一并记录。
+- 极差为 1.0 表示至少有学生 AUC 为 0.0，且至少有学生 AUC 为 1.0；应结合学生样本数和四分位数解释。
+- 历史 `akt_abl_*` 旧代码训练结果已按要求排除。
