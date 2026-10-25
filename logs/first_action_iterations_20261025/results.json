@@ -1,0 +1,83 @@
+{
+  "dataset": "assist2009",
+  "fold": 0,
+  "seed": 42,
+  "epoch_budget": 20,
+  "primary_metric": "windowauclate_mean",
+  "selection": {
+    "frozen_at_utc": "2026-10-25T07:05:44.852036+00:00",
+    "selected_by": "validation_auc only",
+    "selected_variant": "r3_balanced",
+    "validation_auc": {
+      "baseline": 0.8308394991180901,
+      "r1_joint": 0.8319555451228047,
+      "r2_conditional": 0.8314261657512422,
+      "r3_balanced": 0.8323387198809282
+    },
+    "checkpoint_sha256": {
+      "baseline": "8094b98fa8047f51b2478d4e5794a1c417b8ad8eab0fc527b122e058e944475a",
+      "r1_joint": "0c00720aa9dfae12db3e9b6b55d08cffedef6c67ecb4353968b3b2e785fcf579",
+      "r2_conditional": "a0fbab1691154ae3680f06774cf2a3cdab5a93558ae6761bea73d9c82b4dd9c8",
+      "r3_balanced": "f7889f898af3f1551e712997703476645c830678391836c79b0b6adc9b7fb296"
+    },
+    "test_evaluation_started": false
+  },
+  "results": [
+    {
+      "variant": "baseline",
+      "selected_before_test": false,
+      "best_epoch": 4,
+      "validation_auc": 0.8308394991180901,
+      "windowauclate_mean": 0.7508302058555418,
+      "windowacclate_mean": 0.7223834434304479,
+      "failure_macro_f1": null,
+      "training_seconds": 32.83685280941427,
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/baseline"
+    },
+    {
+      "variant": "r1_joint",
+      "selected_before_test": false,
+      "best_epoch": 5,
+      "validation_auc": 0.8319555451228047,
+      "windowauclate_mean": 0.7520206908578513,
+      "windowacclate_mean": 0.7224216274008172,
+      "failure_macro_f1": 0.5226007349525482,
+      "training_seconds": 36.628686050884426,
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r1_joint"
+    },
+    {
+      "variant": "r2_conditional",
+      "selected_before_test": false,
+      "best_epoch": 4,
+      "validation_auc": 0.8314261657512422,
+      "windowauclate_mean": 0.7514136218596874,
+      "windowacclate_mean": 0.7206842567490168,
+      "failure_macro_f1": 0.5353726108249325,
+      "training_seconds": 34.074002710171044,
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional"
+    },
+    {
+      "variant": "r3_balanced",
+      "selected_before_test": true,
+      "best_epoch": 5,
+      "validation_auc": 0.8323387198809282,
+      "windowauclate_mean": 0.7523096037577055,
+      "windowacclate_mean": 0.7218870518156478,
+      "failure_macro_f1": 0.5719536380977406,
+      "training_seconds": 36.75368188787252,
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r3_balanced"
+    }
+  ],
+  "selected_primary_gain_over_dkt": 0.0014793979021636705,
+  "limitations": [
+    "Single fold and seed, exploratory result, not evidence of general superiority.",
+    "Existing ALSO device regression expects float but unmodified HEAD returns Tensor; unrelated test remains unchanged.",
+    "DKT main loss and standard concept-expansion evaluation are preserved; only auxiliary labels are event-deduplicated."
+  ],
+  "checks": {
+    "targeted_tests": "18 passed",
+    "original_dkt_export_identical": true,
+    "source_and_legacy_cache_consistent": true,
+    "original_backbone_and_loader_files_unchanged": true
+  }
+}

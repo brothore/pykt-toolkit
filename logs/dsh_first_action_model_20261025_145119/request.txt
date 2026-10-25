@@ -1,0 +1,9 @@
+你是主 agent 委派的代码 worker。先读 AGENTS.md。你只能新增/编辑 pykt/models/dkt_first_action.py，其他文件不得改。不要安装、不联网、不启动训练、不读取凭据、不调用子代理。本机你的 bash sandbox 曾不可用，优先用 read/write/edit 工具直接读写，不要尝试改变权限或重复调用失败的 shell。不能执行测试就明确说未测试。
+请实现独立 PyTorch 模型 DKTFirstAction，继承 .dkt.DKT。保留原 DKT backbone、参数名称、forward(c,r)->[B,T,C] 完全相同；model_name='dkt_first_action'。构造函数接受 DKT 全部参数，加 action_weight=0.1, action_mode='joint' ('joint'或'conditional'), action_balance=0.0, action_class_counts=None (长度4), action_hidden=100。不要改父类。
+训练期辅助头：将dropout后LSTM h_t与目标知识点的原有interaction_emb两个回答通道嵌入的均值拼接，Linear(2*emb_size,action_hidden),Tanh,Linear(action_hidden,4或3)。辅助头初始化用 torch.random.fork_rng(devices=[])，确保不改变初始化完父类后的全局随机状态；辅助头不使用dropout。four classes:0首次正确、1首次尝试错误、2首动作提示、3首动作脚手架。
+新增 forward_details(c,r,target_c): 用与DKT完全相同计算返回 dict {'predictions':所有知识点概率,'action_logits':辅助logits}；target_c是已知下一题知识点，不能读取未知回答/行为。forward继续只返回原DKT概率，推理不使用辅助头。
+新增 compute_loss(data,return_per_sample=False,return_components=False)：输入普通KTDataset批字典 cseqs,rseqs,shft_cseqs,shft_rseqs,masks,smasks，以及仅用于loss的 action_labels[B,T] (0..3或-100),action_mask[B,T]bool。所有Tensor搬到模型device。主loss严格等价现有cal_loss的 masked BCE(pred.double(),target.double())，sm=masks&smasks；action_weight=0时直接只算主loss，且不要求action字段。辅助loss在action_mask&sm&labels有效位置算，每个原始事件只标一次，外部dataset负责掩码。joint为4分类CE；conditional仅label>0位置算3分类CE(label-1)，不重复预测主任务的正确/错误。
+辅助类别权重从训练折 action_class_counts 计算 counts.clamp(min=1)**(-action_balance) 后归一化为均值1；conditional用counts[1:]；register_buffer保存权重。类别counts为空则全1；检查参数范围与标签合法性，不要静默将未知标签当正确。加权CE用sum(loss*weight)/sum(weight)；空mask返回连接图的0且无NaN。
+return_per_sample=True按每条序列归一化，否则全batch有效位置归一化；总loss=main+action_weight*aux。return_components=True返回(total,{'response':main,'action':aux})否则只返回loss。
+新增 action_probabilities(data)：返回[B,T,4]，joint softmax4；conditional返回cat[p_selected, (1-p_selected)*softmax3]，只依赖预测可见的 c/r history和shft_cseqs，忽略真实shft_rseqs/action_labels/action_mask。用于验证辅助任务。
+模型state_dict兼容自身保存重载。主 agent负责接入、数据、测试和实验。请写完目标文件后返回简短实现说明，不声称跑过测试。

@@ -1,0 +1,709 @@
+{
+  "audit_date": "2026-10-25",
+  "scope": "Read-only full-raw-file feasibility audit; not training-fold statistics or fitted thresholds. No raw student identifiers or answer text are exported.",
+  "assist2009": {
+    "raw_rows": 346860,
+    "eligible_rows_before_short_sequence_filter": 283105,
+    "eligible_students": 4163,
+    "eligible_unique_order_ids": 283105,
+    "eligible_duplicate_order_rows": 0,
+    "eligible_unique_event_keys": 283105,
+    "correct": {
+      "1": 186322,
+      "0": 96783
+    },
+    "fields": {
+      "attempt_count": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 180,
+        "numeric_valid": 283105,
+        "quantiles": {
+          "0.0": 0.0,
+          "0.01": 0.0,
+          "0.1": 1.0,
+          "0.5": 1.0,
+          "0.9": 2.0,
+          "0.99": 8.0,
+          "1.0": 3824.0
+        }
+      },
+      "ms_first_response": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 82938,
+        "numeric_valid": 283105,
+        "quantiles": {
+          "0.0": -7759575.0,
+          "0.01": 1345.04,
+          "0.1": 4781.0,
+          "0.5": 20263.0,
+          "0.9": 94909.00000000003,
+          "0.99": 353863.76000000275,
+          "1.0": 84076920.0
+        }
+      },
+      "hint_count": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 8,
+        "numeric_valid": 283105,
+        "quantiles": {
+          "0.0": 0.0,
+          "0.01": 0.0,
+          "0.1": 0.0,
+          "0.5": 0.0,
+          "0.9": 3.0,
+          "0.99": 5.0,
+          "1.0": 7.0
+        }
+      },
+      "hint_total": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 10,
+        "numeric_valid": 283105,
+        "quantiles": {
+          "0.0": 0.0,
+          "0.01": 0.0,
+          "0.1": 0.0,
+          "0.5": 3.0,
+          "0.9": 5.0,
+          "0.99": 6.0,
+          "1.0": 10.0
+        }
+      },
+      "bottom_hint": {
+        "rows": 283105,
+        "non_null": 42522,
+        "coverage": 0.15019868953215237,
+        "nunique_non_null": 2,
+        "numeric_valid": 42522,
+        "quantiles": {
+          "0.0": 0.0,
+          "0.01": 0.0,
+          "0.1": 0.0,
+          "0.5": 1.0,
+          "0.9": 1.0,
+          "0.99": 1.0,
+          "1.0": 1.0
+        }
+      },
+      "opportunity": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 932,
+        "numeric_valid": 283105,
+        "quantiles": {
+          "0.0": 1.0,
+          "0.01": 1.0,
+          "0.1": 1.0,
+          "0.5": 7.0,
+          "0.9": 29.0,
+          "0.99": 105.0,
+          "1.0": 3371.0
+        }
+      },
+      "opportunity_original": {
+        "rows": 283105,
+        "non_null": 259399,
+        "coverage": 0.9162642835697002,
+        "nunique_non_null": 908,
+        "numeric_valid": 259399,
+        "quantiles": {
+          "0.0": 1.0,
+          "0.01": 1.0,
+          "0.1": 1.0,
+          "0.5": 6.0,
+          "0.9": 23.0,
+          "0.99": 93.0,
+          "1.0": 3371.0
+        }
+      },
+      "overlap_time": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 93718,
+        "numeric_valid": 283105,
+        "quantiles": {
+          "0.0": -7759575.0,
+          "0.01": 2235.0,
+          "0.1": 6078.0,
+          "0.5": 24840.0,
+          "0.9": 123490.40000000002,
+          "0.99": 468711.4000000019,
+          "1.0": 84076925.0
+        }
+      },
+      "first_action": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 3,
+        "counts": {
+          "0": 255317,
+          "1": 21565,
+          "2": 6223
+        }
+      },
+      "original": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 2,
+        "counts": {
+          "1": 259399,
+          "0": 23706
+        }
+      },
+      "answer_type": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 5,
+        "counts": {
+          "algebra": 231698,
+          "choose_1": 30550,
+          "fill_in_1": 20782,
+          "choose_n": 67,
+          "open_response": 8
+        }
+      },
+      "tutor_mode": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 2,
+        "counts": {
+          "tutor": 282846,
+          "test": 259
+        }
+      },
+      "type": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 1,
+        "counts": {
+          "MasterySection": 283105
+        }
+      },
+      "template_id": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 658
+      },
+      "sequence_id": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 620
+      },
+      "assignment_id": {
+        "rows": 283105,
+        "non_null": 283105,
+        "coverage": 1.0,
+        "nunique_non_null": 3415
+      },
+      "answer_text": {
+        "rows": 283105,
+        "non_null": 225425,
+        "coverage": 0.7962593384080111,
+        "nunique_non_null": 13918
+      },
+      "answer_id": {
+        "rows": 283105,
+        "non_null": 29892,
+        "coverage": 0.10558626657953762,
+        "nunique_non_null": 5407
+      }
+    },
+    "first_action_by_correct": {
+      "0": {
+        "0": 68995,
+        "1": 21565,
+        "2": 6223
+      },
+      "1": {
+        "0": 186322,
+        "1": 0,
+        "2": 0
+      }
+    },
+    "attempt_eq1_and_correct0": 38153,
+    "hint_positive_and_correct1": 9,
+    "overlap_equals_first_response_fraction": 0.6824005227742357,
+    "timing_quality": {
+      "negative_first_response_rows": 5,
+      "zero_first_response_rows": 310,
+      "first_response_over_one_hour_rows": 130,
+      "negative_overlap_rows": 9
+    },
+    "order_id_digit_lengths": {
+      "8": 283105
+    },
+    "hint_positive_rows": 42519,
+    "hint_positive_but_no_hint_available": 0,
+    "bottom_hint_by_hint_positive": {
+      "False": {
+        "0": 3,
+        "1": 0,
+        "missing": 240583
+      },
+      "True": {
+        "0": 13474,
+        "1": 29045,
+        "missing": 0
+      }
+    },
+    "attempt_by_correct_top_counts": {
+      "0": {
+        "1": 38153,
+        "2": 27480,
+        "3": 10881,
+        "0": 6466,
+        "4": 5706,
+        "5": 2628,
+        "6": 1441,
+        "7": 867,
+        "8": 580,
+        "9": 376,
+        "10": 321,
+        "11": 218,
+        "12": 184,
+        "13": 171,
+        "14": 119
+      },
+      "1": {
+        "1": 185004,
+        "2": 601,
+        "3": 68,
+        "0": 595,
+        "4": 19,
+        "5": 9,
+        "6": 4,
+        "7": 2,
+        "8": 1,
+        "9": 1,
+        "10": 2,
+        "11": 1,
+        "12": 0,
+        "13": 1,
+        "14": 0
+      }
+    },
+    "multi_concept_row_fraction": 0.16614683597958355,
+    "template_multiple_questions_count": 596
+  },
+  "nips_task34": {
+    "raw_rows": 1382727,
+    "students": 4918,
+    "questions": 948,
+    "answer_id_unique": true,
+    "metadata_rows": 1508917,
+    "metadata_answer_id_unique": true,
+    "metadata_join_matched_rows": 1382727,
+    "fields": {
+      "Confidence": {
+        "rows": 1382727,
+        "non_null": 346428,
+        "coverage": 0.2505396943865275,
+        "nunique_non_null": 5,
+        "numeric_valid": 346428,
+        "quantiles": {
+          "0.0": 0.0,
+          "0.01": 0.0,
+          "0.1": 25.0,
+          "0.5": 75.0,
+          "0.9": 100.0,
+          "0.99": 100.0,
+          "1.0": 100.0
+        }
+      },
+      "AnswerValue": {
+        "rows": 1382727,
+        "non_null": 1382727,
+        "coverage": 1.0,
+        "nunique_non_null": 4,
+        "numeric_valid": 1382727,
+        "quantiles": {
+          "0.0": 1.0,
+          "0.01": 1.0,
+          "0.1": 1.0,
+          "0.5": 2.0,
+          "0.9": 4.0,
+          "0.99": 4.0,
+          "1.0": 4.0
+        }
+      },
+      "CorrectAnswer": {
+        "rows": 1382727,
+        "non_null": 1382727,
+        "coverage": 1.0,
+        "nunique_non_null": 4,
+        "numeric_valid": 1382727,
+        "quantiles": {
+          "0.0": 1.0,
+          "0.01": 1.0,
+          "0.1": 1.0,
+          "0.5": 2.0,
+          "0.9": 4.0,
+          "0.99": 4.0,
+          "1.0": 4.0
+        }
+      },
+      "GroupId": {
+        "rows": 1382727,
+        "non_null": 1382727,
+        "coverage": 1.0,
+        "nunique_non_null": 370
+      },
+      "QuizId": {
+        "rows": 1382727,
+        "non_null": 1382727,
+        "coverage": 1.0,
+        "nunique_non_null": 120
+      },
+      "SchemeOfWorkId": {
+        "rows": 1382727,
+        "non_null": 1267192,
+        "coverage": 0.9164440992328927,
+        "nunique_non_null": 2
+      },
+      "DateAnswered": {
+        "rows": 1382727,
+        "non_null": 1382727,
+        "coverage": 1.0,
+        "nunique_non_null": 177615
+      }
+    },
+    "confidence_values": {
+      "nan": 1036299,
+      "100.0": 159469,
+      "75.0": 87778,
+      "50.0": 53043,
+      "0.0": 28733,
+      "25.0": 17405
+    },
+    "confidence_present_students": 4284,
+    "confidence_present_questions": 904,
+    "confidence_by_correct": {
+      "0": {
+        "0.0": 19117,
+        "25.0": 10660,
+        "50.0": 27399,
+        "75.0": 31150,
+        "100.0": 42621
+      },
+      "1": {
+        "0.0": 9616,
+        "25.0": 6745,
+        "50.0": 25644,
+        "75.0": 56628,
+        "100.0": 116848
+      }
+    },
+    "option_by_correct": {
+      "0": {
+        "1": 146134,
+        "2": 175209,
+        "3": 173612,
+        "4": 144789
+      },
+      "1": {
+        "1": 191890,
+        "2": 205669,
+        "3": 210390,
+        "4": 135034
+      }
+    },
+    "correctness_matches_option_equality": 1.0,
+    "questions_with_inconsistent_correct_answer": 4,
+    "timestamp_valid_rows": 1382727,
+    "timestamp_subminute_nonzero_rows": 0,
+    "timestamp_range": [
+      "2019-09-06 14:05:00",
+      "2020-05-01 08:33:00"
+    ],
+    "recorded_answer_gaps": {
+      "within_student_pairs": 1377809,
+      "zero_gap_count": 666111,
+      "zero_gap_fraction": 0.48345670553756,
+      "positive_gap_seconds_quantiles": {
+        "0.0": 60.0,
+        "0.1": 60.0,
+        "0.5": 60.0,
+        "0.9": 1500.0,
+        "0.99": 1563540.0,
+        "1.0": 17759640.0
+      },
+      "warning": "Interval between recorded answers is not per-item response duration; equal timestamps do not establish within-tie chronology."
+    },
+    "subject_levels": {
+      "3": 308,
+      "2": 69,
+      "1": 9,
+      "0": 2
+    },
+    "metadata_question_rows": 948,
+    "question_subject_counts": {
+      "4": 934,
+      "5": 12,
+      "6": 2
+    },
+    "bundled_question_image_files": 0,
+    "correct_answer_inconsistent_rows": 5074,
+    "subject_parent_non_null_rows": 386
+  },
+  "peiyou": {
+    "raw_rows": 5549635,
+    "students": 18066,
+    "questions": 7652,
+    "fields": {
+      "ans_state": {
+        "rows": 5549635,
+        "non_null": 5549635,
+        "coverage": 1.0,
+        "nunique_non_null": 2,
+        "numeric_valid": 5549635,
+        "quantiles": {
+          "0.0": 1.0,
+          "0.01": 1.0,
+          "0.1": 1.0,
+          "0.5": 1.0,
+          "0.9": 2.0,
+          "0.99": 2.0,
+          "1.0": 2.0
+        }
+      },
+      "timestamp": {
+        "rows": 5549635,
+        "non_null": 5549635,
+        "coverage": 1.0,
+        "nunique_non_null": 1558128,
+        "numeric_valid": 5549635,
+        "quantiles": {
+          "0.0": 978763200000.0,
+          "0.01": 1594222673000.0,
+          "0.1": 1597147293200.0,
+          "0.5": 1607842576000.0,
+          "0.9": 1619262955000.0,
+          "0.99": 1622203541000.0,
+          "1.0": 1622303867000.0
+        }
+      },
+      "label": {
+        "rows": 5549635,
+        "non_null": 5549635,
+        "coverage": 1.0,
+        "nunique_non_null": 2,
+        "numeric_valid": 5549635,
+        "quantiles": {
+          "0.0": 0.0,
+          "0.01": 0.0,
+          "0.1": 0.0,
+          "0.5": 1.0,
+          "0.9": 1.0,
+          "0.99": 1.0,
+          "1.0": 1.0
+        }
+      }
+    },
+    "ans_state_values": {
+      "1": 4410399,
+      "2": 1139236
+    },
+    "ans_state_by_label": {
+      "0": {
+        "1": 0,
+        "2": 1139236
+      },
+      "1": {
+        "1": 4410399,
+        "2": 0
+      }
+    },
+    "timestamp_inferred_epoch_unit": "ms",
+    "timestamp_range_utc": [
+      "2001-01-06 06:40:00+00:00",
+      "2021-05-29 15:57:47+00:00"
+    ],
+    "recorded_answer_gaps": {
+      "within_student_pairs": 5531569,
+      "zero_gap_count": 2854452,
+      "zero_gap_fraction": 0.5160293580356676,
+      "positive_gap_seconds_quantiles": {
+        "0.0": 1.0,
+        "0.1": 119.0,
+        "0.5": 1141.0,
+        "0.9": 589795.0,
+        "0.99": 2577285.439999994,
+        "1.0": 618442979.0
+      },
+      "warning": "Interval between recorded answers is not per-item response duration; equal timestamps do not establish within-tie chronology."
+    },
+    "timestamp_resolution_inferred": {
+      "all_integer_seconds": false,
+      "warning": "Epoch unit inferred from magnitude/date plausibility; timezone of instructional events is not established."
+    },
+    "duplicate_student_question_timestamp_rows": 56946,
+    "questions.json": {
+      "top_level_type": "dict",
+      "entries": 7652,
+      "value_types": {
+        "dict": 7652
+      },
+      "fields": {
+        "analysis": {
+          "present": 7652,
+          "nonempty": 7652,
+          "non_null_nonempty": 7652
+        },
+        "concept_routes": {
+          "present": 7652,
+          "nonempty": 7652,
+          "non_null_nonempty": 7652
+        },
+        "content": {
+          "present": 7652,
+          "nonempty": 7652,
+          "non_null_nonempty": 7652
+        },
+        "type": {
+          "present": 7652,
+          "nonempty": 1510,
+          "non_null_nonempty": 7652
+        }
+      },
+      "route_counts": {
+        "1": 5543,
+        "2": 1780,
+        "3": 184,
+        "4": 94,
+        "6": 25,
+        "5": 19,
+        "8": 6,
+        "7": 1
+      },
+      "route_depths": {
+        "5": 4763,
+        "6": 2893,
+        "4": 2211,
+        "2": 255,
+        "3": 197,
+        "7": 12
+      },
+      "content_lengths": {
+        "rows": 7652,
+        "non_null": 7652,
+        "coverage": 1.0,
+        "nunique_non_null": 1031,
+        "numeric_valid": 7652,
+        "quantiles": {
+          "0.0": 28.0,
+          "0.01": 91.0,
+          "0.1": 180.0,
+          "0.5": 394.0,
+          "0.9": 728.0,
+          "0.99": 1208.4899999999998,
+          "1.0": 3230.0
+        }
+      },
+      "content_with_image_markup": 0,
+      "interaction_question_mapping_coverage": 1.0,
+      "type_values": {
+        "0": 6142,
+        "1": 1510
+      },
+      "content_with_http_reference": 0
+    },
+    "map_questions.json": {
+      "top_level_type": "dict",
+      "entries": 8241,
+      "value_types": {
+        "dict": 8241
+      },
+      "fields": {
+        "analysis": {
+          "present": 8241,
+          "nonempty": 8241,
+          "non_null_nonempty": 8241
+        },
+        "concept_routes": {
+          "present": 8241,
+          "nonempty": 8241,
+          "non_null_nonempty": 8241
+        },
+        "content": {
+          "present": 8241,
+          "nonempty": 8241,
+          "non_null_nonempty": 8241
+        },
+        "type": {
+          "present": 8241,
+          "nonempty": 1637,
+          "non_null_nonempty": 8241
+        }
+      },
+      "route_counts": {
+        "1": 5964,
+        "2": 1914,
+        "3": 202,
+        "4": 104,
+        "6": 27,
+        "5": 21,
+        "8": 7,
+        "7": 1,
+        "10": 1
+      },
+      "route_depths": {
+        "5": 5159,
+        "6": 3126,
+        "4": 2358,
+        "2": 282,
+        "3": 215,
+        "7": 14
+      },
+      "content_lengths": {
+        "rows": 8241,
+        "non_null": 8241,
+        "coverage": 1.0,
+        "nunique_non_null": 1072,
+        "numeric_valid": 8241,
+        "quantiles": {
+          "0.0": 28.0,
+          "0.01": 91.0,
+          "0.1": 184.0,
+          "0.5": 407.0,
+          "0.9": 752.0,
+          "0.99": 1252.6000000000004,
+          "1.0": 3872.0
+        }
+      },
+      "content_with_image_markup": 0,
+      "interaction_question_mapping_coverage": 1.0,
+      "type_values": {
+        "0": 6604,
+        "1": 1637
+      },
+      "content_with_http_reference": 0
+    },
+    "timestamp_year_counts": {
+      "2001": 7,
+      "2018": 23,
+      "2020": 3201136,
+      "2021": 2348469
+    },
+    "timestamp_nonzero_millisecond_rows": 26915,
+    "repeated_student_question_timestamp_groups": 56942,
+    "repeated_groups_with_label_conflict": 819,
+    "exact_duplicate_core_rows": 56127
+  }
+}

@@ -1,0 +1,8 @@
+你是主 agent 委派的只读核验 worker。本次仅测试委派链路，请直接完成这个小任务，不要扩展范围。
+只允许读取以下三个文件：
+1. /root/pykt-toolkit/AGENTS.md
+2. /root/pykt-toolkit/logs/dkt_assist2009_fold0_smoke_20261025/summary.json
+3. /root/pykt-toolkit/logs/dkt_assist2009_fold0_smoke_20261025/model/all_results.json
+禁止修改任何文件、安装软件、启动训练、主动联网、读取凭据或调用其他子代理。允许用本地读取工具读取上述文件。
+任务：核验本次实验的 dataset、model、fold、seed、epochs；从 all_results.json 提取精确的 windowauclate_mean 和 window_testauc；确认项目首要指标是哪一个，并说明这两个字段不能互相替代。
+最终只返回一个简短 JSON 对象，包含 dataset、model、fold、seed、epochs、primary_metric、windowauclate_mean、window_testauc、source_file、note。不要猜测缺失值。

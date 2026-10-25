@@ -1,0 +1,18 @@
+{
+  "frozen_at_utc": "2026-10-25T07:05:44.852036+00:00",
+  "selected_by": "validation_auc only",
+  "selected_variant": "r3_balanced",
+  "validation_auc": {
+    "baseline": 0.8308394991180901,
+    "r1_joint": 0.8319555451228047,
+    "r2_conditional": 0.8314261657512422,
+    "r3_balanced": 0.8323387198809282
+  },
+  "checkpoint_sha256": {
+    "baseline": "8094b98fa8047f51b2478d4e5794a1c417b8ad8eab0fc527b122e058e944475a",
+    "r1_joint": "0c00720aa9dfae12db3e9b6b55d08cffedef6c67ecb4353968b3b2e785fcf579",
+    "r2_conditional": "a0fbab1691154ae3680f06774cf2a3cdab5a93558ae6761bea73d9c82b4dd9c8",
+    "r3_balanced": "f7889f898af3f1551e712997703476645c830678391836c79b0b6adc9b7fb296"
+  },
+  "test_evaluation_started": false
+}

@@ -1,0 +1,33 @@
+{
+  "checkpoint_sha_unchanged": {
+    "baseline": true,
+    "r1_joint": true,
+    "r2_conditional": true,
+    "r3_weaker": true,
+    "r4_time_reweight": true
+  },
+  "pure_dkt_export_identical": {
+    "r1_joint": true,
+    "r2_conditional": true,
+    "r3_weaker": true,
+    "r4_time_reweight": true
+  },
+  "source_snapshot_unchanged": {
+    "pykt/models/dkt_process.py": true,
+    "pykt/datasets/process_dataset.py": true,
+    "examples/train_dkt_process.py": true,
+    "examples/evaluate_dkt_first_action.py": true,
+    "tests/test_dkt_process.py": true,
+    "pykt/models/init_model.py": true,
+    "pykt/models/train_model.py": true,
+    "pykt/models/evaluate_model.py": true,
+    "pykt/datasets/init_dataset.py": true
+  },
+  "original_files_unchanged": {
+    "pykt/models/dkt.py": true,
+    "pykt/datasets/data_loader.py": true,
+    "ALSO/also.py": true,
+    "configs/kt_config.json": true
+  },
+  "baseline_matches_previous_baseline": true
+}

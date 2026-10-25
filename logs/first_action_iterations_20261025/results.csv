@@ -1,0 +1,5 @@
+variant,selected_before_test,best_epoch,validation_auc,windowauclate_mean,windowacclate_mean,failure_macro_f1,training_seconds,model_dir
+baseline,False,4,0.8308394991180901,0.7508302058555418,0.7223834434304479,,32.83685280941427,/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/baseline
+r1_joint,False,5,0.8319555451228047,0.7520206908578513,0.7224216274008172,0.5226007349525482,36.628686050884426,/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r1_joint
+r2_conditional,False,4,0.8314261657512422,0.7514136218596874,0.7206842567490168,0.5353726108249325,34.074002710171044,/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+r3_balanced,True,5,0.8323387198809282,0.7523096037577055,0.7218870518156478,0.5719536380977406,36.75368188787252,/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r3_balanced

@@ -1,0 +1,18 @@
+{
+  "scope": "train_valid raw events only",
+  "raw_events": 229467,
+  "invalid_or_ineligible": {
+    "process_time_mask": 355,
+    "process_attempt_mask": 0,
+    "process_hint_mask": 73996
+  },
+  "time_invalid_reasons": {
+    "nonpositive": 244,
+    "over_1h": 111
+  },
+  "hint_exclusion_reasons_overlap": {
+    "no_hint_opportunity": 73784,
+    "scaffold_or_unknown": 4995,
+    "hint_count_exceeds_total": 0
+  }
+}

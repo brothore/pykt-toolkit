@@ -1,0 +1,98 @@
+[HAMI-core Msg(336317:140677476801408:libvgpu.c:837)]: Initializing.....
+[HAMI-core Msg(336317:140677476801408:libvgpu.c:853)]: Initialized
+Read data from processed file: /root/pykt-toolkit/data/assist2009/train_valid_sequences.csv_0.pkl
+file path: /root/pykt-toolkit/data/assist2009/train_valid_sequences.csv, qlen: 741, clen: 741, rlen: 741, uidlen: 741
+Read data from processed file: /root/pykt-toolkit/data/assist2009/train_valid_sequences.csv_1_2_3_4.pkl
+file path: /root/pykt-toolkit/data/assist2009/train_valid_sequences.csv, qlen: 3016, clen: 3016, rlen: 3016, uidlen: 3016
+EXPERIMENT {"model_name": "dkt_first_action", "dataset_name": "assist2009", "fold": 0, "seed": 42, "num_epochs": 20, "batch_size": 32, "emb_size": 200, "dropout": 0.2, "learning_rate": 0.001, "action_weight": 0.1, "action_mode": "conditional", "action_balance": 0.0, "action_hidden": 100, "save_dir": "/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional", "emb_type": "qid", "use_wandb": 0, "use_also": 0}
+MODEL_CONFIG {"emb_size": 200, "dropout": 0.2, "action_weight": 0.1, "action_mode": "conditional", "action_balance": 0.0, "action_hidden": 100, "action_class_counts": [121381, 44051, 13339, 3869]}
+PARAMETERS 435926
+未找到预训练模型文件，将从头开始训练。
+Epoch: 1, validauc: 0.8171, validacc: 0.7681, best epoch: 1, best auc: 0.8171, train loss: 0.596824972743968, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.69s | Train Phase: 2.44s | Valid Phase: 0.24s
+Avg Batch Time: 0.0257s
+------------------------------
+Epoch: 2, validauc: 0.8253, validacc: 0.7748, best epoch: 2, best auc: 0.8253, train loss: 0.5294606957894757, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.39s | Train Phase: 2.16s | Valid Phase: 0.23s
+Avg Batch Time: 0.0227s
+------------------------------
+Epoch: 3, validauc: 0.829, validacc: 0.778, best epoch: 3, best auc: 0.829, train loss: 0.5167668936081028, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.38s | Train Phase: 2.15s | Valid Phase: 0.23s
+Avg Batch Time: 0.0226s
+------------------------------
+Epoch: 4, validauc: 0.8314, validacc: 0.7793, best epoch: 4, best auc: 0.8314, train loss: 0.5087830851457373, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.39s | Train Phase: 2.15s | Valid Phase: 0.23s
+Avg Batch Time: 0.0227s
+------------------------------
+Epoch: 5, validauc: 0.8314, validacc: 0.7793, best epoch: 4, best auc: 0.8314, train loss: 0.5022654628750589, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.38s | Train Phase: 2.15s | Valid Phase: 0.23s
+Avg Batch Time: 0.0227s
+------------------------------
+Epoch: 6, validauc: 0.8314, validacc: 0.7793, best epoch: 4, best auc: 0.8314, train loss: 0.49678279899742567, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.38s | Train Phase: 2.15s | Valid Phase: 0.23s
+Avg Batch Time: 0.0227s
+------------------------------
+Epoch: 7, validauc: 0.8314, validacc: 0.7793, best epoch: 4, best auc: 0.8314, train loss: 0.49194153932789064, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.39s | Train Phase: 2.16s | Valid Phase: 0.23s
+Avg Batch Time: 0.0227s
+------------------------------
+Epoch: 8, validauc: 0.8314, validacc: 0.7793, best epoch: 4, best auc: 0.8314, train loss: 0.486801443823736, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.38s | Train Phase: 2.15s | Valid Phase: 0.23s
+Avg Batch Time: 0.0226s
+------------------------------
+Epoch: 9, validauc: 0.8314, validacc: 0.7793, best epoch: 4, best auc: 0.8314, train loss: 0.48152007024165855, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.38s | Train Phase: 2.15s | Valid Phase: 0.23s
+Avg Batch Time: 0.0227s
+------------------------------
+Epoch: 10, validauc: 0.8314, validacc: 0.7793, best epoch: 4, best auc: 0.8314, train loss: 0.4770700327010779, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.39s | Train Phase: 2.15s | Valid Phase: 0.23s
+Avg Batch Time: 0.0227s
+------------------------------
+Epoch: 11, validauc: 0.8314, validacc: 0.7793, best epoch: 4, best auc: 0.8314, train loss: 0.4716511018191629, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.38s | Train Phase: 2.15s | Valid Phase: 0.23s
+Avg Batch Time: 0.0227s
+------------------------------
+Epoch: 12, validauc: 0.8314, validacc: 0.7793, best epoch: 4, best auc: 0.8314, train loss: 0.4677359595537599, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.38s | Train Phase: 2.14s | Valid Phase: 0.23s
+Avg Batch Time: 0.0226s
+------------------------------
+Epoch: 13, validauc: 0.8314, validacc: 0.7793, best epoch: 4, best auc: 0.8314, train loss: 0.4629113921009155, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.38s | Train Phase: 2.15s | Valid Phase: 0.23s
+Avg Batch Time: 0.0226s
+------------------------------
+Epoch: 14, validauc: 0.8314, validacc: 0.7793, best epoch: 4, best auc: 0.8314, train loss: 0.4573060713566923, emb_type: qid, model: dkt_first_action, save_dir: /root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 2.39s | Train Phase: 2.16s | Valid Phase: 0.23s
+Avg Batch Time: 0.0227s
+------------------------------
+Early stopping at epoch 14
+✅ Training Finished! Total Time Cost: 33.66 s
+VALIDATION_SUMMARY {"status": "trained_and_reloaded", "model": "dkt_first_action", "dataset": "assist2009", "fold": 0, "seed": 42, "epoch_budget": 20, "best_epoch": 4, "validation_auc": 0.8314261657512422, "validation_accuracy": 0.7793469001419783, "elapsed_seconds": 34.074002710171044, "model_config": {"emb_size": 200, "dropout": 0.2, "action_weight": 0.1, "action_mode": "conditional", "action_balance": 0.0, "action_hidden": 100, "action_class_counts": [121381, 44051, 13339, 3869]}, "parameters": 435926, "train_sequences": 3016, "validation_sequences": 741, "validation_diagnostics": {"response_nll": 0.45024927180360996, "response_brier": 0.15044132464367738, "event_count": 43191, "class_counts": [28623, 10401, 3163, 1004], "confusion_matrix": [[27037, 1302, 253, 31], [8337, 1637, 340, 87], [1532, 753, 838, 40], [520, 202, 52, 230]], "macro_f1": 0.43473163321999964, "failure_macro_f1": 0.5353726108249325, "failure_confusion_matrix": [[9863, 431, 107], [2206, 909, 48], [694, 59, 251]]}, "test_evaluated": false}
+[HAMI-core Msg(336317:140677476801408:multiprocess_memory_limit.c:459)]: Calling exit handler 336317

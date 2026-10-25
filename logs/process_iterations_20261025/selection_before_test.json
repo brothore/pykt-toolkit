@@ -1,0 +1,20 @@
+{
+  "frozen_at_utc": "2026-10-25T07:59:16.577305+00:00",
+  "selected_by": "validation AUC of retained checkpoint only; no test metrics used",
+  "selected_variant": "r4_time_reweight",
+  "validation_auc": {
+    "baseline": 0.8308394991180901,
+    "r1_joint": 0.8326950814697007,
+    "r2_conditional": 0.8325395091774778,
+    "r3_weaker": 0.8313326527560354,
+    "r4_time_reweight": 0.8329018940829128
+  },
+  "checkpoint_sha256": {
+    "baseline": "8094b98fa8047f51b2478d4e5794a1c417b8ad8eab0fc527b122e058e944475a",
+    "r1_joint": "b44343133a9b2654b0a1b9a37c032c7e2fa5200e7ee239387fb2f633c66c18e4",
+    "r2_conditional": "a59b31a8f8f946e02e252c41c19b00fdd61d561f8b2b8531523c224d6db10d00",
+    "r3_weaker": "7879894bf32a078b18a20e415382642e3561f21bfc76bb7756130b15ddd20783",
+    "r4_time_reweight": "a40544a11ab1cae83a40ce56b4564d8f5a85410fdde94106e20716cd4c74a3e8"
+  },
+  "test_evaluation_started": false
+}

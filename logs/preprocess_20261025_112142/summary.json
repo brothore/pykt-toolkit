@@ -1,0 +1,41 @@
+{
+  "assist2009": {
+    "exit_code": 0,
+    "train_valid_students": 3082,
+    "test_students": 770,
+    "folds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "output_files": 14
+  },
+  "nips_task34": {
+    "exit_code": 0,
+    "train_valid_students": 3935,
+    "test_students": 983,
+    "folds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "output_files": 14
+  },
+  "peiyou": {
+    "exit_code": 0,
+    "train_valid_students": 14453,
+    "test_students": 3613,
+    "folds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "output_files": 14
+  }
+}

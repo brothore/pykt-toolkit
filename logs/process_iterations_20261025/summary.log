@@ -1,0 +1,52 @@
+{
+  "selected_variant": "r4_time_reweight",
+  "windowauclate_mean": 0.7528373715660613,
+  "gain": 0.0020071657105195095,
+  "rows": [
+    {
+      "variant": "baseline",
+      "selected_before_test": false,
+      "best_epoch": 4,
+      "stopped_epoch": 14,
+      "validation_auc": 0.8308394991180901,
+      "windowauclate_mean": 0.7508302058555418,
+      "windowacclate_mean": 0.7223834434304479
+    },
+    {
+      "variant": "r1_joint",
+      "selected_before_test": false,
+      "best_epoch": 5,
+      "stopped_epoch": 15,
+      "validation_auc": 0.8326950814697007,
+      "windowauclate_mean": 0.7528880740639377,
+      "windowacclate_mean": 0.7229943869563558
+    },
+    {
+      "variant": "r2_conditional",
+      "selected_before_test": false,
+      "best_epoch": 5,
+      "stopped_epoch": 15,
+      "validation_auc": 0.8325395091774778,
+      "windowauclate_mean": 0.7522454211884138,
+      "windowacclate_mean": 0.7220970636526786
+    },
+    {
+      "variant": "r3_weaker",
+      "selected_before_test": false,
+      "best_epoch": 4,
+      "stopped_epoch": 14,
+      "validation_auc": 0.8313326527560354,
+      "windowauclate_mean": 0.7511293849930538,
+      "windowacclate_mean": 0.7217915918897247
+    },
+    {
+      "variant": "r4_time_reweight",
+      "selected_before_test": true,
+      "best_epoch": 6,
+      "stopped_epoch": 16,
+      "validation_auc": 0.8329018940829128,
+      "windowauclate_mean": 0.7528373715660613,
+      "windowacclate_mean": 0.7225552712971095
+    }
+  ]
+}

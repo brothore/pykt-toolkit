@@ -1,0 +1,20 @@
+[HAMI-core Msg(416325:140480116689792:libvgpu.c:837)]: Initializing.....
+[HAMI-core Warn(416325:140480116689792:multiprocess_memory_limit.c:501)]: Lock shrreg timeout, try fix (416325:414450)
+[HAMI-core Warn(416325:140480116689792:multiprocess_memory_limit.c:505)]: Owner proc dead (414450), try fix
+[HAMI-core Msg(416325:140480116689792:libvgpu.c:853)]: Initialized
+Read data from processed file: /root/pykt-toolkit/data/assist2009/test_sequences.csv_-1.pkl
+file path: /root/pykt-toolkit/data/assist2009/test_sequences.csv, qlen: 904, clen: 904, rlen: 904, uidlen: 904
+FINISHED test_file {"testauc": 0.8241004068982173, "testacc": 0.7659763504781597}
+Read data from processed file: /root/pykt-toolkit/data/assist2009/test_window_sequences.csv_-1.pkl
+file path: /root/pykt-toolkit/data/assist2009/test_window_sequences.csv, qlen: 20362, clen: 20362, rlen: 20362, uidlen: 20362
+FINISHED test_window_file {"testauc": 0.8241004068982173, "testacc": 0.7659763504781597, "window_testauc": 0.8250440832638488, "window_testacc": 0.7665699548678272}
+Read data from processed file: /root/pykt-toolkit/data/assist2009/test_question_sequences.csv_-1_qtest.pkl
+file path: /root/pykt-toolkit/data/assist2009/test_question_sequences.csv, qlen: 18292, clen: 18292, rlen: 18292, uidlen: 18292
+[DEBUG] auc: 0.7390016279759222 (type: <class 'float'>)
+FINISHED test_question_file {"testauc": 0.8241004068982173, "testacc": 0.7659763504781597, "window_testauc": 0.8250440832638488, "window_testacc": 0.7665699548678272, "oriaucconcepts": 0.7390016279759222, "oriauclate_mean": 0.7517144217323815, "oriauclate_vote": 0.7504416477730721, "oriauclate_all": 0.7499797439381772, "oriaccconcepts": 0.7154384600427766, "oriacclate_mean": 0.7224135951314732, "oriacclate_vote": 0.7216672407853945, "oriacclate_all": 0.7190645692195813}
+Read data from processed file: /root/pykt-toolkit/data/assist2009/test_question_window_sequences.csv_-1_qtest.pkl
+file path: /root/pykt-toolkit/data/assist2009/test_question_window_sequences.csv, qlen: 30610, clen: 30610, rlen: 30610, uidlen: 30610
+[DEBUG] auc: 0.740045520155022 (type: <class 'float'>)
+FINISHED test_question_window_file {"testauc": 0.8241004068982173, "testacc": 0.7659763504781597, "window_testauc": 0.8250440832638488, "window_testacc": 0.7665699548678272, "oriaucconcepts": 0.7390016279759222, "oriauclate_mean": 0.7517144217323815, "oriauclate_vote": 0.7504416477730721, "oriauclate_all": 0.7499797439381772, "oriaccconcepts": 0.7154384600427766, "oriacclate_mean": 0.7224135951314732, "oriacclate_vote": 0.7216672407853945, "oriacclate_all": 0.7190645692195813, "windowaucconcepts": 0.740045520155022, "windowauclate_mean": 0.7528880740639377, "windowauclate_vote": 0.7515748584125926, "windowauclate_all": 0.751188867014153, "windowaccconcepts": 0.715894767460651, "windowacclate_mean": 0.7229943869563558, "windowacclate_vote": 0.7221925235786018, "windowacclate_all": 0.719767841460155}
+PRIMARY_METRIC 0.7528880740639377
+[HAMI-core Msg(416325:140480116689792:multiprocess_memory_limit.c:459)]: Calling exit handler 416325

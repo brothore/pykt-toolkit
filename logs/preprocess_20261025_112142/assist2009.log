@@ -1,0 +1,66 @@
+[HAMI-core Msg(91806:140166075988864:libvgpu.c:837)]: Initializing.....
+[HAMI-core Msg(91806:140166075988864:libvgpu.c:853)]: Initialized
+Start preprocessing data: assist2009
+original interaction num: 346860, user num: 4217, question num: 26688, concept num: 123, avg(ins) per s: 82.2528, avg(c) per q: 1.1969, na: 8937
+after drop interaction num: 283105, user num: 4163, question num: 17751, concept num: 123, avg(ins) per s: 68.005, avg(c) per q: 1.1969, na: 0
+346860,4217,26688,123,82.2528,1.1969,8937
+283105,4163,17751,123,68.005,1.1969,0
+delete bad stu num of len: 311, delete interactions: 486, of r: 0, good num: 282619
+====================
+original total interactions: 282619, qs: 17737, cs: 123, seqnum: 3852
+df.columns: Index(['uid', 'is_repeat', 'concepts', 'questions', 'responses'], dtype='str')
+====================
+after extend multi, total interactions: 337424, qs: 17737, cs: 123, seqnum: 3852
+total num: 3852, train+valid num: 3082, test num: 770
+fold: 1, start: 0, end: 617, total num: 3082
+fold: 2, start: 617, end: 1234, total num: 3082
+fold: 3, start: 1234, end: 1850, total num: 3082
+fold: 4, start: 1850, end: 2466, total num: 3082
+fold: 5, start: 2466, end: 3082, total num: 3082
+train+valid original interactions num: 274614, select num: 0, qs: 17405, cs: 120, seqnum: 3082
+dropnum: 7
+train+valid sequences interactions num: 274607, select num: 274607, qs: 17405, cs: 120, seqnum: 3757
+dropnum: 2
+original test interactions num: 62810, select num: 0, qs: 13454, cs: 122, seqnum: 770
+test sequences interactions num: 62808, select num: 62808, qs: 13454, cs: 122, seqnum: 904
+====================
+test window interactions num: 3961618, select num: 62810, qs: 13454, cs: 122, seqnum: 20362
+test question interactions num: 1447806, select num: 61799, qs: 13454, cs: 122, seqnum: 18292
+test question window interactions num: 4679370, select num: 61882, qs: 13454, cs: 122, seqnum: 30610
+====================
+original,282619,3852,0
+extend multi,337424,3852,0
+original train+valid,274614,3082,0
+train+valid sequences,274607,3757,274607
+test original,62810,770,0
+test sequences,62808,904,62808
+test window,3961618,20362,62810
+test question,1447806,18292,61799
+test question window,4679370,30610,61882
+delete bad stu num of len: 311, delete interactions: 486, of r: 0, good num: 282619
+====================
+original total interactions: 282619, qs: 17737, cs: 123, seqnum: 3852
+df.columns: Index(['concepts', 'questions', 'responses', 'uid'], dtype='str')
+total num: 3852, train+valid num: 3082, test num: 770
+fold: 1, start: 0, end: 617, total num: 3082
+fold: 2, start: 617, end: 1234, total num: 3082
+fold: 3, start: 1234, end: 1850, total num: 3082
+fold: 4, start: 1850, end: 2466, total num: 3082
+fold: 5, start: 2466, end: 3082, total num: 3082
+train+valid original interactions num: 229471, select num: 0, qs: 17405, cs: 120, seqnum: 3082
+dropnum: 12
+train+valid sequences interactions num: 229459, select num: 229459, qs: 17405, cs: 120, seqnum: 3580
+dropnum: 2
+original test interactions num: 53148, select num: 0, qs: 13454, cs: 122, seqnum: 770
+test sequences interactions num: 53146, select num: 53146, qs: 13452, cs: 122, seqnum: 874
+====================
+test window interactions num: 2879147, select num: 53148, qs: 13454, cs: 122, seqnum: 14971
+====================
+original,282619,3852,0
+original train+valid question level,229471,3082,0
+train+valid sequences question level,229459,3580,229459
+test original question level,53148,770,0
+test sequences question level,53146,874,53146
+test window question level,2879147,14971,53148
+COMPLETE: assist2009
+[HAMI-core Msg(91806:140166075988864:multiprocess_memory_limit.c:459)]: Calling exit handler 91806

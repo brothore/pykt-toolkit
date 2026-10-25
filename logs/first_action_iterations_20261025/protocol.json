@@ -1,0 +1,337 @@
+{
+  "branch": "feat/student-state-simulator",
+  "dataset": "assist2009",
+  "fold": 0,
+  "seed": 42,
+  "epoch_budget_per_run": 20,
+  "batch_size": 32,
+  "embedding_size": 200,
+  "dropout": 0.2,
+  "learning_rate": 0.001,
+  "primary_metric": "windowauclate_mean",
+  "selection": "validation_auc; freeze before test evaluation",
+  "rounds": [
+    {
+      "round": 1,
+      "variant": "joint_four_class",
+      "validation": {
+        "status": "trained_and_reloaded",
+        "model": "dkt_first_action",
+        "dataset": "assist2009",
+        "fold": 0,
+        "seed": 42,
+        "epoch_budget": 20,
+        "best_epoch": 5,
+        "validation_auc": 0.8319555451228047,
+        "validation_accuracy": 0.7796687174633223,
+        "elapsed_seconds": 36.628686050884426,
+        "model_config": {
+          "emb_size": 200,
+          "dropout": 0.2,
+          "action_weight": 0.1,
+          "action_mode": "joint",
+          "action_balance": 0.0,
+          "action_hidden": 100,
+          "action_class_counts": [
+            121381,
+            44051,
+            13339,
+            3869
+          ]
+        },
+        "parameters": 436027,
+        "train_sequences": 3016,
+        "validation_sequences": 741,
+        "validation_diagnostics": {
+          "response_nll": 0.4501717527402129,
+          "response_brier": 0.15040390013455587,
+          "event_count": 43191,
+          "class_counts": [
+            28623,
+            10401,
+            3163,
+            1004
+          ],
+          "confusion_matrix": [
+            [
+              27620,
+              683,
+              283,
+              37
+            ],
+            [
+              9049,
+              876,
+              389,
+              87
+            ],
+            [
+              1737,
+              487,
+              894,
+              45
+            ],
+            [
+              519,
+              220,
+              59,
+              206
+            ]
+          ],
+          "macro_f1": 0.40707544697772663,
+          "failure_macro_f1": 0.5226007349525482,
+          "failure_confusion_matrix": [
+            [
+              9840,
+              463,
+              98
+            ],
+            [
+              2168,
+              949,
+              46
+            ],
+            [
+              734,
+              61,
+              209
+            ]
+          ]
+        },
+        "test_evaluated": false
+      },
+      "next_decision": "Conditional failure-only CE: avoid duplicating correctness in the auxiliary objective; R1 failure subtype confusion is dominated by attempted-incorrect."
+    },
+    {
+      "round": 2,
+      "variant": "conditional_failure_ce",
+      "validation": {
+        "status": "trained_and_reloaded",
+        "model": "dkt_first_action",
+        "dataset": "assist2009",
+        "fold": 0,
+        "seed": 42,
+        "epoch_budget": 20,
+        "best_epoch": 4,
+        "validation_auc": 0.8314261657512422,
+        "validation_accuracy": 0.7793469001419783,
+        "elapsed_seconds": 34.074002710171044,
+        "model_config": {
+          "emb_size": 200,
+          "dropout": 0.2,
+          "action_weight": 0.1,
+          "action_mode": "conditional",
+          "action_balance": 0.0,
+          "action_hidden": 100,
+          "action_class_counts": [
+            121381,
+            44051,
+            13339,
+            3869
+          ]
+        },
+        "parameters": 435926,
+        "train_sequences": 3016,
+        "validation_sequences": 741,
+        "validation_diagnostics": {
+          "response_nll": 0.45024927180360996,
+          "response_brier": 0.15044132464367738,
+          "event_count": 43191,
+          "class_counts": [
+            28623,
+            10401,
+            3163,
+            1004
+          ],
+          "confusion_matrix": [
+            [
+              27037,
+              1302,
+              253,
+              31
+            ],
+            [
+              8337,
+              1637,
+              340,
+              87
+            ],
+            [
+              1532,
+              753,
+              838,
+              40
+            ],
+            [
+              520,
+              202,
+              52,
+              230
+            ]
+          ],
+          "macro_f1": 0.43473163321999964,
+          "failure_macro_f1": 0.5353726108249325,
+          "failure_confusion_matrix": [
+            [
+              9863,
+              431,
+              107
+            ],
+            [
+              2206,
+              909,
+              48
+            ],
+            [
+              694,
+              59,
+              251
+            ]
+          ]
+        },
+        "test_evaluated": false
+      },
+      "next_decision": "Failure macro-F1 improves but scaffold recall remains 251/1004; test sqrt-inverse-frequency weights using training-fold counts only; keep lambda=.1 and all other settings fixed."
+    },
+    {
+      "round": 3,
+      "variant": "conditional_sqrt_balance",
+      "validation": {
+        "status": "trained_and_reloaded",
+        "model": "dkt_first_action",
+        "dataset": "assist2009",
+        "fold": 0,
+        "seed": 42,
+        "epoch_budget": 20,
+        "best_epoch": 5,
+        "validation_auc": 0.8323387198809282,
+        "validation_accuracy": 0.7793847610033128,
+        "elapsed_seconds": 36.75368188787252,
+        "model_config": {
+          "emb_size": 200,
+          "dropout": 0.2,
+          "action_weight": 0.1,
+          "action_mode": "conditional",
+          "action_balance": 0.5,
+          "action_hidden": 100,
+          "action_class_counts": [
+            121381,
+            44051,
+            13339,
+            3869
+          ]
+        },
+        "parameters": 435926,
+        "train_sequences": 3016,
+        "validation_sequences": 741,
+        "validation_diagnostics": {
+          "response_nll": 0.44912730931506534,
+          "response_brier": 0.15016757760574131,
+          "event_count": 43191,
+          "class_counts": [
+            28623,
+            10401,
+            3163,
+            1004
+          ],
+          "confusion_matrix": [
+            [
+              27195,
+              707,
+              537,
+              184
+            ],
+            [
+              8518,
+              911,
+              689,
+              283
+            ],
+            [
+              1561,
+              350,
+              1149,
+              103
+            ],
+            [
+              520,
+              72,
+              57,
+              355
+            ]
+          ],
+          "macro_f1": 0.4360395774233045,
+          "failure_macro_f1": 0.5719536380977406,
+          "failure_confusion_matrix": [
+            [
+              8521,
+              1240,
+              640
+            ],
+            [
+              1562,
+              1451,
+              150
+            ],
+            [
+              455,
+              82,
+              467
+            ]
+          ]
+        },
+        "test_evaluated": false
+      },
+      "next_decision": "Freeze r3 by highest validation AUC, then test all frozen checkpoints once. No subsequent selection by test scores."
+    }
+  ],
+  "test_status": "all_four_completed",
+  "baseline_note": "Same runner and DKT backbone, original response BCE; historical 3-epoch smoke is not the comparison baseline.",
+  "selected_variant": "r3_balanced",
+  "results": [
+    {
+      "variant": "baseline",
+      "selected_before_test": false,
+      "best_epoch": 4,
+      "validation_auc": 0.8308394991180901,
+      "windowauclate_mean": 0.7508302058555418,
+      "windowacclate_mean": 0.7223834434304479,
+      "failure_macro_f1": null,
+      "training_seconds": 32.83685280941427,
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/baseline"
+    },
+    {
+      "variant": "r1_joint",
+      "selected_before_test": false,
+      "best_epoch": 5,
+      "validation_auc": 0.8319555451228047,
+      "windowauclate_mean": 0.7520206908578513,
+      "windowacclate_mean": 0.7224216274008172,
+      "failure_macro_f1": 0.5226007349525482,
+      "training_seconds": 36.628686050884426,
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r1_joint"
+    },
+    {
+      "variant": "r2_conditional",
+      "selected_before_test": false,
+      "best_epoch": 4,
+      "validation_auc": 0.8314261657512422,
+      "windowauclate_mean": 0.7514136218596874,
+      "windowacclate_mean": 0.7206842567490168,
+      "failure_macro_f1": 0.5353726108249325,
+      "training_seconds": 34.074002710171044,
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r2_conditional"
+    },
+    {
+      "variant": "r3_balanced",
+      "selected_before_test": true,
+      "best_epoch": 5,
+      "validation_auc": 0.8323387198809282,
+      "windowauclate_mean": 0.7523096037577055,
+      "windowacclate_mean": 0.7218870518156478,
+      "failure_macro_f1": 0.5719536380977406,
+      "training_seconds": 36.75368188787252,
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/first_action_iterations_20261025/r3_balanced"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+你是独立只读审查 worker，项目 /root/pykt-toolkit。先读 AGENTS.md。本轮不要改任何文件、不要训练、不要调用shell或尝试提权、不联网、不读取凭据、不调用其他子代理。直接read工具阅读以下文件：pykt/models/dkt_first_action.py、pykt/datasets/first_action_dataset.py、examples/train_dkt_first_action.py、examples/evaluate_dkt_first_action.py、tests/test_dkt_first_action.py；必要时读标准 dkt.py/data_loader.py 的相关片段。
+目标：检查这个独立DKT首步行为多任务实现有没有严重/中等缺陷，重点：1.原始事件对齐、chunk和多知识点复制；2.未来答案或目标first_action是否泄漏到推理；3.类别权重是否只来自训练折；4.零辅助权重是否保持DKT；5.保存重载与评估字段windowauclate_mean。报告不超过5个具体问题及代码位置与证据；没发现就明确说没有确认的缺陷，不要为了凑问题编造。区分已确认bug和可选研究改进。没有执行测试不能声称通过。

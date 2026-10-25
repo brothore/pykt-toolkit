@@ -1,0 +1,27 @@
+{
+  "train_valid_alignment_manifest": {
+    "version": 1,
+    "sources": {
+      "raw": "1309321c8673591da65cc8e456cd0561d275e82b09d6b0667c84e30518a0d522",
+      "mapping": "40fec453a462e378c6c7ec54200c820b5e88d55afa56b9c8d8b3b90dc3bcae7c",
+      "original": "d590ba88d8d7ab630e635a89b56df55219f49a75b55caa0df571a1f3b460404e",
+      "sequences": "4b3b6ab7c97aaab6554cbbc869b70b63f1017f5b59bc0ac0c3ab4cbd7152c232"
+    },
+    "rows": 3757,
+    "students": 3082,
+    "raw_events": 229471,
+    "classes": [
+      "first_correct",
+      "attempt_incorrect",
+      "hint_first",
+      "scaffold_first"
+    ],
+    "note": "Only train/validation students; class weighting must use training folds only."
+  },
+  "test_file_sha256": {
+    "test_sequences.csv": "d2d433dc5f01d8dc224310d0343ce761c2d0b4f83ed676a647e615e93558706d",
+    "test_window_sequences.csv": "be49fa0b4a2bef7ca4197f96c081c5dc3b850a87144f640f57ade39950ccd94d",
+    "test_question_sequences.csv": "7be6bcf46ad58179d799fee8b944bef84f815fa687d4e91f4177ea9e7bd83616",
+    "test_question_window_sequences.csv": "7ce5b5ef385ca6abcfc2d6f1edf98123dcd961c1c53f25aa8cc87628e82fb9a8"
+  }
+}

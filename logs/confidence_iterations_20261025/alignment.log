@@ -1,0 +1,13 @@
+[HAMI-core Msg(435307:140421748407168:libvgpu.c:837)]: Initializing.....
+[HAMI-core Warn(435307:140421748407168:multiprocess_memory_limit.c:501)]: Lock shrreg timeout, try fix (435307:421697)
+[HAMI-core Warn(435307:140421748407168:multiprocess_memory_limit.c:505)]: Owner proc dead (421697), try fix
+[HAMI-core Msg(435307:140421748407168:libvgpu.c:853)]: Initialized
+Start preprocessing /root/pykt-toolkit/data/nips_task34/train_valid_sequences.csv fold: _1_2_3_4 mode: train with rev: 0.0...
+interaction_num: 898499
+file path: /root/pykt-toolkit/data/nips_task34/train_valid_sequences.csv, qlen: 6043, clen: 6043, rlen: 6043, uidlen: 6043
+ALIGNED {"folds": [1, 2, 3, 4], "sequences": 6043, "counts": [18975, 11237, 33601, 54461, 98717], "coverage": 0.24609212577342987, "events": 881747}
+Start preprocessing /root/pykt-toolkit/data/nips_task34/train_valid_sequences.csv fold: _0 mode: train with rev: 0.0...
+interaction_num: 224844
+file path: /root/pykt-toolkit/data/nips_task34/train_valid_sequences.csv, qlen: 1503, clen: 1503, rlen: 1503, uidlen: 1503
+ALIGNED {"folds": [0], "sequences": 1503, "counts": [3473, 2706, 8312, 15114, 26772], "coverage": 0.2555331587791443, "events": 220625}
+[HAMI-core Msg(435307:140421748407168:multiprocess_memory_limit.c:459)]: Calling exit handler 435307

@@ -1,0 +1,33 @@
+{
+  "created_at": "2026-10-25T08:18:36.697872+00:00",
+  "branch": "feat/student-state-simulator",
+  "dataset": "nips_task34",
+  "fold": 0,
+  "seed": 42,
+  "epoch_budget": 20,
+  "batch_size": 32,
+  "emb_size": 200,
+  "dropout": 0.2,
+  "learning_rate": 0.001,
+  "augmentation": false,
+  "also": false,
+  "selection": "original validation checkpoint rule: auc > max_auc + 1e-3; patience10; cross-variant selection by retained validation AUC; all test evaluations only after freeze",
+  "test_batch_size": 512,
+  "rounds": [
+    {
+      "round": 1,
+      "variant": "r1_categorical",
+      "mode": "categorical",
+      "confidence_weight": 0.1,
+      "balance": 0,
+      "reason": "Establish 5-way self-reported confidence auxiliary CE; confidence zero valid, missing masked, no confidence-as-correctness soft labels."
+    }
+  ],
+  "outsourcing": {
+    "scope": "pykt/models/dkt_confidence.py only",
+    "entrypoint": "dsh headless --json -",
+    "timeout_seconds": 180,
+    "exit_code": 0,
+    "status": "draft delivered; root added active-label finite/integer checks and masked-value sanitation, completed integration and 48 targeted checks"
+  }
+}

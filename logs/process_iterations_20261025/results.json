@@ -1,0 +1,361 @@
+{
+  "dataset": "assist2009",
+  "fold": 0,
+  "seed": 42,
+  "epoch_budget": 20,
+  "primary_metric": "windowauclate_mean",
+  "selection": {
+    "frozen_at_utc": "2026-10-25T07:59:16.577305+00:00",
+    "selected_by": "validation AUC of retained checkpoint only; no test metrics used",
+    "selected_variant": "r4_time_reweight",
+    "validation_auc": {
+      "baseline": 0.8308394991180901,
+      "r1_joint": 0.8326950814697007,
+      "r2_conditional": 0.8325395091774778,
+      "r3_weaker": 0.8313326527560354,
+      "r4_time_reweight": 0.8329018940829128
+    },
+    "checkpoint_sha256": {
+      "baseline": "8094b98fa8047f51b2478d4e5794a1c417b8ad8eab0fc527b122e058e944475a",
+      "r1_joint": "b44343133a9b2654b0a1b9a37c032c7e2fa5200e7ee239387fb2f633c66c18e4",
+      "r2_conditional": "a59b31a8f8f946e02e252c41c19b00fdd61d561f8b2b8531523c224d6db10d00",
+      "r3_weaker": "7879894bf32a078b18a20e415382642e3561f21bfc76bb7756130b15ddd20783",
+      "r4_time_reweight": "a40544a11ab1cae83a40ce56b4564d8f5a85410fdde94106e20716cd4c74a3e8"
+    },
+    "test_evaluation_started": false
+  },
+  "results": [
+    {
+      "variant": "baseline",
+      "description": "原始 DKT",
+      "selected_before_test": false,
+      "best_epoch": 4,
+      "stopped_epoch": 14,
+      "validation_auc": 0.8308394991180901,
+      "windowauclate_mean": 0.7508302058555418,
+      "windowacclate_mean": 0.7223834434304479,
+      "parameters": 395523,
+      "model_config": {
+        "emb_size": 200,
+        "dropout": 0.2
+      },
+      "validation_diagnostics": {
+        "response_nll": 0.45097881835930825,
+        "response_brier": 0.15073657241268348
+      },
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/process_iterations_20261025/baseline"
+    },
+    {
+      "variant": "r1_joint",
+      "description": "第一轮：三项联合监督",
+      "selected_before_test": false,
+      "best_epoch": 5,
+      "stopped_epoch": 15,
+      "validation_auc": 0.8326950814697007,
+      "windowauclate_mean": 0.7528880740639377,
+      "windowacclate_mean": 0.7229943869563558,
+      "parameters": 436229,
+      "model_config": {
+        "emb_size": 200,
+        "dropout": 0.2,
+        "time_weight": 0.1,
+        "attempt_weight": 0.1,
+        "hint_weight": 0.1,
+        "process_mode": "joint",
+        "process_balance": 0.0,
+        "process_stats": {
+          "time_center": 3.1143334740234585,
+          "time_scale": 1.0939357718069156,
+          "attempt_counts": [
+            4393,
+            144401,
+            18004,
+            15842
+          ],
+          "hint_counts": [
+            97372,
+            26472
+          ],
+          "time_count": 182351,
+          "process_mode": "joint"
+        }
+      },
+      "validation_diagnostics": {
+        "time_concept_mean_log_mae": 0.805781562919414,
+        "attempt_concept_prior_nll": 0.6645421311365277,
+        "hint_concept_prior_nll": 0.48095810896580343,
+        "matched_failure_subset": {
+          "attempt_count": 14568,
+          "hint_count": 10233,
+          "attempt_macro_f1": 0.2049647878774835,
+          "hint_auc": 0.7610143874536469
+        },
+        "counts": {
+          "time": 43127,
+          "attempt": 43191,
+          "hint": 29160
+        },
+        "mean_batch_loss_components": {
+          "response": 0.44862613202023915,
+          "time": 0.35678676267464954,
+          "attempt": 0.6371075610319773,
+          "hint": 0.41138439377148944
+        },
+        "time_log_mae": 0.7808341748138331,
+        "time_train_mean_log_mae": 0.8833095204843575,
+        "attempt_macro_f1": 0.27843186471834647,
+        "attempt_nll": 0.6338973132120522,
+        "attempt_train_prior_nll": 0.7147121831384572,
+        "hint_auc": 0.7999370315521817,
+        "hint_nll": 0.41213549777067,
+        "hint_train_prior_nll": 0.5214757844239531
+      },
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/process_iterations_20261025/r1_joint"
+    },
+    {
+      "variant": "r2_conditional",
+      "description": "第二轮：失败条件监督",
+      "selected_before_test": false,
+      "best_epoch": 5,
+      "stopped_epoch": 15,
+      "validation_auc": 0.8325395091774778,
+      "windowauclate_mean": 0.7522454211884138,
+      "windowacclate_mean": 0.7220970636526786,
+      "parameters": 436229,
+      "model_config": {
+        "emb_size": 200,
+        "dropout": 0.2,
+        "time_weight": 0.1,
+        "attempt_weight": 0.1,
+        "hint_weight": 0.1,
+        "process_mode": "conditional",
+        "process_balance": 0.0,
+        "process_stats": {
+          "time_center": 3.1143334740234585,
+          "time_scale": 1.0939357718069156,
+          "attempt_counts": [
+            4036,
+            23842,
+            17615,
+            15766
+          ],
+          "hint_counts": [
+            17116,
+            26465
+          ],
+          "time_count": 182351,
+          "process_mode": "conditional"
+        }
+      },
+      "validation_diagnostics": {
+        "time_concept_mean_log_mae": 0.805781562919414,
+        "attempt_concept_prior_nll": 1.0963667278114089,
+        "hint_concept_prior_nll": 0.5866321597826446,
+        "matched_failure_subset": {
+          "attempt_count": 14568,
+          "hint_count": 10233,
+          "attempt_macro_f1": 0.43772200309153686,
+          "hint_auc": 0.7685591015371267
+        },
+        "counts": {
+          "time": 43127,
+          "attempt": 14568,
+          "hint": 10233
+        },
+        "mean_batch_loss_components": {
+          "response": 0.4488097433426878,
+          "time": 0.35917678972085315,
+          "attempt": 1.0190919637680054,
+          "hint": 0.5493835806846619
+        },
+        "time_log_mae": 0.7844735794560272,
+        "time_train_mean_log_mae": 0.8833095204843575,
+        "attempt_macro_f1": 0.43772200309153686,
+        "attempt_nll": 1.0206869144137745,
+        "attempt_train_prior_nll": 1.2566387063437108,
+        "hint_auc": 0.7685591015371267,
+        "hint_nll": 0.5526013164293428,
+        "hint_train_prior_nll": 0.6667251213713978
+      },
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/process_iterations_20261025/r2_conditional"
+    },
+    {
+      "variant": "r3_weaker",
+      "description": "第三轮：整体降权",
+      "selected_before_test": false,
+      "best_epoch": 4,
+      "stopped_epoch": 14,
+      "validation_auc": 0.8313326527560354,
+      "windowauclate_mean": 0.7511293849930538,
+      "windowacclate_mean": 0.7217915918897247,
+      "parameters": 436229,
+      "model_config": {
+        "emb_size": 200,
+        "dropout": 0.2,
+        "time_weight": 0.03,
+        "attempt_weight": 0.03,
+        "hint_weight": 0.03,
+        "process_mode": "conditional",
+        "process_balance": 0.0,
+        "process_stats": {
+          "time_center": 3.1143334740234585,
+          "time_scale": 1.0939357718069156,
+          "attempt_counts": [
+            4036,
+            23842,
+            17615,
+            15766
+          ],
+          "hint_counts": [
+            17116,
+            26465
+          ],
+          "time_count": 182351,
+          "process_mode": "conditional"
+        }
+      },
+      "validation_diagnostics": {
+        "time_concept_mean_log_mae": 0.805781562919414,
+        "attempt_concept_prior_nll": 1.0963667278114089,
+        "hint_concept_prior_nll": 0.5866321597826446,
+        "matched_failure_subset": {
+          "attempt_count": 14568,
+          "hint_count": 10233,
+          "attempt_macro_f1": 0.42392000309313616,
+          "hint_auc": 0.7618489549208172
+        },
+        "counts": {
+          "time": 43127,
+          "attempt": 14568,
+          "hint": 10233
+        },
+        "mean_batch_loss_components": {
+          "response": 0.44985310489092284,
+          "time": 0.3706924964984258,
+          "attempt": 1.0314194758733113,
+          "hint": 0.5549778242905935
+        },
+        "time_log_mae": 0.8013706184872533,
+        "time_train_mean_log_mae": 0.8833095204843575,
+        "attempt_macro_f1": 0.42392000309313616,
+        "attempt_nll": 1.0336489495321195,
+        "attempt_train_prior_nll": 1.2566387063437108,
+        "hint_auc": 0.7618489549208172,
+        "hint_nll": 0.5582388429643566,
+        "hint_train_prior_nll": 0.6667251213713978
+      },
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/process_iterations_20261025/r3_weaker"
+    },
+    {
+      "variant": "r4_time_reweight",
+      "description": "第四轮：仅降低耗时权重",
+      "selected_before_test": true,
+      "best_epoch": 6,
+      "stopped_epoch": 16,
+      "validation_auc": 0.8329018940829128,
+      "windowauclate_mean": 0.7528373715660613,
+      "windowacclate_mean": 0.7225552712971095,
+      "parameters": 436229,
+      "model_config": {
+        "emb_size": 200,
+        "dropout": 0.2,
+        "time_weight": 0.03,
+        "attempt_weight": 0.1,
+        "hint_weight": 0.1,
+        "process_mode": "joint",
+        "process_balance": 0.0,
+        "process_stats": {
+          "time_center": 3.1143334740234585,
+          "time_scale": 1.0939357718069156,
+          "attempt_counts": [
+            4393,
+            144401,
+            18004,
+            15842
+          ],
+          "hint_counts": [
+            97372,
+            26472
+          ],
+          "time_count": 182351,
+          "process_mode": "joint"
+        }
+      },
+      "validation_diagnostics": {
+        "time_concept_mean_log_mae": 0.805781562919414,
+        "attempt_concept_prior_nll": 0.6645421311365277,
+        "hint_concept_prior_nll": 0.48095810896580343,
+        "matched_failure_subset": {
+          "attempt_count": 14568,
+          "hint_count": 10233,
+          "attempt_macro_f1": 0.20802142513795716,
+          "hint_auc": 0.7602817494285621
+        },
+        "counts": {
+          "time": 43127,
+          "attempt": 43191,
+          "hint": 29160
+        },
+        "mean_batch_loss_components": {
+          "response": 0.4481960280435944,
+          "time": 0.36141959329446155,
+          "attempt": 0.6331930657227834,
+          "hint": 0.41044139862060547
+        },
+        "time_log_mae": 0.7889970485648898,
+        "time_train_mean_log_mae": 0.8833095204843575,
+        "attempt_macro_f1": 0.2817481119797327,
+        "attempt_nll": 0.630033095609709,
+        "attempt_train_prior_nll": 0.7147121831384572,
+        "hint_auc": 0.8021598889360917,
+        "hint_nll": 0.41098109462614896,
+        "hint_train_prior_nll": 0.5214757844239531
+      },
+      "model_dir": "/root/pykt-toolkit/examples/saved_model/process_iterations_20261025/r4_time_reweight"
+    }
+  ],
+  "selected_primary_gain_over_dkt": 0.0020071657105195095,
+  "previous_first_action_primary_reference": 0.7523096037577055,
+  "selected_primary_difference_vs_first_action": 0.000527767808355839,
+  "checks": {
+    "checkpoint_sha_unchanged": {
+      "baseline": true,
+      "r1_joint": true,
+      "r2_conditional": true,
+      "r3_weaker": true,
+      "r4_time_reweight": true
+    },
+    "pure_dkt_export_identical": {
+      "r1_joint": true,
+      "r2_conditional": true,
+      "r3_weaker": true,
+      "r4_time_reweight": true
+    },
+    "source_snapshot_unchanged": {
+      "pykt/models/dkt_process.py": true,
+      "pykt/datasets/process_dataset.py": true,
+      "examples/train_dkt_process.py": true,
+      "examples/evaluate_dkt_first_action.py": true,
+      "tests/test_dkt_process.py": true,
+      "pykt/models/init_model.py": true,
+      "pykt/models/train_model.py": true,
+      "pykt/models/evaluate_model.py": true,
+      "pykt/datasets/init_dataset.py": true
+    },
+    "original_files_unchanged": {
+      "pykt/models/dkt.py": true,
+      "pykt/datasets/data_loader.py": true,
+      "ALSO/also.py": true,
+      "configs/kt_config.json": true
+    },
+    "baseline_matches_previous_baseline": true
+  },
+  "targeted_tests": "30 passed",
+  "limitations": [
+    "One fold and one seed; exploratory, no statistical-significance claim.",
+    "No complete time-only/attempt-only/hint-only ablation; joint benefit cannot be assigned to each task independently.",
+    "Separate process heads do not define a coherent generative joint trajectory or psychological state.",
+    "R2/R3 attempt and hint diagnostics use failures only; use matched_failure_subset for comparisons with R1/R4.",
+    "Baseline and R1 training overlapped; recorded wall times do not estimate training overhead."
+  ]
+}

@@ -1,0 +1,68 @@
+[HAMI-core Msg(91808:139996605660032:libvgpu.c:837)]: Initializing.....
+[HAMI-core Msg(91808:139996605660032:utils.c:32)]: unified_lock locked, waiting 1 second...
+[HAMI-core Msg(91808:139996605660032:libvgpu.c:853)]: Initialized
+Start preprocessing data: peiyou
+original interaction num: 5549635, user num: 18066, question num: 7652, concept num: 865, avg(ins) per s: 307.1867, avg(c) per q: 1.164, na: 0
+after drop interaction num: 5549635, user num: 18066, question num: 7652, concept num: 865, avg(ins) per s: 307.1867, avg(c) per q: 1.164, na: 0
+5549635,18066,7652,865,307.1867,1.164,0
+5549635,18066,7652,865,307.1867,1.164,0
+delete bad stu num of len: 0, delete interactions: 0, of r: 0, good num: 5549635
+====================
+original total interactions: 5549635, qs: 7652, cs: 865, seqnum: 18066
+df.columns: Index(['uid', 'is_repeat', 'timestamps', 'responses', 'questions', 'concepts'],
+      dtype='str')
+====================
+after extend multi, total interactions: 6413464, qs: 7652, cs: 865, seqnum: 18066
+total num: 18066, train+valid num: 14453, test num: 3613
+fold: 1, start: 0, end: 2891, total num: 14453
+fold: 2, start: 2891, end: 5782, total num: 14453
+fold: 3, start: 5782, end: 8673, total num: 14453
+fold: 4, start: 8673, end: 11563, total num: 14453
+fold: 5, start: 11563, end: 14453, total num: 14453
+train+valid original interactions num: 5139155, select num: 0, qs: 7619, cs: 865, seqnum: 14453
+dropnum: 111
+train+valid sequences interactions num: 5139044, select num: 5139044, qs: 7618, cs: 865, seqnum: 33397
+dropnum: 35
+original test interactions num: 1274309, select num: 0, qs: 7052, cs: 828, seqnum: 3613
+test sequences interactions num: 1274274, select num: 1274274, qs: 7052, cs: 828, seqnum: 8279
+====================
+test window interactions num: 111064400, select num: 1274309, qs: 7052, cs: 828, seqnum: 555322
+test question interactions num: 29248679, select num: 1267550, qs: 7052, cs: 828, seqnum: 312494
+test question window interactions num: 125797887, select num: 1270391, qs: 7052, cs: 828, seqnum: 697697
+====================
+original,5549635,18066,0
+extend multi,6413464,18066,0
+original train+valid,5139155,14453,0
+train+valid sequences,5139044,33397,5139044
+test original,1274309,3613,0
+test sequences,1274274,8279,1274274
+test window,111064400,555322,1274309
+test question,29248679,312494,1267550
+test question window,125797887,697697,1270391
+delete bad stu num of len: 0, delete interactions: 0, of r: 0, good num: 5549635
+====================
+original total interactions: 5549635, qs: 7652, cs: 865, seqnum: 18066
+df.columns: Index(['questions', 'timestamps', 'concepts', 'uid', 'responses'], dtype='str')
+total num: 18066, train+valid num: 14453, test num: 3613
+fold: 1, start: 0, end: 2891, total num: 14453
+fold: 2, start: 2891, end: 5782, total num: 14453
+fold: 3, start: 5782, end: 8673, total num: 14453
+fold: 4, start: 8673, end: 11563, total num: 14453
+fold: 5, start: 11563, end: 14453, total num: 14453
+train+valid original interactions num: 4446825, select num: 0, qs: 7619, cs: 865, seqnum: 14453
+dropnum: 451
+train+valid sequences interactions num: 4446374, select num: 4446374, qs: 7618, cs: 865, seqnum: 30965
+dropnum: 109
+original test interactions num: 1102810, select num: 0, qs: 7052, cs: 828, seqnum: 3613
+test sequences interactions num: 1102701, select num: 1102701, qs: 7052, cs: 828, seqnum: 7711
+====================
+test window interactions num: 76764600, select num: 1102810, qs: 7052, cs: 828, seqnum: 383823
+====================
+original,5549635,18066,0
+original train+valid question level,4446825,14453,0
+train+valid sequences question level,4446374,30965,4446374
+test original question level,1102810,3613,0
+test sequences question level,1102701,7711,1102701
+test window question level,76764600,383823,1102810
+COMPLETE: peiyou
+[HAMI-core Msg(91808:139996605660032:multiprocess_memory_limit.c:459)]: Calling exit handler 91808

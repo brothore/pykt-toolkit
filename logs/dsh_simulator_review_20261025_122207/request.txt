@@ -1,0 +1,4 @@
+你是主 agent 委派的只读代码审查 worker。项目 /root/pykt-toolkit，当前独立分支 feat/student-state-simulator，目标新增独立模型 simdkt，不改变现有 DKT 和其他模型的行为。
+请先读 AGENTS.md。检查 pykt/models/{train_model.py,evaluate_model.py,init_model.py,dkt.py} 和 pykt/datasets/data_loader.py 中相关接口，只读 rg/sed/读取文件，不修改、不安装、不训练、不联网、不读取凭据、不调用子代理。
+拟议模型沿用现有概念级 KTDataset，但自己的 model_name=simdkt；新增因果学生状态，主任务预测下一次答对率，辅助任务从历史预测下一个知识点分布，以及未来短窗口分知识点正确率。所有未来回答只能作为训练目标，不能作为预测输入；同题多知识点展开造成的重复回答需要留意。
+请给出：1. 最小安全接入位置（函数/行号，特别是普通评估、题目late fusion、模型重载）；2. masks/smasks/qseqs/cseqs 的具体语义以及重复同题与padding风险；3. 现有数据对粗心/猜测的可辨识性限制；4. 需要覆盖的5个关键测试。请控制在1200字以内，以文件/行号和代码事实为证据。不要泛读其他模型和日志。

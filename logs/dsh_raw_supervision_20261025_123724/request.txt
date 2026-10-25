@@ -1,0 +1,5 @@
+你是主 agent 委派的原始数据只读审查 worker。只做方案分析，不实现、不改模型/训练/预处理代码，不训练、不联网、不安装、不读凭据、不调用子代理。项目 /root/pykt-toolkit，先读 AGENTS.md。
+任务：用本地 Python/pandas 读取 data/assist2009/skill_builder_data_corrected_collapsed.csv，聚合分析潜在多任务监督信号；可读 pykt/preprocess/assist2009_preprocess.py 和 pykt/preprocess/utils.py 来了解哪些字段丢失。不要输出学生ID、答案文本或原始记录，只返回聚合统计。
+统计要求：原始行数、当前过滤条件后行数；order_id 是否唯一/重复（多知识点等）；attempt_count、ms_first_response、hint_count、hint_total、first_action、bottom_hint、template_id、opportunity、original、answer_text、answer_id 的非空率和有信息量程度。数值给主要分位数/类别给频数，不展示自由文本内容。检查 correct 与 first_action/attempt_count/hint_count 的关联，指出是否近似恒等标签；检查重复 order_id 内行为字段冲突。以当前有效记录为主报告。
+方案要求：基于核验字段给出5-7个实际可构造的监督目标；严格区分作答前能输入的信息和只能作为作答后训练目标的信息。注意 correct 的官方语义应由主 agent 另行核对，不凭字段名断言心理标签。区分严格只改loss、训练期辅助头、改推理输入三种范围。每个方案给一个泄漏/混淆风险。
+请在2000字以内回答，保留关键数字和证据；不要修改任何文件。

@@ -1,0 +1,6 @@
+FROZEN_SELECTION r4_time_reweight
+TEST_FINISHED baseline
+TEST_FINISHED r1_joint
+TEST_FINISHED r2_conditional
+TEST_FINISHED r3_weaker
+TEST_FINISHED r4_time_reweight

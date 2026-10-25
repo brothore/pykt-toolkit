@@ -1,0 +1,3 @@
+..................                                                       [100%]
+18 passed in 3.98s
+[HAMI-core Msg(354534:140123496303488:multiprocess_memory_limit.c:459)]: Calling exit handler 354534

@@ -1,0 +1,12 @@
+{
+  "dataset": "assist2009",
+  "model": "dkt",
+  "fold": 0,
+  "seed": 42,
+  "epochs": 3,
+  "primary_metric": "windowauclate_mean",
+  "windowauclate_mean": 0.7488195400396553,
+  "window_testauc": 0.8220090806539949,
+  "source_file": "/root/pykt-toolkit/examples/saved_model/dkt_assist2009_fold0_smoke_20261025/assist2009_dkt_qid_saved_model/dkt_assist2009_fold0_smoke_20261025_42_0_0.2_200_0.001_32_3_0_0_0_none_None_0.001_0.01_0/all_results.json",
+  "note": "按 AGENTS.md，windowauclate_mean（窗口内晚期学习者 AUC 均值）是首要指标；window_testauc（整体窗口 AUC）是不同指标，二者不可互相替代。本次为 3-epoch smoke/链路检查，非正式实验。all_results.json 中两值分别精确为 0.7488195400396553 和 0.8220090806539949（与 summary.json 一致）。"
+}

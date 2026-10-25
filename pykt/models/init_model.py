@@ -8,7 +8,19 @@ from pykt.models.cuda_retry import retry_decorator
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 
 def init_model(model_name, model_config, data_config, emb_type):
-    if model_name == "dkt":
+    if model_name == "dkt_confidence":
+        from .dkt_confidence import DKTConfidence
+        model = DKTConfidence(data_config["num_c"], **model_config,
+                              emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "dkt_process":
+        from .dkt_process import DKTProcess
+        model = DKTProcess(data_config["num_c"], **model_config,
+                           emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "dkt_first_action":
+        from .dkt_first_action import DKTFirstAction
+        model = DKTFirstAction(data_config["num_c"], **model_config,
+                               emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "dkt":
         from .dkt import DKT
         model = DKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "mamba_dkt":

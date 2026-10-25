@@ -1,0 +1,18 @@
+[HAMI-core Msg(418088:140232242101120:libvgpu.c:837)]: Initializing.....
+[HAMI-core Msg(418088:140232242101120:libvgpu.c:853)]: Initialized
+Read data from processed file: /root/pykt-toolkit/data/assist2009/test_sequences.csv_-1.pkl
+file path: /root/pykt-toolkit/data/assist2009/test_sequences.csv, qlen: 904, clen: 904, rlen: 904, uidlen: 904
+FINISHED test_file {"testauc": 0.8236595244879673, "testacc": 0.7657825019384854}
+Read data from processed file: /root/pykt-toolkit/data/assist2009/test_window_sequences.csv_-1.pkl
+file path: /root/pykt-toolkit/data/assist2009/test_window_sequences.csv, qlen: 20362, clen: 20362, rlen: 20362, uidlen: 20362
+FINISHED test_window_file {"testauc": 0.8236595244879673, "testacc": 0.7657825019384854, "window_testauc": 0.8243838367696605, "window_testacc": 0.7663765312701483}
+Read data from processed file: /root/pykt-toolkit/data/assist2009/test_question_sequences.csv_-1_qtest.pkl
+file path: /root/pykt-toolkit/data/assist2009/test_question_sequences.csv, qlen: 18292, clen: 18292, rlen: 18292, uidlen: 18292
+[DEBUG] auc: 0.7384629133959835 (type: <class 'float'>)
+FINISHED test_question_file {"testauc": 0.8236595244879673, "testacc": 0.7657825019384854, "window_testauc": 0.8243838367696605, "window_testacc": 0.7663765312701483, "oriaucconcepts": 0.7384629133959835, "oriauclate_mean": 0.7513734877930817, "oriauclate_vote": 0.749867892468247, "oriauclate_all": 0.7496347413870599, "oriaccconcepts": 0.7142232160217772, "oriacclate_mean": 0.7215141424579936, "oriacclate_vote": 0.720997435603016, "oriacclate_all": 0.7187200979829296}
+Read data from processed file: /root/pykt-toolkit/data/assist2009/test_question_window_sequences.csv_-1_qtest.pkl
+file path: /root/pykt-toolkit/data/assist2009/test_question_window_sequences.csv, qlen: 30610, clen: 30610, rlen: 30610, uidlen: 30610
+[DEBUG] auc: 0.739329253616599 (type: <class 'float'>)
+FINISHED test_question_window_file {"testauc": 0.8236595244879673, "testacc": 0.7657825019384854, "window_testauc": 0.8243838367696605, "window_testacc": 0.7663765312701483, "oriaucconcepts": 0.7384629133959835, "oriauclate_mean": 0.7513734877930817, "oriauclate_vote": 0.749867892468247, "oriauclate_all": 0.7496347413870599, "oriaccconcepts": 0.7142232160217772, "oriacclate_mean": 0.7215141424579936, "oriacclate_vote": 0.720997435603016, "oriacclate_all": 0.7187200979829296, "windowaucconcepts": 0.739329253616599, "windowauclate_mean": 0.7522454211884138, "windowauclate_vote": 0.750757363965471, "windowauclate_all": 0.7505321631056061, "windowaccconcepts": 0.714812061665751, "windowacclate_mean": 0.7220970636526786, "windowacclate_vote": 0.7215815800526939, "windowacclate_all": 0.7193287258009088}
+PRIMARY_METRIC 0.7522454211884138
+[HAMI-core Msg(418088:140232242101120:multiprocess_memory_limit.c:459)]: Calling exit handler 418088

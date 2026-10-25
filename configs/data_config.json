@@ -432,7 +432,7 @@
             3,
             4
         ],
-        "students_num_eval": 0,
+        "students_num_eval": 3613,
         "train_valid_original_file": "train_valid.csv",
         "test_original_file": "test.csv",
         "test_file": "test_sequences.csv",

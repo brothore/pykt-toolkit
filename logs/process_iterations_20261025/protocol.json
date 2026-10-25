@@ -1,0 +1,252 @@
+{
+  "created_at": "2026-10-25T07:52:34.552925+00:00",
+  "branch": "feat/student-state-simulator",
+  "dataset": "assist2009",
+  "fold": 0,
+  "seed": 42,
+  "epoch_budget": 20,
+  "backbone": "DKT emb200 dropout.2 Adam.001 batch32",
+  "selection": {
+    "frozen_at_utc": "2026-10-25T07:59:16.577305+00:00",
+    "selected_by": "validation AUC of retained checkpoint only; no test metrics used",
+    "selected_variant": "r4_time_reweight",
+    "validation_auc": {
+      "baseline": 0.8308394991180901,
+      "r1_joint": 0.8326950814697007,
+      "r2_conditional": 0.8325395091774778,
+      "r3_weaker": 0.8313326527560354,
+      "r4_time_reweight": 0.8329018940829128
+    },
+    "checkpoint_sha256": {
+      "baseline": "8094b98fa8047f51b2478d4e5794a1c417b8ad8eab0fc527b122e058e944475a",
+      "r1_joint": "b44343133a9b2654b0a1b9a37c032c7e2fa5200e7ee239387fb2f633c66c18e4",
+      "r2_conditional": "a59b31a8f8f946e02e252c41c19b00fdd61d561f8b2b8531523c224d6db10d00",
+      "r3_weaker": "7879894bf32a078b18a20e415382642e3561f21bfc76bb7756130b15ddd20783",
+      "r4_time_reweight": "a40544a11ab1cae83a40ce56b4564d8f5a85410fdde94106e20716cd4c74a3e8"
+    },
+    "test_evaluation_started": false
+  },
+  "baseline": "fresh DKT run, same runner/budget/seed",
+  "rounds": [
+    {
+      "round": 1,
+      "variant": "r1_joint",
+      "mode": "joint",
+      "time_weight": 0.1,
+      "attempt_weight": 0.1,
+      "hint_weight": 0.1,
+      "balance": 0,
+      "reason": "establish all three process objectives jointly; training-fold standardized log-time Huber and unweighted CE/BCE",
+      "validation_auc": 0.8326950814697007,
+      "diagnostics": {
+        "response_nll": 0.44912593145862617,
+        "response_brier": 0.15016423667742465,
+        "counts": {
+          "time": 43127,
+          "attempt": 43191,
+          "hint": 29160
+        },
+        "mean_batch_loss_components": {
+          "response": 0.44862601507129657,
+          "time": 0.35678496460119885,
+          "attempt": 0.6371070146560669,
+          "hint": 0.4113851586977641
+        },
+        "time_log_mae": 0.7808319696921315,
+        "time_train_mean_log_mae": 0.8833095204843575,
+        "attempt_macro_f1": 0.27843186471834647,
+        "attempt_nll": 0.6338967784969812,
+        "attempt_train_prior_nll": 0.7147121831384572,
+        "hint_auc": 0.7999369967983139,
+        "hint_nll": 0.41213614483646727,
+        "hint_train_prior_nll": 0.5214757844239531,
+        "shared_gradient_diagnostics": {
+          "time": {
+            "cosine": 0.08677659428212792,
+            "norm_over_response": 2.3846578001976013
+          },
+          "attempt": {
+            "cosine": 0.23081611841917038,
+            "norm_over_response": 1.4582995474338531
+          },
+          "hint": {
+            "cosine": 0.25092726200819016,
+            "norm_over_response": 1.702984869480133
+          }
+        }
+      }
+    },
+    {
+      "round": 2,
+      "variant": "r2_conditional",
+      "decided_at": "2026-10-25T07:54:54.568479+00:00",
+      "mode": "conditional",
+      "time_weight": 0.1,
+      "attempt_weight": 0.1,
+      "hint_weight": 0.1,
+      "balance": 0,
+      "reason": "R1 improves validation AUC but attempt macroF1=.278 and raw labels heavily encode correctness; supervise attempt/hint only within failed first-response events, keeping time and all other settings fixed",
+      "validation_auc": 0.8325395091774778,
+      "diagnostics": {
+        "response_nll": 0.44933876871937023,
+        "response_brier": 0.15019378452722384,
+        "time_concept_mean_log_mae": 0.805781562919414,
+        "attempt_concept_prior_nll": 1.0963667278114089,
+        "hint_concept_prior_nll": 0.5866321597826446,
+        "counts": {
+          "time": 43127,
+          "attempt": 14568,
+          "hint": 10233
+        },
+        "mean_batch_loss_components": {
+          "response": 0.44880892849365256,
+          "time": 0.3591749171415965,
+          "attempt": 1.0190926988919575,
+          "hint": 0.5493826667467753
+        },
+        "time_log_mae": 0.7844711674435866,
+        "time_train_mean_log_mae": 0.8833095204843575,
+        "attempt_macro_f1": 0.43772431051560046,
+        "attempt_nll": 1.0206878070225283,
+        "attempt_train_prior_nll": 1.2566387063437108,
+        "hint_auc": 0.7685590208967452,
+        "hint_nll": 0.5526005351751578,
+        "hint_train_prior_nll": 0.6667251213713978,
+        "shared_gradient_diagnostics": {
+          "time": {
+            "cosine": 0.028302836697548628,
+            "norm_over_response": 2.594866067171097
+          },
+          "attempt": {
+            "cosine": 0.056585711892694235,
+            "norm_over_response": 4.002038240432739
+          },
+          "hint": {
+            "cosine": 0.104465801268816,
+            "norm_over_response": 2.9731494188308716
+          }
+        }
+      }
+    },
+    {
+      "round": 3,
+      "variant": "r3_weaker",
+      "decided_at": "2026-10-25T07:56:33.877045+00:00",
+      "mode": "conditional",
+      "time_weight": 0.03,
+      "attempt_weight": 0.03,
+      "hint_weight": 0.03,
+      "balance": 0,
+      "reason": "R2 process heads outperform concept-only priors but validation AUC is slightly below R1; raw auxiliary/main shared gradient norm ratios time2.59/attempt4.00/hint2.97 with cosines .028/.057/.104. Reduce all auxiliary weights together, preserving task ratios and label masks.",
+      "validation_auc": 0.8313326527560354,
+      "diagnostics": {
+        "response_nll": 0.4504660414142706,
+        "response_brier": 0.15053915862127928,
+        "time_concept_mean_log_mae": 0.805781562919414,
+        "attempt_concept_prior_nll": 1.0963667278114089,
+        "hint_concept_prior_nll": 0.5866321597826446,
+        "counts": {
+          "time": 43127,
+          "attempt": 14568,
+          "hint": 10233
+        },
+        "mean_batch_loss_components": {
+          "response": 0.4498533489008281,
+          "time": 0.3706929087638855,
+          "attempt": 1.0314200123151143,
+          "hint": 0.5549787183602651
+        },
+        "time_log_mae": 0.8013713624707516,
+        "time_train_mean_log_mae": 0.8833095204843575,
+        "attempt_macro_f1": 0.42392000309313616,
+        "attempt_nll": 1.033649512691123,
+        "attempt_train_prior_nll": 1.2566387063437108,
+        "hint_auc": 0.7618486323592917,
+        "hint_nll": 0.5582395370088333,
+        "hint_train_prior_nll": 0.6667251213713978,
+        "shared_gradient_diagnostics": {
+          "time": {
+            "cosine": 0.01520006125792861,
+            "norm_over_response": 3.237026810646057
+          },
+          "attempt": {
+            "cosine": 0.023767586797475815,
+            "norm_over_response": 4.3372461795806885
+          },
+          "hint": {
+            "cosine": 0.11981427390128374,
+            "norm_over_response": 3.1713298559188843
+          }
+        }
+      }
+    },
+    {
+      "round": 4,
+      "variant": "r4_time_reweight",
+      "decided_at": "2026-10-25T07:57:42.347042+00:00",
+      "mode": "joint",
+      "time_weight": 0.03,
+      "attempt_weight": 0.1,
+      "hint_weight": 0.1,
+      "balance": 0,
+      "reason": "R3 global downweighting underperforms R1/R2. Return to best validation configuration R1 and change only time weight .1->.03 because time shared gradient had weakest alignment; preserve attempt/hint training strength. Test data still untouched.",
+      "validation_auc": 0.8329018940829128,
+      "diagnostics": {
+        "response_nll": 0.4487754848210837,
+        "response_brier": 0.1500268995034497,
+        "time_concept_mean_log_mae": 0.805781562919414,
+        "attempt_concept_prior_nll": 0.6645421311365277,
+        "hint_concept_prior_nll": 0.48095810896580343,
+        "matched_failure_subset": {
+          "attempt_count": 14568,
+          "hint_count": 10233,
+          "attempt_macro_f1": 0.20802142513795716,
+          "hint_auc": 0.7602831606352365
+        },
+        "counts": {
+          "time": 43127,
+          "attempt": 43191,
+          "hint": 29160
+        },
+        "mean_batch_loss_components": {
+          "response": 0.4481959295354658,
+          "time": 0.3614189674456914,
+          "attempt": 0.6331940293312073,
+          "hint": 0.4104415575663249
+        },
+        "time_log_mae": 0.7889957450575943,
+        "time_train_mean_log_mae": 0.8833095204843575,
+        "attempt_macro_f1": 0.2817481119797327,
+        "attempt_nll": 0.6300339807173309,
+        "attempt_train_prior_nll": 0.7147121831384572,
+        "hint_auc": 0.8021599827715347,
+        "hint_nll": 0.4109811699314288,
+        "hint_train_prior_nll": 0.5214757844239531,
+        "shared_gradient_diagnostics": {
+          "time": {
+            "cosine": 0.03471525153145194,
+            "norm_over_response": 2.447691887617111
+          },
+          "attempt": {
+            "cosine": 0.17115217074751854,
+            "norm_over_response": 1.3215848207473755
+          },
+          "hint": {
+            "cosine": 0.22372743859887123,
+            "norm_over_response": 1.7191413342952728
+          }
+        }
+      }
+    }
+  ],
+  "outsourcing": {
+    "entrypoint": "dsh headless --json -",
+    "timeout_seconds": 240,
+    "exit_code": 124,
+    "scope": "pykt/models/dkt_process.py only",
+    "status": "model draft written; CLI timed out before final response; root reviews/tests independently"
+  },
+  "timing_note": "Baseline and R1 training overlapped in separate processes; their elapsed wall times must not be used to estimate training overhead. Baseline checkpoint SHA matches previous isolated baseline exactly.",
+  "checkpoint_rule": "Original validation AUC improvement threshold 1e-3 and ten-epoch patience retained; cross-variant selection uses validation AUC of retained checkpoints.",
+  "test_status": "all_five_completed"
+}

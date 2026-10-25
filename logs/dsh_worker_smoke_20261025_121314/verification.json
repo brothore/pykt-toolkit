@@ -1,0 +1,18 @@
+{
+  "status": {
+    "exit_code": 0,
+    "timed_out": false
+  },
+  "checks": {
+    "dataset": true,
+    "model": true,
+    "fold": true,
+    "seed": true,
+    "epochs": true,
+    "windowauclate_mean": true,
+    "window_testauc": true,
+    "primary_metric": true
+  },
+  "all_fields_match": true,
+  "reviewer_note": "Worker 对 late_mean 的中文展开不准确；该字段中的 late 指 late fusion（后期融合），不是晚期学习者。数值和实验元数据均与本地文件一致。"
+}

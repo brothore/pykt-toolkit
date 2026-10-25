@@ -418,6 +418,33 @@ def init_dataset4train(dataset_name, model_name, data_config, i, batch_size, dif
     elif model_name == "dimkt":
         curvalid = DIMKTDataset(data_config["dpath"],os.path.join(data_config["dpath"], data_config["train_valid_file"]), data_config["input_type"], {i}, diff_level=diff_level)
         curtrain = DIMKTDataset(data_config["dpath"],os.path.join(data_config["dpath"], data_config["train_valid_file"]), data_config["input_type"], all_folds - {i}, diff_level=diff_level)
+    elif model_name == "dkt_confidence":
+        if dataset_name != "nips_task34":
+            raise ValueError("dkt_confidence requires NIPS task34 confidence metadata")
+        from .confidence_dataset import ConfidenceDataset
+        source = os.path.join(data_config["dpath"], data_config["train_valid_file"])
+        curtrain = ConfidenceDataset(source, data_config["input_type"], all_folds - {i},
+                                     mode='train', aug_probs=aug_probs)
+        curvalid = ConfidenceDataset(source, data_config["input_type"], {i},
+                                     mode='valid', aug_probs=aug_probs)
+    elif model_name == "dkt_process":
+        if dataset_name != "assist2009":
+            raise ValueError("dkt_process currently requires ASSIST2009 raw process fields")
+        from .process_dataset import ProcessDataset
+        source = os.path.join(data_config["dpath"], data_config["train_valid_file"])
+        process_mode = getattr(args, 'process_mode', 'joint')
+        curtrain = ProcessDataset(source, data_config["input_type"], all_folds - {i},
+                                  mode='train', aug_probs=aug_probs, process_mode=process_mode)
+        curvalid = ProcessDataset(source, data_config["input_type"], {i}, mode='valid',
+                                  aug_probs=aug_probs, process_mode=process_mode,
+                                  process_stats=curtrain.process_stats)
+    elif model_name == "dkt_first_action":
+        if dataset_name != "assist2009":
+            raise ValueError("dkt_first_action currently requires ASSIST2009 raw first_action labels")
+        from .first_action_dataset import FirstActionDataset
+        source = os.path.join(data_config["dpath"], data_config["train_valid_file"])
+        curvalid = FirstActionDataset(source, data_config["input_type"], {i}, mode='valid', aug_probs=aug_probs)
+        curtrain = FirstActionDataset(source, data_config["input_type"], all_folds - {i}, mode='train', aug_probs=aug_probs)
     elif model_name in needs_uid_models:
         curvalid = KTDataset_uid(os.path.join(data_config["dpath"], data_config["train_valid_file"]), data_config["input_type"], {i})
         curtrain = KTDataset_uid(os.path.join(data_config["dpath"], data_config["train_valid_file"]), data_config["input_type"], all_folds - {i})
