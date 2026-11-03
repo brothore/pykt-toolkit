@@ -12,7 +12,9 @@
 set -euo pipefail
 
 # 1) 网络加速 (AutoDL)
-source /etc/network_turbo
+if [ -f /etc/network_turbo ]; then
+    source /etc/network_turbo
+fi
 
 # 2) 前置校验: 必须是 torch 2.8.x + cp312, 否则直接退出
 python - <<'PY'
@@ -32,7 +34,8 @@ PY
 # 3) 本地 wheel 优先, 缺了才回退到 GitHub URL
 #    --no-deps: 切断 mamba-ssm 2.3.1 对 triton>=3.5 / tilelang / quack-kernels 的传染,
 #               防止 pip 顺手把 torch 又升到 2.12
-LOCAL_DIR="/root/autodl-tmp/pykt-toolkit/packages"
+SCRIPT_PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+LOCAL_DIR="${PYKT_WHEEL_DIR:-${SCRIPT_PROJECT_ROOT}/packages}"
 CCONV_WHL_NAME="causal_conv1d-1.6.1+cu12torch2.8cxx11abiTRUE-cp312-cp312-linux_x86_64.whl"
 MAMBA_WHL_NAME="mamba_ssm-2.3.1+cu12torch2.8cxx11abiTRUE-cp312-cp312-linux_x86_64.whl"
 CCONV_URL="https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.6.2/${CCONV_WHL_NAME}"
@@ -64,7 +67,7 @@ pip install --no-input --no-deps "$MAMBA_SRC"
 # 4) 补齐 mamba-ssm 运行时真正需要的轻量包 (einops 是 Mamba 层 import 时的硬依赖)
 echo
 echo "==[3/3]== 补齐运行依赖 (einops) ..."
-pip install --no-input einops
+pip install --no-input einops 'transformers>=4.40,<5' ninja
 
 # 5) 自检: import + GPU forward 都过才算成功
 echo

@@ -1,4 +1,5 @@
 import os
+import copy
 from turtle import forward
 import torch
 import torch.nn as nn
@@ -10,7 +11,8 @@ from sklearn import metrics
 from torch.utils.data import DataLoader
 from .loss import Loss
 from scipy.special import softmax
-from mamba_ssm import Mamba
+from .qikt_switch_utils import causal_concept_features, fragment_pairwise_loss
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -74,6 +76,47 @@ class QIKTNet(nn.Module):
 
         self.version = version
         self.emb_type = emb_type
+        self.freeze_backbone = bool(other_config.get('freeze_backbone', False))
+        self.anchor_kl_weight = float(other_config.get('anchor_kl_weight', 0.0))
+        if not math.isfinite(self.anchor_kl_weight) or self.anchor_kl_weight < 0:
+            raise ValueError('anchor_kl_weight must be finite and nonnegative')
+        if self.anchor_kl_weight and not self.freeze_backbone:
+            raise ValueError('baseline anchoring requires a frozen backbone')
+        self.history_response_dropout = float(other_config.get('history_response_dropout', 0.0))
+        if not 0 <= self.history_response_dropout <= 1:
+            raise ValueError('history_response_dropout must be in [0, 1]')
+        if self.history_response_dropout and emb_type not in ('attn', 'iekt'):
+            raise ValueError('response dropout currently supports attn/iekt embeddings')
+        self.item_residual = None
+        self.concept_memory_residual = None
+        self.head_fusion_residual = None
+        self.fusion_gate_scale = float(other_config.get('fusion_gate_scale', 0.1))
+        if not math.isfinite(self.fusion_gate_scale) or not 0 <= self.fusion_gate_scale <= .25:
+            raise ValueError('fusion_gate_scale must be finite and in [0, .25]')
+        if other_config.get('head_fusion_residual', False):
+            if self.output_mode != 'an_irt':
+                raise ValueError('head_fusion_residual requires output_mode=an_irt')
+            with torch.random.fork_rng(devices=[]):
+                self.head_fusion_residual = nn.Linear(3, 3)
+                nn.init.zeros_(self.head_fusion_residual.weight)
+                nn.init.zeros_(self.head_fusion_residual.bias)
+        self.pairwise_loss_weight = float(other_config.get('pairwise_loss_weight', 0.0))
+        if not math.isfinite(self.pairwise_loss_weight) or self.pairwise_loss_weight < 0:
+            raise ValueError('pairwise_loss_weight must be finite and nonnegative')
+        if other_config.get('concept_memory_residual', False):
+            if self.output_mode != 'an_irt':
+                raise ValueError('concept_memory_residual requires output_mode=an_irt')
+            with torch.random.fork_rng(devices=[]):
+                self.concept_memory_residual = nn.Linear(2, 1)
+                nn.init.zeros_(self.concept_memory_residual.weight)
+                nn.init.zeros_(self.concept_memory_residual.bias)
+        if other_config.get('item_residual', False):
+            if self.output_mode != 'an_irt':
+                raise ValueError('item_residual requires output_mode=an_irt')
+            # Keep backbone initialization and dropout RNG comparable at the same seed.
+            with torch.random.fork_rng(devices=[]):
+                self.item_residual = nn.Embedding(num_q, 1)
+                nn.init.zeros_(self.item_residual.weight)
       
 
         self.que_emb = QueEmb(num_q=num_q,num_c=num_c,emb_size=emb_size,emb_type=self.emb_type,model_name=self.model_name,device=device,
@@ -101,12 +144,16 @@ class QIKTNet(nn.Module):
             self.que_lstm_layer = nn.LSTM(self.emb_size*4, self.hidden_size, num_layers=2, batch_first=True)
             self.concept_lstm_layer = self.que_lstm_layer
         elif self.version == "public_mamba":
+            from mamba_ssm import Mamba
             #共用lstm
             self.four2two = nn.Linear(self.emb_size*2, self.emb_size*4)
             self.que_lstm_layer = Mamba(d_model=self.emb_size*4, d_state=self.hidden_size) 
             self.que_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 1024 -> 256
             self.concept_proj = nn.Linear(self.emb_size*4, self.hidden_size)  # 512 -> 256
-            self.concept_lstm_layer = self.que_lstm_layer
+            # Isolate parameter sharing itself: both branches start from the
+            # same weights, without shifting the decoder initialization RNG.
+            self.concept_lstm_layer = (copy.deepcopy(self.que_lstm_layer)
+                if other_config.get('separate_mamba_branches', False) else self.que_lstm_layer)
         elif self.version == "public_lstm_large":
             #共用lstm
             self.four2two = nn.Linear(self.emb_size*2, self.emb_size*4)
@@ -132,8 +179,26 @@ class QIKTNet(nn.Module):
         self.out_concept_all = MLP(self.mlp_layer_num,self.hidden_size,num_c,dropout)
 
         self.que_disc = MLP(self.mlp_layer_num,self.hidden_size*2,1,dropout)
+        if self.freeze_backbone:
+            heads = [h for h in (self.item_residual,self.concept_memory_residual,self.head_fusion_residual) if h is not None]
+            if not heads or self.history_response_dropout:
+                raise ValueError('frozen refinement requires a residual head and full unmasked feedback')
+            for p in self.parameters():
+                p.requires_grad_(False)
+            for head in heads:
+                for p in head.parameters():
+                    p.requires_grad_(True)
+            self.train(self.training)
         
         
+
+    def train(self, mode=True):
+        super().train(mode)
+        if self.freeze_backbone:
+            for name, child in self.named_children():
+                if name not in ('item_residual','concept_memory_residual','head_fusion_residual'):
+                    child.eval()
+        return self
 
     def get_avg_fusion_concepts(self,y_concept,cshft):
         """获取知识点 fusion 的预测结果
@@ -154,7 +219,13 @@ class QIKTNet(nn.Module):
         if data is not None:
             data = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in data.items()}
 
-        _, emb_qca, emb_qc, _, emb_c = self.que_emb(q, c, r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
+        # Neutral feedback hides only historical response identity, retaining question/KC.
+        # Training targets remain the original data['rshft']; evaluation uses full feedback.
+        history_r = r
+        if self.training and self.history_response_dropout:
+            dropped = torch.rand_like(r, dtype=torch.float32) < self.history_response_dropout
+            history_r = torch.where(dropped, 0.5, r.float())
+        _, emb_qca, emb_qc, _, emb_c = self.que_emb(q, c, history_r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
         
         emb_qc_shift = emb_qc[:, 1:, :]
         emb_qca_current = emb_qca[:, :-1, :]
@@ -189,8 +260,8 @@ class QIKTNet(nn.Module):
 
         # concept model
         emb_ca = torch.cat([
-            emb_c.mul((1 - r).unsqueeze(-1).repeat(1, 1, self.emb_size)),
-            emb_c.mul(r.unsqueeze(-1).repeat(1, 1, self.emb_size))
+            emb_c.mul((1 - history_r).unsqueeze(-1).repeat(1, 1, self.emb_size)),
+            emb_c.mul(history_r.unsqueeze(-1).repeat(1, 1, self.emb_size))
         ], dim=-1)
         
         emb_ca_current = emb_ca[:, :-1, :]
@@ -318,6 +389,17 @@ class QIKT_MAMBA(QueBaseModel):
 
         else:
             loss = loss_kt  + loss_q_all_lambda * loss_q_all + loss_c_all_lambda * loss_c_all + loss_c_next_lambda* loss_c_next + loss_q_next_lambda*loss_q_next
+        if self.model.pairwise_loss_weight:
+            loss = loss + self.model.pairwise_loss_weight * fragment_pairwise_loss(
+                outputs['y'], data_new['rshft'], data_new['sm'])
+        if self.model.anchor_kl_weight:
+            mask = data_new['sm'].bool()
+            student = outputs['fusion_logit'][mask]
+            teacher = outputs['baseline_logit'][mask].detach()
+            probability = torch.sigmoid(teacher)
+            kl = ((F.softplus(student) - probability * student) -
+                  (F.softplus(teacher) - probability * teacher)).mean()
+            loss = loss + self.model.anchor_kl_weight * kl
         # print(f"loss={loss:.3f},loss_kt={loss_kt:.3f},loss_q_all={loss_q_all:.3f},loss_c_all={loss_c_all:.3f},loss_q_next={loss_q_next:.3f},loss_c_next={loss_c_next:.3f}")
         return outputs['y'],loss#y_question没用
 
@@ -428,6 +510,21 @@ class QIKT_MAMBA(QueBaseModel):
             y = (sigmoid_inverse(y_q_all) * output_q_all_lambda +
                  sigmoid_inverse(y_c_all) * output_c_all_lambda +
                  sigmoid_inverse(y_c_next) * output_c_next_lambda)
+            baseline_logit = y
+            if self.model.head_fusion_residual is not None:
+                # Only already-available branch predictions route the correction.
+                head_probs = torch.stack((y_q_all, y_c_all, y_c_next), dim=-1)
+                gates = torch.tanh(self.model.head_fusion_residual(head_probs.detach()))
+                head_logits = torch.stack((sigmoid_inverse(y_q_all), sigmoid_inverse(y_c_all), sigmoid_inverse(y_c_next)), dim=-1)
+                y = y + self.model.fusion_gate_scale * (gates * head_logits).sum(-1)
+            if self.model.item_residual is not None:
+                y = y + self.model.item_residual(data_new['qshft'].long()).squeeze(-1)
+            if self.model.concept_memory_residual is not None:
+                features = causal_concept_features(data_new['cc'], data_new['cr'], self.model.num_c)
+                y = y + self.model.concept_memory_residual(features[:, 1:]).squeeze(-1)
+            if self.model.anchor_kl_weight:
+                outputs['baseline_logit'] = baseline_logit.detach()
+                outputs['fusion_logit'] = y
             y = torch.sigmoid(y)
         else:
             y = (y_q_all * output_q_all_lambda +

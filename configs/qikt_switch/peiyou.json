@@ -1,0 +1,32 @@
+{
+  "params": {
+    "dataset_name": "peiyou",
+    "fold": 3,
+    "learning_rate": 0.0001,
+    "seed": 42,
+    "batch_size": 32,
+    "num_epochs": 200,
+    "use_wandb": 0,
+    "add_uuid": 1,
+    "save_dir": "saved_model",
+    "model_name": "qikt_mamba",
+    "emb_type": "attn",
+    "dropout": 0.5,
+    "emb_size": 256,
+    "mlp_layer_num": 1,
+    "num_attn_head": 1,
+    "version": "public_mamba",
+    "use_trained": 1,
+    "other_config": {
+      "output_mode": "an_irt",
+      "loss_q_all_lambda": 2.0,
+      "loss_c_all_lambda": 0.5,
+      "loss_q_next_lambda": 0,
+      "loss_c_next_lambda": 1.0,
+      "output_q_all_lambda": 1,
+      "output_c_all_lambda": 1,
+      "output_q_next_lambda": 0,
+      "output_c_next_lambda": 1
+    }
+  }
+}

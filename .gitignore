@@ -75,3 +75,9 @@ configs/data_config.json
 examples/seq
 examples/saved_models.zip
 .env
+
+# Local QIKT-Mamba experiment artifacts (keep code/configuration in Git).
+/logs/qikt_switch_20261103/
+/docs/QIKT_Mamba_切换问题_实验迭代_20261103.md
+/docs/QIKT_Mamba_环境与正式训练_20261103.md
+/scripts/qikt_switch/write_progress.py

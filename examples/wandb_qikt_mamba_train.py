@@ -45,10 +45,19 @@ if __name__ == "__main__":
     parser.add_argument("--output_mode", type=str, default="an")
     parser.add_argument("--version", type=str, default="an")
     parser.add_argument("--use_trained", type=int, default=1)
+    parser.add_argument("--history_response_dropout", type=float, default=0.0)
+    parser.add_argument("--item_residual", type=int, choices=[0, 1], default=0)
+    parser.add_argument("--separate_mamba_branches", type=int, choices=[0, 1], default=0)
+    parser.add_argument("--concept_memory_residual", type=int, choices=[0, 1], default=0)
+    parser.add_argument("--pairwise_loss_weight", type=float, default=0.0)
+    parser.add_argument("--head_fusion_residual", type=int, choices=[0, 1], default=0)
+    parser.add_argument("--fusion_gate_scale", type=float, default=0.1)
+    parser.add_argument("--freeze_backbone", type=int, choices=[0, 1], default=0)
+    parser.add_argument("--anchor_kl_weight", type=float, default=0.0)
     args = parser.parse_args()
 
     params = vars(args)
-    remove_keys = ['output_mode'] + [x for x in params.keys() if "lambda" in x]
+    remove_keys = ['output_mode', 'history_response_dropout', 'item_residual', 'separate_mamba_branches', 'concept_memory_residual', 'pairwise_loss_weight', 'head_fusion_residual', 'fusion_gate_scale', 'freeze_backbone', 'anchor_kl_weight'] + [x for x in params.keys() if "lambda" in x]
     other_config = {}
     for k in remove_keys:
         other_config[k] = params[k]
