@@ -542,7 +542,7 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name in ["rekt"]:
                 y = model(dcur)
-            elif model_name in ["dkt", "dkt_first_action", "dkt_process", "dkt_confidence", "dkt+", "mult_dataset_dkt", "mamba_dkt"]:
+            elif model_name in ["dkt", "dkt_first_action", "dkt_process", "dkt_confidence", "dkt_option", "dkt_distill", "dkt_transfer", "dkt_profile", "dkt_joint_assist", "dkt_joint_nips", "dkt+", "mult_dataset_dkt", "mamba_dkt"]:
                 
                 y = model(c.long(), r.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
@@ -802,7 +802,7 @@ def evaluate_return_results(model, test_loader, model_name, rel=None, save_path=
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name in ["rekt"]:
                 y = model(dcur)
-            elif model_name in ["dkt", "dkt_first_action", "dkt_process", "dkt_confidence", "dkt+", "mult_dataset_dkt", "mamba_dkt"]:
+            elif model_name in ["dkt", "dkt_first_action", "dkt_process", "dkt_confidence", "dkt_option", "dkt_distill", "dkt_transfer", "dkt_profile", "dkt_joint_assist", "dkt_joint_nips", "dkt+", "mult_dataset_dkt", "mamba_dkt"]:
                 
                 y = model(c.long(), r.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
@@ -1411,7 +1411,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
             elif model_name in ["atdkt"]:
                 y = model(dcurori)#c.long(), r.long(), q.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
-            elif model_name in ["dkt", "dkt_first_action", "dkt_process", "dkt_confidence", "dkt+", "mult_dataset_dkt", "mamba_dkt"]:
+            elif model_name in ["dkt", "dkt_first_action", "dkt_process", "dkt_confidence", "dkt_option", "dkt_distill", "dkt_transfer", "dkt_profile", "dkt_joint_assist", "dkt_joint_nips", "dkt+", "mult_dataset_dkt", "mamba_dkt"]:
                 y = model(c.long(), r.long())
                 y = (y * one_hot(cshft.long(), model.num_c)).sum(-1)
             elif model_name == "long_dkt":
@@ -1846,7 +1846,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
         if model_name == "dimkt":
             sdout = None if csd.shape[0] == 0 else csd.long()[k]
             qdout = None if cqd.shape[0] == 0 else cqd.long()[k]
-        if model_name in ["dkt", "dkt_first_action", "dkt_process", "dkt_confidence", "dkt+", "long_dkt", "mult_dataset_dkt", "mamba_dkt"]:
+        if model_name in ["dkt", "dkt_first_action", "dkt_process", "dkt_confidence", "dkt_option", "dkt_distill", "dkt_transfer", "dkt_profile", "dkt_joint_assist", "dkt_joint_nips", "dkt+", "long_dkt", "mult_dataset_dkt", "mamba_dkt"]:
             y = model(cin.long(), rin.long())
             # print(y)
             pred = y[0][-1][cout.item()]
@@ -1872,7 +1872,7 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             dcurinfos = {"qseqs": qin, "cseqs": cin, "rseqs": rin}
             y = model(dcurinfos)
             pred = y[0][-1][cout.item()]
-        elif model_name in ["dkt", "dkt_first_action", "dkt_process", "dkt_confidence", "dkt+", "long_dkt", "mult_dataset_dkt", "mamba_dkt"]:
+        elif model_name in ["dkt", "dkt_first_action", "dkt_process", "dkt_confidence", "dkt_option", "dkt_distill", "dkt_transfer", "dkt_profile", "dkt_joint_assist", "dkt_joint_nips", "dkt+", "long_dkt", "mult_dataset_dkt", "mamba_dkt"]:
             y = model(cin.long(), rin.long())
             # print(y)
             pred = y[0][-1][cout.item()]
@@ -2292,7 +2292,7 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
             dcurinfos = {"qseqs": curq, "cseqs": curc, "rseqs": curr}
             y = model(dcurinfos)
             y = (y * one_hot(curcshft.long(), model.num_c)).sum(-1)
-        elif model_name in ["dkt", "dkt_first_action", "dkt_process", "dkt_confidence", "dkt+", "long_dkt", "mult_dataset_dkt", "mamba_dkt"]:
+        elif model_name in ["dkt", "dkt_first_action", "dkt_process", "dkt_confidence", "dkt_option", "dkt_distill", "dkt_transfer", "dkt_profile", "dkt_joint_assist", "dkt_joint_nips", "dkt+", "long_dkt", "mult_dataset_dkt", "mamba_dkt"]:
             y = model(curc.long(), curr.long())
             y = (y * one_hot(curcshft.long(), model.num_c)).sum(-1)
         elif model_name in ["balance_dkt"]:

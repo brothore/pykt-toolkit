@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT))
 
 import numpy as np
 import torch
-from sklearn.metrics import f1_score, log_loss, roc_auc_score
+from sklearn.metrics import confusion_matrix, f1_score, log_loss, roc_auc_score
 from torch.utils.data import DataLoader
 
 from pykt.datasets import init_dataset4train
@@ -64,9 +64,13 @@ def confidence_diagnostics(model, loader, train_dataset):
             questions.extend(data['shft_qseqs'][mask].tolist())
     y, r = np.asarray(labels, dtype=int), np.asarray(responses, dtype=int)
     p, joint = np.asarray(predictions), np.asarray(joints)
+    p /= p.sum(-1, keepdims=True)
+    joint /= joint.sum((-1, -2), keepdims=True)
     counts = np.maximum(np.asarray(train_dataset.confidence_counts, dtype=float), 1)
     prior = counts / counts.sum()
     result = {'count': len(y), 'class_counts': np.bincount(y, minlength=5).tolist(),
+              'predicted_class_counts': np.bincount(p.argmax(-1), minlength=5).tolist(),
+              'confusion_matrix': confusion_matrix(y, p.argmax(-1), labels=[0, 1, 2, 3, 4]).tolist(),
               'confidence_nll': float(log_loss(y, p, labels=[0, 1, 2, 3, 4])),
               'confidence_prior_nll': float(-np.log(prior[y]).mean()),
               'confidence_macro_f1': float(f1_score(y, p.argmax(-1), labels=[0, 1, 2, 3, 4], average='macro', zero_division=0)),

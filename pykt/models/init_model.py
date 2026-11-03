@@ -8,7 +8,27 @@ from pykt.models.cuda_retry import retry_decorator
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 
 def init_model(model_name, model_config, data_config, emb_type):
-    if model_name == "dkt_confidence":
+    if model_name in ("dkt_joint_assist", "dkt_joint_nips"):
+        from .dkt_joint import DKTJoint
+        model = DKTJoint(data_config["num_c"], **model_config,
+                         emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "dkt_profile":
+        from .dkt_profile import DKTProfile
+        model = DKTProfile(data_config["num_c"], **model_config,
+                           emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "dkt_transfer":
+        from .dkt_transfer import DKTTransfer
+        model = DKTTransfer(data_config["num_c"], **model_config,
+                            emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "dkt_distill":
+        from .dkt_distill import DKTdistill
+        model = DKTdistill(data_config["num_c"], **model_config,
+                           emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "dkt_option":
+        from .dkt_option import DKTOption
+        model = DKTOption(data_config["num_c"], **model_config,
+                          emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "dkt_confidence":
         from .dkt_confidence import DKTConfidence
         model = DKTConfidence(data_config["num_c"], **model_config,
                               emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)

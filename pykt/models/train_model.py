@@ -286,7 +286,7 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[], return_per_sample=False):
 
 
 def model_forward(model, data, rel=None, return_per_sample=False):
-    if model.model_name in ("dkt_first_action", "dkt_process", "dkt_confidence"):
+    if model.model_name in ("dkt_first_action", "dkt_process", "dkt_confidence", "dkt_option", "dkt_distill", "dkt_transfer", "dkt_profile", "dkt_joint_assist", "dkt_joint_nips"):
         return model.compute_loss(data, return_per_sample=return_per_sample)
     model_name = model.model_name
     

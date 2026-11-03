@@ -418,6 +418,14 @@ def init_dataset4train(dataset_name, model_name, data_config, i, batch_size, dif
     elif model_name == "dimkt":
         curvalid = DIMKTDataset(data_config["dpath"],os.path.join(data_config["dpath"], data_config["train_valid_file"]), data_config["input_type"], {i}, diff_level=diff_level)
         curtrain = DIMKTDataset(data_config["dpath"],os.path.join(data_config["dpath"], data_config["train_valid_file"]), data_config["input_type"], all_folds - {i}, diff_level=diff_level)
+    elif model_name == "dkt_option":
+        if dataset_name != "nips_task34":
+            raise ValueError("dkt_option requires NIPS task34 option labels")
+        from .option_dataset import OptionDataset
+        source = os.path.join(data_config["dpath"], data_config["train_valid_file"])
+        curtrain = OptionDataset(source, data_config["input_type"], all_folds - {i}, mode='train', aug_probs=aug_probs)
+        curvalid = OptionDataset(source, data_config["input_type"], {i}, mode='valid', aug_probs=aug_probs,
+                                 option_stats=curtrain.option_stats)
     elif model_name == "dkt_confidence":
         if dataset_name != "nips_task34":
             raise ValueError("dkt_confidence requires NIPS task34 confidence metadata")
