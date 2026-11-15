@@ -90,6 +90,8 @@ class QIKTNet(nn.Module):
         self.item_residual = None
         self.concept_memory_residual = None
         self.head_fusion_residual = None
+        self.rasch_transfer = None
+        self.reference_fusion = None
         self.fusion_gate_scale = float(other_config.get('fusion_gate_scale', 0.1))
         if not math.isfinite(self.fusion_gate_scale) or not 0 <= self.fusion_gate_scale <= .25:
             raise ValueError('fusion_gate_scale must be finite and in [0, .25]')
@@ -122,7 +124,7 @@ class QIKTNet(nn.Module):
         self.que_emb = QueEmb(num_q=num_q,num_c=num_c,emb_size=emb_size,emb_type=self.emb_type,model_name=self.model_name,device=device,
                              emb_path=emb_path,pretrain_dim=pretrain_dim,num_attn_head=num_attn_head)
        
-        if self.version == "lstm":
+        if self.version in {"lstm", "gru"}:
             self.que_lstm_layer = nn.GRU(self.emb_size*4, self.hidden_size, batch_first=True)
             self.concept_lstm_layer = nn.GRU(self.emb_size*2, self.hidden_size, batch_first=True)
         elif self.version in ["encoder",'decoder','full']:
@@ -196,7 +198,7 @@ class QIKTNet(nn.Module):
         super().train(mode)
         if self.freeze_backbone:
             for name, child in self.named_children():
-                if name not in ('item_residual','concept_memory_residual','head_fusion_residual'):
+                if name not in ('item_residual','concept_memory_residual','head_fusion_residual','causal_adapter','retrieval_adapter','ukt_transfer','rasch_transfer'):
                     child.eval()
         return self
 
@@ -226,11 +228,35 @@ class QIKTNet(nn.Module):
             dropped = torch.rand_like(r, dtype=torch.float32) < self.history_response_dropout
             history_r = torch.where(dropped, 0.5, r.float())
         _, emb_qca, emb_qc, _, emb_c = self.que_emb(q, c, history_r)  # [batch_size,emb_size*4],[batch_size,emb_size*2],...
+        if self.rasch_transfer is not None and self.rasch_transfer.mode.startswith('input_'):
+            emb_c=emb_c+self.rasch_transfer.input_delta(q,c)
+            emb_qc=torch.cat([emb_qc[...,:self.emb_size],emb_c],-1)
+            emb_qca=torch.cat([emb_qc*(1-history_r).unsqueeze(-1),emb_qc*history_r.unsqueeze(-1)],-1)
         
+        reference_context=None
+        if self.reference_fusion is not None:
+            if data is None:raise ValueError('Reference fusion requires aligned metadata')
+            valid=torch.cat([data['m'][:,:1],data['m']],1).bool()
+            reference_context=self.reference_fusion.context(emb_qc,c,history_r,data['ct'],valid,q)
+            delta=self.reference_fusion.input_delta(reference_context)
+            if delta is not None:
+                emb_c=emb_c+delta
+                emb_qc=torch.cat([emb_qc[...,:self.emb_size],emb_c],-1)
+                emb_qca=torch.cat([emb_qc*(1-history_r).unsqueeze(-1),emb_qc*history_r.unsqueeze(-1)],-1)
+
+        if self.reference_fusion is not None and self.reference_fusion.share_history:
+            question_history=self.reference_fusion.history_weight*emb_qc[...,:self.emb_size]
+            emb_qca=torch.cat([question_history*(1-history_r).unsqueeze(-1),emb_c*(1-history_r).unsqueeze(-1),question_history*history_r.unsqueeze(-1),emb_c*history_r.unsqueeze(-1)],-1)
         emb_qc_shift = emb_qc[:, 1:, :]
+        if self.reference_fusion is not None:
+            query_delta=self.reference_fusion.decoder_delta(reference_context)
+            if query_delta is not None:emb_qc_shift=torch.cat([emb_qc_shift[...,:self.emb_size],emb_qc_shift[...,self.emb_size:]+query_delta[:,1:]],-1)
+        if self.rasch_transfer is not None and self.rasch_transfer.mode=='query_vector':
+            delta=self.rasch_transfer.input_delta(q[:,1:],c[:,1:])
+            emb_qc_shift=torch.cat([emb_qc_shift[...,:self.emb_size],emb_qc_shift[...,self.emb_size:]+delta],-1)
         emb_qca_current = emb_qca[:, :-1, :]
         # question model
-        if self.version == "lstm":
+        if self.version in {"lstm", "gru"}:
 
             que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
         elif self.version in ["encoder",'decoder','full']:
@@ -255,6 +281,7 @@ class QIKTNet(nn.Module):
             
             que_h = self.dropout_layer(self.que_lstm_layer(emb_qca_current)[0])
         # print(f"[DEBUG] que_h.shape: {que_h.shape} (type: {type(que_h.shape)})")
+        if self.reference_fusion is not None:que_h=self.reference_fusion.hidden(que_h,reference_context,'question')
         que_outputs = get_outputs(self, emb_qc_shift, que_h, data, add_name="", model_type="question")
         outputs = que_outputs
 
@@ -265,7 +292,7 @@ class QIKTNet(nn.Module):
         ], dim=-1)
         
         emb_ca_current = emb_ca[:, :-1, :]
-        if self.version == "lstm":
+        if self.version in {"lstm", "gru"}:
             #mamba
             concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
         elif self.version in ["encoder",'decoder','full']:
@@ -290,9 +317,11 @@ class QIKTNet(nn.Module):
             #原版
             
             concept_h = self.dropout_layer(self.concept_lstm_layer(emb_ca_current)[0])
+        if self.reference_fusion is not None:concept_h=self.reference_fusion.hidden(concept_h,reference_context,'concept')
         concept_outputs = get_outputs(self, emb_qc_shift, concept_h, data, add_name="", model_type="concept")
         outputs['y_concept_all'] = concept_outputs['y_concept_all']
         outputs['y_concept_next'] = concept_outputs['y_concept_next']
+        if self.reference_fusion is not None and self.reference_fusion.mode=='alibi_logit':outputs['reference_context']=reference_context
         
         return outputs
 

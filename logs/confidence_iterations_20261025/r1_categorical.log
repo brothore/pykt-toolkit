@@ -12,3 +12,99 @@ Epoch: 1, validauc: 0.7519, validacc: 0.6867, best epoch: 1, best auc: 0.7519, t
 Total Epoch Time: 5.56s | Train Phase: 4.98s | Valid Phase: 0.58s
 Avg Batch Time: 0.0263s
 ------------------------------
+Epoch: 2, validauc: 0.7574, validacc: 0.6912, best epoch: 2, best auc: 0.7574, train loss: 0.7144423506060967, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.43s | Train Phase: 4.85s | Valid Phase: 0.58s
+Avg Batch Time: 0.0256s
+------------------------------
+Epoch: 3, validauc: 0.7592, validacc: 0.6926, best epoch: 3, best auc: 0.7592, train loss: 0.7083429699513272, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.35s | Train Phase: 4.79s | Valid Phase: 0.55s
+Avg Batch Time: 0.0254s
+------------------------------
+Epoch: 4, validauc: 0.7607, validacc: 0.6933, best epoch: 4, best auc: 0.7607, train loss: 0.7045062638881102, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.35s | Train Phase: 4.79s | Valid Phase: 0.55s
+Avg Batch Time: 0.0253s
+------------------------------
+Epoch: 5, validauc: 0.7607, validacc: 0.6933, best epoch: 4, best auc: 0.7607, train loss: 0.7013405936479825, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.33s | Train Phase: 4.78s | Valid Phase: 0.55s
+Avg Batch Time: 0.0253s
+------------------------------
+Epoch: 6, validauc: 0.7623, validacc: 0.6946, best epoch: 6, best auc: 0.7623, train loss: 0.6984041389171874, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.23s | Train Phase: 4.68s | Valid Phase: 0.55s
+Avg Batch Time: 0.0247s
+------------------------------
+Epoch: 7, validauc: 0.7623, validacc: 0.6946, best epoch: 6, best auc: 0.7623, train loss: 0.6960873741333107, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.28s | Train Phase: 4.74s | Valid Phase: 0.54s
+Avg Batch Time: 0.0251s
+------------------------------
+Epoch: 8, validauc: 0.7623, validacc: 0.6946, best epoch: 6, best auc: 0.7623, train loss: 0.6936147665741582, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.43s | Train Phase: 4.88s | Valid Phase: 0.55s
+Avg Batch Time: 0.0258s
+------------------------------
+Epoch: 9, validauc: 0.7623, validacc: 0.6946, best epoch: 6, best auc: 0.7623, train loss: 0.6915349012791435, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.32s | Train Phase: 4.77s | Valid Phase: 0.55s
+Avg Batch Time: 0.0252s
+------------------------------
+Epoch: 10, validauc: 0.7623, validacc: 0.6946, best epoch: 6, best auc: 0.7623, train loss: 0.6892406922706191, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.29s | Train Phase: 4.75s | Valid Phase: 0.54s
+Avg Batch Time: 0.0251s
+------------------------------
+Epoch: 11, validauc: 0.7623, validacc: 0.6946, best epoch: 6, best auc: 0.7623, train loss: 0.6870870083519306, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.32s | Train Phase: 4.77s | Valid Phase: 0.55s
+Avg Batch Time: 0.0252s
+------------------------------
+Epoch: 12, validauc: 0.7623, validacc: 0.6946, best epoch: 6, best auc: 0.7623, train loss: 0.6849549345484854, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.30s | Train Phase: 4.76s | Valid Phase: 0.54s
+Avg Batch Time: 0.0252s
+------------------------------
+Epoch: 13, validauc: 0.7623, validacc: 0.6946, best epoch: 6, best auc: 0.7623, train loss: 0.6825211947010308, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.29s | Train Phase: 4.75s | Valid Phase: 0.55s
+Avg Batch Time: 0.0251s
+------------------------------
+Epoch: 14, validauc: 0.7623, validacc: 0.6946, best epoch: 6, best auc: 0.7623, train loss: 0.6805044479414722, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.32s | Train Phase: 4.77s | Valid Phase: 0.55s
+Avg Batch Time: 0.0252s
+------------------------------
+Epoch: 15, validauc: 0.7623, validacc: 0.6946, best epoch: 6, best auc: 0.7623, train loss: 0.6778801395813422, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.31s | Train Phase: 4.76s | Valid Phase: 0.55s
+Avg Batch Time: 0.0252s
+------------------------------
+Epoch: 16, validauc: 0.7623, validacc: 0.6946, best epoch: 6, best auc: 0.7623, train loss: 0.675335034770905, emb_type: qid, model: dkt_confidence, save_dir: /root/pykt-toolkit/examples/saved_model/confidence_iterations_20261025/r1_categorical
+            testauc: -1, testacc: -1, window_testauc: -1, window_testacc: -1
+
+Total Epoch Time: 5.29s | Train Phase: 4.74s | Valid Phase: 0.54s
+Avg Batch Time: 0.0251s
+------------------------------
+Early stopping at epoch 16
+✅ Training Finished! Total Time Cost: 85.37 s
+/root/miniconda3/lib/python3.12/site-packages/sklearn/metrics/_classification.py:304: UserWarning: The y_prob values do not sum to one. Make sure to pass probabilities.
+  warnings.warn(
+VALIDATION_SUMMARY {"model": "dkt_confidence", "dataset": "nips_task34", "fold": 0, "seed": 42, "epoch_budget": 20, "best_epoch": 6, "validation_auc": 0.7622572762163615, "validation_accuracy": 0.6945746638548229, "training_seconds": 85.37356622796506, "model_config": {"emb_size": 200, "dropout": 0.2, "confidence_weight": 0.1, "confidence_mode": "categorical", "confidence_balance": 0.0, "confidence_counts": [18975, 11237, 33601, 54461, 98717]}, "parameters": 396462, "train_sequences": 6043, "validation_sequences": 1503, "validation_diagnostics": {"response_nll": 0.5732328277671649, "response_brier": 0.19698057529790436, "coverage_groups": {"observed": {"count": 56377, "auc": 0.751130196190405}, "missing": {"count": 164248, "auc": 0.7469952684584825}}, "confidence": {"count": 56377, "class_counts": [3473, 2706, 8312, 15114, 26772], "confidence_nll": 1.2794814869053879, "confidence_prior_nll": 1.3118363971331441, "confidence_macro_f1": 0.14912419745017824, "confidence_level_mae": 0.8780103838570282, "prior_level_mae": 0.9351015709000656, "joint_nll": 1.8368078652781796, "concept_prior_nll": 1.3020202085601797, "question_prior_nll": 1.2663218716346067, "high_confidence_wrong": {"count": 12207, "auc": 0.6822126409393439, "brier": 0.16001474583728045}, "low_confidence_correct": {"count": 2144, "auc": 0.6252998953726748, "brier": 0.036764148056618554}}, "gradient": {"cosine": 0.2760819084942341, "aux_norm_over_response": 4.123454749584198}}, "test_evaluated": false}
+[HAMI-core Msg(441193:140349524577152:multiprocess_memory_limit.c:459)]: Calling exit handler 441193

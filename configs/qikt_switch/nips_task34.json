@@ -15,7 +15,7 @@
     "emb_size": 256,
     "mlp_layer_num": 1,
     "num_attn_head": 1,
-    "version": "public_mamba",
+    "version": "gru",
     "use_trained": 1,
     "other_config": {
       "output_mode": "an_irt",

@@ -190,6 +190,21 @@ def init_model(model_name, model_config, data_config, emb_type):
                      max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
     elif model_name == "qikt_mamba":
         from .qikt_mamba import QIKT_MAMBA
+        if model_config.get('other_config', {}).get('reference_fusion_mode', 'off') != 'off':
+            from .qikt_reference_fusion import QIKTReferenceFusion
+            QIKT_MAMBA = QIKTReferenceFusion
+        elif model_config.get('other_config', {}).get('ukt_rasch_mode', 'off') != 'off':
+            from .qikt_ukt_rasch import QIKTRaschTransfer
+            QIKT_MAMBA = QIKTRaschTransfer
+        elif model_config.get('other_config', {}).get('ukt_transfer_mode', 'off') != 'off':
+            from .qikt_ukt_transfer import QIKTUKTTransfer
+            QIKT_MAMBA = QIKTUKTTransfer
+        elif model_config.get('other_config', {}).get('retrieval_adapter_mode', 'off') != 'off':
+            from .qikt_retrieval_adapter import QIKTRetrievalAdapter
+            QIKT_MAMBA = QIKTRetrievalAdapter
+        elif model_config.get('other_config', {}).get('causal_adapter_mode', 'off') != 'off':
+            from .qikt_causal_adapter import QIKTCausalAdapter
+            QIKT_MAMBA = QIKTCausalAdapter
         model = QIKT_MAMBA(num_q=data_config['num_q'], num_c=data_config['num_c'],
                      max_concepts=data_config['max_concepts'], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"], device=device).to(device)
     elif model_name == "qikt_asikt":

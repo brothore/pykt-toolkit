@@ -11,11 +11,11 @@ import os
 
 def initialize_from_baseline(model, checkpoint):
     import torch
-    if not model.model.freeze_backbone:
+    if not model.model.freeze_backbone and not getattr(model,'baseline_warmstart_allowed',False):
         raise ValueError('baseline warm-start is scoped to frozen refinements')
     state=torch.load(checkpoint,map_location='cpu',weights_only=True)
     result=model.load_state_dict(state,strict=False)
-    allowed=('model.item_residual.','model.concept_memory_residual.','model.head_fusion_residual.')
+    allowed=('model.item_residual.','model.concept_memory_residual.','model.head_fusion_residual.','model.causal_adapter.','model.retrieval_adapter.','model.ukt_transfer.','model.rasch_transfer.')
     if result.unexpected_keys or any(not key.startswith(allowed) for key in result.missing_keys):
         raise ValueError(f'Unexpected warm-start mismatch: {result}')
     return model
@@ -26,6 +26,9 @@ def main():
     sys.path.insert(0, str(examples))
     import wandb_train
     wandb_train.predict_after_train = 0
+    if os.environ.get('QIKT_SWITCH_RESUMABLE')=='1':
+        from resumable_qikt import train_qikt
+        wandb_train.train_model=train_qikt
     warm_start=os.environ.get('QIKT_SWITCH_BASE_CHECKPOINT')
     if warm_start:
         original_model_init=wandb_train.init_model
@@ -49,6 +52,37 @@ def main():
             return (DataLoader(train, batch_size=batch_size), *loaders[1:])
 
         wandb_train.init_dataset4train = init_overlap
+    protocol_path=os.environ.get('QIKT_V2_PROTOCOL')
+    if protocol_path:
+        import json
+        protocol=json.loads(Path(protocol_path).read_text())
+        if protocol.get('indexed_training_fragments'):
+            if overlap_path or protocol.get('full_uid_batch_size'):
+                raise ValueError('Indexed native-fragment discovery excludes grouping and overlap')
+            from pykt.datasets.indexed_que_dataset import IndexedQueDataset
+            from torch.utils.data import DataLoader,RandomSampler,SequentialSampler
+            original_indexed_init=wandb_train.init_dataset4train
+            def init_indexed(*args,**kwargs):
+                loaders=original_indexed_init(*args,**kwargs);old=loaders[0]
+                if old.num_workers or old.drop_last:raise ValueError('Indexed discovery requires native single-process complete coverage')
+                if not isinstance(old.sampler,(SequentialSampler,RandomSampler)) or getattr(old.sampler,'replacement',False):
+                    raise ValueError('Unsupported stateful/replacement sampler for rank anchors')
+                return (DataLoader(IndexedQueDataset(old.dataset),batch_size=old.batch_size,
+                    sampler=old.sampler,num_workers=0,generator=old.generator),*loaders[1:])
+            wandb_train.init_dataset4train=init_indexed
+        complete_size=protocol.get('full_uid_batch_size')
+        if complete_size:
+            if overlap_path:raise ValueError('Complete-UID discovery does not combine overlap yet')
+            from pykt.datasets.complete_uid_sampler import CompleteUIDBatchSampler
+            from torch.utils.data import DataLoader
+            original_complete_init=wandb_train.init_dataset4train
+            def init_complete(*args,**kwargs):
+                loaders=original_complete_init(*args,**kwargs)
+                dataset=loaders[0].dataset
+                sampler=CompleteUIDBatchSampler(dataset,complete_size)
+                dataset._qikt_complete_uid_sampler=sampler
+                return (DataLoader(dataset,batch_sampler=sampler,num_workers=0),*loaders[1:])
+            wandb_train.init_dataset4train=init_complete
     runpy.run_path(str(examples / 'wandb_qikt_mamba_train.py'), run_name='__main__')
 
 

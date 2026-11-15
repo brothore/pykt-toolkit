@@ -32,6 +32,12 @@ def wait_finished(variant,neural_root=None):
     return directory
 
 
+
+def describe_saved_architecture(config):
+    version=config.get('model_config',{}).get('version',config.get('params',{}).get('version','unknown'))
+    return {'model':'qikt_mamba/'+str(version),'version':version,'architecture':'two independent GRUs' if version in ['gru','lstm'] else 'See saved version/source'}
+
+
 def evaluate_finished(variant,neural_root=None):
     neural_root=Path(neural_root) if neural_root else BASE/'neural'
     directory=wait_finished(variant,neural_root)
@@ -45,7 +51,7 @@ def evaluate_finished(variant,neural_root=None):
         'source':str(directory/'training.log'),'native_selected_validation_auc_rounded':native_auc})
     out=directory/'validation'
     if not (out/'validation_results.json').exists():
-        with open(directory/'validation_export.log','x') as log:
+        with open(directory/'validation_export.log','a') as log:
             subprocess.run([sys.executable,str(ROOT/'scripts/qikt_switch/evaluate_validation.py'),
                 '--checkpoint-dir',str(checkpoint),'--output-dir',str(out),'--batch-size','32','--device','cuda'],
                 cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,check=True)
@@ -53,7 +59,7 @@ def evaluate_finished(variant,neural_root=None):
     if abs(result['validation_auc']-native_auc)>1.1e-4:
         raise RuntimeError(f'Export AUC {result["validation_auc"]} disagrees with native selected AUC {native_auc}')
     config=json.loads((checkpoint/'config.json').read_text());params=config['params']
-    summary={'variant':variant,'dataset':params['dataset_name'],'model':'qikt_mamba/public_mamba','fold':params['fold'],'seed':params['seed'],
+    summary={'variant':variant,'dataset':params['dataset_name'],**describe_saved_architecture(config),'fold':params['fold'],'seed':params['seed'],
         'completed_epochs':completed,'selected_epoch':best,'validation_auc':result['validation_auc'],'cohorts':result['cohorts'],
         'checkpoint_dir':str(checkpoint),'formal_test_windowauclate_mean':None,'test_evaluated':False}
     if variant!='baseline':

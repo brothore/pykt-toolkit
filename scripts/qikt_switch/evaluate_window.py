@@ -12,7 +12,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import Dataset,DataLoader
+from torch.utils.data import Dataset,DataLoader,Subset
+from contextlib import nullcontext
+from prediction_progress import PredictionProgress,atomic_json
 from sklearn.metrics import roc_auc_score
 from evaluate_validation import load_run,load_saved_model,sha256_file
 from audit_inputs import sequence_metrics
@@ -53,7 +55,7 @@ class QuestionWindows(Dataset):
         return data,{'orirow':row['uid'],'qidx':torch.from_numpy(positions)}
 
 
-def evaluate_window_checkpoint(checkpoint_dir,output_dir,batch_size=32,device='auto',source='test',mixture_path=None):
+def evaluate_window_checkpoint(checkpoint_dir,output_dir,batch_size=32,device='auto',source='test',mixture_path=None,resume=False,checkpoint_batches=0):
     started=time.perf_counter()
     config,paths=load_run(checkpoint_dir);cfg=config['data_config']
     if paths['emb_type'] not in ('attn','iekt'):raise ValueError('Window input path currently supports attn/iekt QIKT only')
@@ -62,6 +64,14 @@ def evaluate_window_checkpoint(checkpoint_dir,output_dir,batch_size=32,device='a
     raw=pd.read_csv(raw_path)
     if source=='validation':raw=raw[raw.fold==paths['fold']].copy()
     dataset=QuestionWindows(raw,int(cfg.get('maxlen',200)),int(cfg['max_concepts']))
+    progress=None
+    if checkpoint_batches:
+        if checkpoint_batches<1:raise ValueError('checkpoint_batches must be positive')
+        identity={'config':sha256_file(Path(checkpoint_dir)/'config.json'),'checkpoint':sha256_file(paths['checkpoint_path']),
+            'raw_data':sha256_file(raw_path),'source':source,'batch_size':batch_size,'device':device,
+            'mixture':sha256_file(mixture_path) if mixture_path else None,
+            'code':{str(p):sha256_file(p) for p in [Path(__file__),Path(__file__).with_name('prediction_progress.py'),Path(__file__).with_name('evaluate_validation.py'),Path(__file__).resolve().parents[2]/'pykt/models/qikt_mamba.py',Path(__file__).resolve().parents[2]/'pykt/models/qikt_switch_utils.py']}}
+        progress=PredictionProgress(output_dir,identity,resume)
     components=[]
     if mixture_path:
         spec=json.loads(Path(mixture_path).read_text())
@@ -80,13 +90,21 @@ def evaluate_window_checkpoint(checkpoint_dir,output_dir,batch_size=32,device='a
     else:
         components=[{'model':load_saved_model(config,paths,device=device),'weight':1.}]
     model=components[0]['model'];records=[]
-    with torch.no_grad():
-        for data,meta in DataLoader(dataset,batch_size=batch_size,shuffle=False):
+    next_window=progress.state['next_window'] if progress else 0
+    remaining=Subset(dataset,range(next_window,len(dataset)))
+    with progress.signals() if progress else nullcontext(),torch.no_grad():
+        for batch_index,(data,meta) in enumerate(DataLoader(remaining,batch_size=batch_size,shuffle=False)):
             p=sum(c['weight']*c['model'].predict_one_step(data).detach().cpu().numpy().astype(np.float64) for c in components)
             mask=data['smasks'].numpy();labels=data['shft_rseqs'].numpy();qs=data['shft_qseqs'].numpy();cs=data['shft_cseqs'].numpy()
             for b,i in zip(*np.where(mask)):
                 concepts=[int(x) for x in cs[b,i] if x!=-1];question=int(qs[b,i])
                 records.append((int(meta['orirow'][b]),int(meta['qidx'][b,i]),int(labels[b,i]),float(p[b,i]),','.join([str(question)]*len(concepts)),','.join(map(str,reversed(concepts)))))
+            next_window+=len(meta['orirow'])
+            if progress and ((batch_index+1)%checkpoint_batches==0 or progress.stopping):
+                progress.flush(records,next_window);records=[]
+                if progress.stopping:raise SystemExit(130)
+        if progress:
+            progress.flush(records,next_window);records=progress.records()
     frame=pd.DataFrame(records,columns=['orirow','qidx','late_trues','late_mean','questions','concepts'])
     if frame.duplicated(['orirow','qidx']).any():raise ValueError('A question was scored multiple times')
     # Validate all exported positions against the original full question sequences.
@@ -119,11 +137,13 @@ def evaluate_window_checkpoint(checkpoint_dir,output_dir,batch_size=32,device='a
         result['completed_epochs']=None;result['selected_epoch']=None
     result['elapsed_seconds']=time.perf_counter()-started
     result['test_evaluated']=source=='test'
-    (output_dir/('all_results.json' if source=='test' else 'validation_window_results.json')).write_text(json.dumps(result,indent=2));return result
+    atomic_json(output_dir/('all_results.json' if source=='test' else 'validation_window_results.json'),result)
+    if progress:progress.mark('completed');progress.close()
+    return result
 
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--checkpoint-dir',type=Path,required=True);ap.add_argument('--output-dir',type=Path,required=True);ap.add_argument('--batch-size',type=int,default=32);ap.add_argument('--device',choices=['auto','cuda','cpu'],default='auto');ap.add_argument('--source',choices=['test','validation'],default='test');ap.add_argument('--mixture-json',type=Path);args=ap.parse_args()
-    print(json.dumps(evaluate_window_checkpoint(args.checkpoint_dir,args.output_dir,args.batch_size,args.device,args.source,args.mixture_json)),flush=True)
+    ap=argparse.ArgumentParser();ap.add_argument('--checkpoint-dir',type=Path,required=True);ap.add_argument('--output-dir',type=Path,required=True);ap.add_argument('--batch-size',type=int,default=32);ap.add_argument('--device',choices=['auto','cuda','cpu'],default='auto');ap.add_argument('--source',choices=['test','validation'],default='test');ap.add_argument('--mixture-json',type=Path);ap.add_argument('--resume',action='store_true');ap.add_argument('--checkpoint-batches',type=int,default=0);args=ap.parse_args()
+    print(json.dumps(evaluate_window_checkpoint(args.checkpoint_dir,args.output_dir,args.batch_size,args.device,args.source,args.mixture_json,args.resume,args.checkpoint_batches)),flush=True)
 
 if __name__=='__main__':main()

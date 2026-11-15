@@ -8,6 +8,7 @@ from run_remaining_trials import ROOT,BASE,read,write,alive
 from advance_experiment import evaluate_finished
 from compare_validation import compare
 from audit_inputs import sha
+from transfer_gate import assess_transfer
 
 WORK=BASE/'confirmation_pipeline'
 STATUS=WORK/'status.json'
@@ -18,6 +19,26 @@ def logstage(stage,**fields):write(STATUS,{'stage':stage,'updated_utc':datetime.
 
 def run_command(command,log):
     with open(log,'x') as f:subprocess.run(command,cwd=ROOT,stdout=f,stderr=subprocess.STDOUT,check=True)
+
+
+def run_or_attach_inference(command, target, log):
+    matches=[]
+    for proc in Path('/proc').iterdir():
+        if not proc.name.isdigit():continue
+        try:
+            # Only Python can own this entrypoint. Avoid reading unrelated
+            # process argv: procfs cmdline can block on another process's mm.
+            if not (proc/'comm').read_text().strip().startswith('python'):continue
+            args=[os.fsdecode(v) for v in (proc/'cmdline').read_bytes().split(b'\0') if v]
+        except OSError:continue
+        if args[1:]==command[1:]:matches.append(int(proc.name))
+    if len(matches)>1:raise RuntimeError('Duplicate inference processes; inspect before proceeding')
+    if matches:
+        pid=matches[0]
+        write(target.parent/'inference_attachment.json',{'pid':pid,'command':command,'reason':'Preserve live inference during controller handoff'})
+        while alive(pid,'evaluate_window.py'):time.sleep(5)
+        if not target.exists():raise RuntimeError('Attached inference exited without results; no automatic restart')
+    elif not target.exists():run_command(command,log)
 
 
 def run_model(name,dataset='nips_task34'):
@@ -56,7 +77,7 @@ def predict_candidate(candidate,neural,out,source):
     if not target.exists():
         command=[sys.executable,str(ROOT/'scripts/qikt_switch/evaluate_window.py'),'--checkpoint-dir',primary,'--output-dir',str(out),'--source',source,'--device','cuda','--batch-size','32']
         if mixture:command+=['--mixture-json',str(spec)]
-        run_command(command,out/'inference.log')
+        run_or_attach_inference(command,target,out/'inference.log')
     result=read(target)
     if result['source']!=source or result['test_evaluated']!=(source=='test'):raise RuntimeError('Evaluation source mismatch')
     if mixture:
@@ -143,8 +164,16 @@ def main():
         clear_private_overlap_cache('nips_task34')
         run_model('r3_frozen_memory_fusion_anchor1')
         logstage('r3_validation_window');result=evaluate_new_windows('r3_frozen_memory_fusion_anchor1');summaries=[r for r in summaries if r['variant']!=result['variant']]+[result];write(BASE/'validation_window_summaries.json',summaries)
-        selection=freeze_candidates();confirm_dataset('nips_task34',selection)
-        # Transfer choices/coefficients are already fixed before nips test outcomes.
+        selection=freeze_candidates();outcomes=confirm_dataset('nips_task34',selection)
+        # Fixed methods/coefficients stay frozen; Nips confirmation gates only transfer compute.
+        checks=[assess_transfer(o) for o in outcomes]
+        write(WORK/'peiyou_transfer_gate.json',{'screening':'Nips formal confirmation, no coefficient refitting','candidates':checks})
+        eligible={c['candidate'] for c in checks if c['eligible_for_peiyou']}
+        if not eligible:
+            logstage('nips_confirmation_no_transfer_candidate',objective_achieved=False,peiyou_started=False,next='Review Nips evidence; do not launch expensive Peiyou training or tune on the observed test set.')
+            return
+        selection={**selection,'candidates':[c for c in selection['candidates'] if c['id'] in eligible]}
+        write(WORK/'peiyou_transfer_selection.json',selection)
         needed={'baseline'}
         for candidate in selection['candidates']:needed.update(name for name,weight in candidate['components'].items() if weight)
         for name in ['baseline']+sorted(needed-{'baseline'}):

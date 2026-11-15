@@ -19,8 +19,11 @@ def read(path):
 
 
 def alive(pid,needle):
-    p=Path(f'/proc/{pid}/cmdline')
-    return p.exists() and needle in p.read_text().replace('\x00',' ')
+    root=Path(f'/proc/{pid}')
+    try:
+        if not (root/'comm').read_text().strip().startswith('python'):return False
+        return needle in (root/'cmdline').read_text().replace('\x00',' ')
+    except OSError:return False
 
 
 def verify_summary(name):

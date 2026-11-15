@@ -54,11 +54,35 @@ if __name__ == "__main__":
     parser.add_argument("--fusion_gate_scale", type=float, default=0.1)
     parser.add_argument("--freeze_backbone", type=int, choices=[0, 1], default=0)
     parser.add_argument("--anchor_kl_weight", type=float, default=0.0)
+    parser.add_argument("--causal_adapter_mode", choices=['off','question','prefix','multiscale','supported','uncertain','disagreement','low_support','state_only','state_multiscale','state_interaction'], default='off')
+    parser.add_argument("--causal_adapter_scale", type=float, default=.25)
+    parser.add_argument("--causal_adapter_kl", type=float, default=0.)
+    parser.add_argument("--retrieval_adapter_mode", choices=['off','content','kc_bias','multi_scale'], default='off')
+    parser.add_argument("--retrieval_adapter_scale", type=float, default=.25)
+    parser.add_argument("--retrieval_adapter_kl", type=float, default=0.)
+    parser.add_argument('--ukt_transfer_mode', choices=['off','mean','w2','w2_legacy'], default='off')
+    parser.add_argument('--ukt_transfer_scale', type=float, default=.1)
+    parser.add_argument('--ukt_transfer_fusion', choices=['additive','uncertainty'], default='additive')
+    parser.add_argument('--ukt_transfer_freeze', type=int, choices=[0,1], default=0)
+    parser.add_argument('--ukt_rasch_mode', choices=['off','input_scalar','input_vector','input_additive','query_vector','output_vector'], default='off')
+    parser.add_argument('--ukt_rasch_scale', type=float, default=1.)
+    parser.add_argument('--ukt_rasch_freeze', type=int, choices=[0,1], default=0)
+    parser.add_argument('--ukt_rasch_warmstart', type=int, choices=[0,1], default=0)
+    parser.add_argument('--reference_fusion_mode', choices=['off','cic_question','cic_concept','cic_both','time_input','time_decode','time_gate','time_input_decode','time_sparse_input','alibi_logit','alibi_question','alibi_concept','scalar_query','shared_history','shared_scalar','scalar_additive_query','scalar_additive_input'], default='off')
+    parser.add_argument('--reference_fusion_scale', type=float, default=.1)
+    parser.add_argument('--reference_fusion_bias', choices=['alibi','none'], default='alibi')
+    parser.add_argument('--reference_cic_kernel', type=int, default=3)
+    parser.add_argument('--reference_cic_context', choices=['past','current'], default='past')
+    parser.add_argument('--reference_history_weight', type=float, default=0.)
     args = parser.parse_args()
 
     params = vars(args)
     remove_keys = ['output_mode', 'history_response_dropout', 'item_residual', 'separate_mamba_branches', 'concept_memory_residual', 'pairwise_loss_weight', 'head_fusion_residual', 'fusion_gate_scale', 'freeze_backbone', 'anchor_kl_weight'] + [x for x in params.keys() if "lambda" in x]
     other_config = {}
+    remove_keys += ['causal_adapter_mode', 'causal_adapter_scale', 'causal_adapter_kl']
+    remove_keys += ['retrieval_adapter_mode', 'retrieval_adapter_scale', 'retrieval_adapter_kl']
+    remove_keys += ['ukt_transfer_mode','ukt_transfer_scale','ukt_transfer_fusion','ukt_transfer_freeze','ukt_rasch_mode','ukt_rasch_scale','ukt_rasch_freeze','ukt_rasch_warmstart']
+    remove_keys += ['reference_fusion_mode','reference_fusion_scale','reference_fusion_bias','reference_cic_kernel','reference_cic_context','reference_history_weight']
     for k in remove_keys:
         other_config[k] = params[k]
         del params[k]

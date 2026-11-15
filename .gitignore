@@ -81,6 +81,7 @@ examples/saved_models.zip
 /docs/QIKT_Mamba_切换问题_实验迭代_20261103.md
 /docs/QIKT_Mamba_环境与正式训练_20261103.md
 /scripts/qikt_switch/write_progress.py
+/logs/qikt_v2_20261105/
 
 # Local experiment outputs, datasets, and model weights.
 /logs/

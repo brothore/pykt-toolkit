@@ -11,7 +11,27 @@
   "learning_rate": 0.001,
   "augmentation": false,
   "also": false,
-  "selection": "original validation checkpoint rule: auc > max_auc + 1e-3; patience10; cross-variant selection by retained validation AUC; all test evaluations only after freeze",
+  "selection": {
+    "frozen_at_utc": "2026-10-25T08:29:01.332272+00:00",
+    "selected_by": "retained validation AUC only, baseline included; no test metric used",
+    "selected_variant": "r2_ordinal",
+    "validation_auc": {
+      "baseline": 0.7624967536457152,
+      "r1_categorical": 0.7622572762163615,
+      "r2_ordinal": 0.7629646773058221,
+      "r3_conditional": 0.762760403521867,
+      "r4_balanced_ordinal": 0.7628304276941078
+    },
+    "checkpoint_sha256": {
+      "baseline": "cb9b88b69bc203ce2ec2f2121302e02840afdcd63daab4f888b2fc9c0f6a9d4f",
+      "r1_categorical": "4d49ba708a2a6c754d68ef2aed861f1d65739af535e5171edb41eeeb050528e5",
+      "r2_ordinal": "993f0896f5bddea107ca1c6fc5f71dbf9ee09d297a7e4862fdd832d8971d418f",
+      "r3_conditional": "80e9ea892a864ae30587e59bf44d8fee8aa36cb3dd78af3143f7ddd779fe6191",
+      "r4_balanced_ordinal": "cfdcfdac82dac6e243a56d1bb552880fa5584d62a920ffdf70937288cf284fbe"
+    },
+    "test_evaluation_started": false,
+    "test_batch_size": 512
+  },
   "test_batch_size": 512,
   "rounds": [
     {
@@ -20,7 +40,354 @@
       "mode": "categorical",
       "confidence_weight": 0.1,
       "balance": 0,
-      "reason": "Establish 5-way self-reported confidence auxiliary CE; confidence zero valid, missing masked, no confidence-as-correctness soft labels."
+      "reason": "Establish 5-way self-reported confidence auxiliary CE; confidence zero valid, missing masked, no confidence-as-correctness soft labels.",
+      "validation_auc": 0.7622572762163615,
+      "diagnostics": {
+        "response_nll": 0.5732328277671649,
+        "response_brier": 0.19698057529790436,
+        "coverage_groups": {
+          "observed": {
+            "count": 56377,
+            "auc": 0.751130196190405
+          },
+          "missing": {
+            "count": 164248,
+            "auc": 0.7469952684584825
+          }
+        },
+        "confidence": {
+          "count": 56377,
+          "class_counts": [
+            3473,
+            2706,
+            8312,
+            15114,
+            26772
+          ],
+          "confidence_nll": 1.2794814869053879,
+          "confidence_prior_nll": 1.3118363971331441,
+          "confidence_macro_f1": 0.14912419745017824,
+          "confidence_level_mae": 0.8780103838570282,
+          "prior_level_mae": 0.9351015709000656,
+          "joint_nll": 1.8368078652781796,
+          "concept_prior_nll": 1.3020202085601797,
+          "question_prior_nll": 1.2663218716346067,
+          "high_confidence_wrong": {
+            "count": 12207,
+            "auc": 0.6822126409393439,
+            "brier": 0.16001474583728045
+          },
+          "low_confidence_correct": {
+            "count": 2144,
+            "auc": 0.6252998953726748,
+            "brier": 0.036764148056618554
+          }
+        },
+        "gradient": {
+          "cosine": 0.2760819084942341,
+          "aux_norm_over_response": 4.123454749584198
+        }
+      }
+    },
+    {
+      "round": 2,
+      "variant": "r2_ordinal",
+      "decided_at": "2026-10-25T08:22:12.372201+00:00",
+      "mode": "ordinal",
+      "confidence_weight": 0.182,
+      "balance": 0,
+      "reason": "R1 confidence macroF1=.149 and AUC slightly below baseline; use ordered cumulative BCE on same 5 logits to encode distances. Match initial training-fold auxiliary gradient scale: CE/ordinal norm ratio1.8177, weight .1->.182. No validation/test used for calibration.",
+      "validation_auc": 0.7629646773058221,
+      "diagnostics": {
+        "response_nll": 0.5723277415774319,
+        "response_brier": 0.1965691150516387,
+        "coverage_groups": {
+          "observed": {
+            "count": 56377,
+            "auc": 0.7535182028320468
+          },
+          "missing": {
+            "count": 164248,
+            "auc": 0.7471388913639543
+          }
+        },
+        "confidence": {
+          "count": 56377,
+          "class_counts": [
+            3473,
+            2706,
+            8312,
+            15114,
+            26772
+          ],
+          "predicted_class_counts": [
+            1049,
+            0,
+            881,
+            81,
+            54366
+          ],
+          "confusion_matrix": [
+            [
+              189,
+              0,
+              141,
+              14,
+              3129
+            ],
+            [
+              123,
+              0,
+              85,
+              5,
+              2493
+            ],
+            [
+              243,
+              0,
+              214,
+              18,
+              7837
+            ],
+            [
+              220,
+              0,
+              167,
+              16,
+              14711
+            ],
+            [
+              274,
+              0,
+              274,
+              28,
+              26196
+            ]
+          ],
+          "confidence_nll": 1.2830849854537123,
+          "confidence_prior_nll": 1.3118363971331441,
+          "confidence_macro_f1": 0.15559383170190766,
+          "confidence_level_mae": 0.8771747082719559,
+          "prior_level_mae": 0.9351015709000656,
+          "joint_nll": 1.8387692580099626,
+          "concept_prior_nll": 1.3020202085601797,
+          "question_prior_nll": 1.2663218716346067,
+          "high_confidence_wrong": {
+            "count": 12207,
+            "auc": 0.6822823065014323,
+            "brier": 0.1600787701917767
+          },
+          "low_confidence_correct": {
+            "count": 2144,
+            "auc": 0.6301366171970527,
+            "brier": 0.03685047057594707
+          }
+        },
+        "gradient": {
+          "cosine": 0.1848500156775117,
+          "aux_norm_over_response": 3.605900138616562
+        }
+      }
+    },
+    {
+      "round": 3,
+      "variant": "r3_conditional",
+      "decided_at": "2026-10-25T08:24:30.189205+00:00",
+      "mode": "conditional",
+      "confidence_weight": 0.1,
+      "balance": 0,
+      "reason": "R2 slightly improves main AUC but independent confidence marginal remains weak and cannot explicitly represent correctness-confidence dependence. Factor joint P(r,c)=P(r)*P(c|r); select true response branch only in label loss. Head predicts both branches from history, never reads future response. Keep CE scale/weight from R1.",
+      "validation_auc": 0.762760403521867,
+      "diagnostics": {
+        "response_nll": 0.5723215116233936,
+        "response_brier": 0.1965740967506931,
+        "coverage_groups": {
+          "observed": {
+            "count": 56377,
+            "auc": 0.7526758126648636
+          },
+          "missing": {
+            "count": 164248,
+            "auc": 0.7471771919719334
+          }
+        },
+        "confidence": {
+          "count": 56377,
+          "class_counts": [
+            3473,
+            2706,
+            8312,
+            15114,
+            26772
+          ],
+          "predicted_class_counts": [
+            937,
+            0,
+            617,
+            13,
+            54810
+          ],
+          "confusion_matrix": [
+            [
+              181,
+              0,
+              88,
+              5,
+              3199
+            ],
+            [
+              110,
+              0,
+              62,
+              0,
+              2534
+            ],
+            [
+              216,
+              0,
+              130,
+              2,
+              7964
+            ],
+            [
+              192,
+              0,
+              109,
+              1,
+              14812
+            ],
+            [
+              238,
+              0,
+              228,
+              5,
+              26301
+            ]
+          ],
+          "confidence_nll": 1.2722747416005247,
+          "confidence_prior_nll": 1.3118363971331441,
+          "confidence_macro_f1": 0.15122231333163794,
+          "confidence_level_mae": 0.878650713021484,
+          "prior_level_mae": 0.9351015709000656,
+          "joint_nll": 1.8120209933138574,
+          "concept_prior_nll": 1.3020202085601797,
+          "question_prior_nll": 1.2663218716346067,
+          "high_confidence_wrong": {
+            "count": 12207,
+            "auc": 0.6860778142953604,
+            "brier": 0.15748173123631484
+          },
+          "low_confidence_correct": {
+            "count": 2144,
+            "auc": 0.624304608762468,
+            "brier": 0.03643787397890118
+          }
+        },
+        "gradient": {
+          "cosine": 0.1580540193244815,
+          "aux_norm_over_response": 3.7526327669620514
+        }
+      }
+    },
+    {
+      "round": 4,
+      "variant": "r4_balanced_ordinal",
+      "decided_at": "2026-10-25T08:26:44.896408+00:00",
+      "mode": "ordinal",
+      "confidence_weight": 0.182,
+      "balance": 0.5,
+      "reason": "Conditional joint NLL improves but main AUC remains below R2 and argmax confidence overwhelmingly100 (no25 predictions). Return to validation-best R2 and change only inverse-square-root class weighting fitted on training-fold counts. Compare minority learning/calibration and primary metric; no test data consulted.",
+      "validation_auc": 0.7628304276941078,
+      "diagnostics": {
+        "response_nll": 0.5719057668094298,
+        "response_brier": 0.19637347764790195,
+        "coverage_groups": {
+          "observed": {
+            "count": 56377,
+            "auc": 0.7531877696119526
+          },
+          "missing": {
+            "count": 164248,
+            "auc": 0.7470401236978197
+          }
+        },
+        "confidence": {
+          "count": 56377,
+          "class_counts": [
+            3473,
+            2706,
+            8312,
+            15114,
+            26772
+          ],
+          "predicted_class_counts": [
+            4212,
+            55,
+            3668,
+            620,
+            47822
+          ],
+          "confusion_matrix": [
+            [
+              693,
+              10,
+              541,
+              73,
+              2156
+            ],
+            [
+              415,
+              5,
+              311,
+              46,
+              1929
+            ],
+            [
+              953,
+              14,
+              757,
+              110,
+              6478
+            ],
+            [
+              865,
+              8,
+              784,
+              173,
+              13284
+            ],
+            [
+              1286,
+              18,
+              1275,
+              218,
+              23975
+            ]
+          ],
+          "confidence_nll": 1.2913602085653804,
+          "confidence_prior_nll": 1.3118363971331441,
+          "confidence_macro_f1": 0.19503083877946104,
+          "confidence_level_mae": 0.9452952093168233,
+          "prior_level_mae": 0.9351015709000656,
+          "joint_nll": 1.847498769210806,
+          "concept_prior_nll": 1.3020202085601797,
+          "question_prior_nll": 1.2663218716346067,
+          "high_confidence_wrong": {
+            "count": 12207,
+            "auc": 0.6723644982329661,
+            "brier": 0.15876840528609087
+          },
+          "low_confidence_correct": {
+            "count": 2144,
+            "auc": 0.6179128867949815,
+            "brier": 0.04108340034737431
+          }
+        },
+        "gradient": {
+          "cosine": 0.10400066152215004,
+          "aux_norm_over_response": 3.638926863670349
+        }
+      }
     }
   ],
   "outsourcing": {
@@ -29,5 +396,6 @@
     "timeout_seconds": 180,
     "exit_code": 0,
     "status": "draft delivered; root added active-label finite/integer checks and masked-value sanitation, completed integration and 48 targeted checks"
-  }
+  },
+  "test_status": "all_completed"
 }
